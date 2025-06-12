@@ -5,24 +5,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, FileText, Settings, Plus } from "lucide-react"
 import UserManagement from "@/components/administrador/UserManagement"
-// import ArticleOverview from "@/components/administrador/ArticleOverview"
-// import SystemSettings from "@/components/administrador/system-settings"
-// import DashboardHeader from "@/components/dashboard/dashboard-header"
+import ArticleOverview from "@/components/administrador/ArticleOverview"
+import SystemSettings from "@/components/administrador/SystemSettings"
+import PrivateHeader from "@/components/PrivateHeader"
 
-interface AdminDashboardProps {
-  user: {
-    name?: string | null
-    email?: string | null
-    image?: string | null
-  }
-}
+// interface AdminDashboardProps {
+//   user: {
+//     name?: string | null
+//     email?: string | null
+//     image?: string | null
+//   }
+// }
 
-export default function Page({ user }: AdminDashboardProps) {
+export default function Page() {
   const [activeTab, setActiveTab] = useState("overview")
+  const user = {
+    name: "Administrador",
+    email: "test@test.com",
+    image: "https://via.placeholder.com/150",
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* <DashboardHeader user={user} role="Administrador" /> */}
+      <PrivateHeader user={user} role="Administrador" />
 
       <div className="container mx-auto p-6">
         <div className="mb-8">
@@ -90,13 +95,13 @@ export default function Page({ user }: AdminDashboardProps) {
             <UserManagement />
           </TabsContent>
 
-          {/* <TabsContent value="articles">
+          <TabsContent value="articles">
             <ArticleOverview />
           </TabsContent>
 
           <TabsContent value="settings">
             <SystemSettings />
-          </TabsContent> */}
+          </TabsContent>
         </Tabs>
       </div>
     </div>
