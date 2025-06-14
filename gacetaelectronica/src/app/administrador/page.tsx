@@ -6,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, FileText, Settings, Plus } from "lucide-react"
 import UserManagement from "@/components/administrador/UserManagement"
 import ArticleOverview from "@/components/administrador/ArticleOverview"
-import SystemSettings from "@/components/administrador/SystemSettings"
 import PrivateHeader from "@/components/PrivateHeader"
 
 // interface AdminDashboardProps {
@@ -19,15 +18,10 @@ import PrivateHeader from "@/components/PrivateHeader"
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("overview")
-  const user = {
-    name: "Administrador",
-    email: "test@test.com",
-    image: "https://via.placeholder.com/150",
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PrivateHeader user={user} role="Administrador" />
+      <PrivateHeader />
 
       <div className="container mx-auto p-6">
         <div className="mb-8">
@@ -36,11 +30,10 @@ export default function Page() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Resumen</TabsTrigger>
             <TabsTrigger value="users">Usuarios</TabsTrigger>
             <TabsTrigger value="articles">Artículos</TabsTrigger>
-            <TabsTrigger value="settings">Configuración</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -97,10 +90,6 @@ export default function Page() {
 
           <TabsContent value="articles">
             <ArticleOverview />
-          </TabsContent>
-
-          <TabsContent value="settings">
-            <SystemSettings />
           </TabsContent>
         </Tabs>
       </div>

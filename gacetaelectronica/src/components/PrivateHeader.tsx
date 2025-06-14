@@ -12,23 +12,24 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { LogOut, User } from "lucide-react"
 
-interface DashboardHeaderProps {
-  user: {
-    name?: string | null
-    email?: string | null
-    image?: string | null
+export default function PrivateHeader() {
+  // La información de ambas constantes deberán venir del usuario logeado
+  // TODO: Hay que hacer un contexto globalr useContext() que obtendrá la sesión del usuario y la mantendrá.
+  // El contexto se utilizará aquí para obtener la información del usuario.
+  const user = {
+    name: "Administrador",
+    email: "test@test.com",
+    image: "https://via.placeholder.com/150",
   }
-  role: string
-}
 
-export default function PrivateHeader({ user, role }: DashboardHeaderProps) {
+  const role = "Administrador"
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <h2 className="text-xl font-semibold text-gray-900">Gaceta Electrónica</h2>
-          <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">{role}</span>
+          <span className="px-2 py-1 text-xs font-bold bg-[#711919] text-[#ffffff] rounded-full">{role}</span>
         </div>
 
         <div className="flex items-center gap-4">
