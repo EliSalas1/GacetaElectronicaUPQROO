@@ -18,6 +18,9 @@ import {
 } from "@/components/ui/dialog"
 import { Plus, Edit, Trash2 } from "lucide-react"
 import { toast } from "sonner"
+import EditUserDialog from "./EditUserDialog"
+import { UserInterface } from "@/entities/user"
+import DeleteUserDialog from "./DeleteUserDialog"
 
 const mockUsers = [
   {
@@ -64,8 +67,11 @@ const mockUsers = [
 
 export default function UserManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isDialogUserOpen, setIsDialogUserOpen] = useState(false)
   const [newUserEmail, setNewUserEmail] = useState("")
   const [newUserRole, setNewUserRole] = useState("")
+  const [selectedUser, setSelectedUser] = useState<UserInterface | null>(null)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -100,99 +106,137 @@ export default function UserManagement() {
     setIsDialogOpen(false)
   }
 
-  const handleUserAction = (action: string, userName: string) => {
-    toast.message(`${action} usuario`,{
-      description: `Acción "${action}" realizada en ${userName}`,
-    })
+  // const handleUserAction = (action: string, userName: string) => {
+  //   toast.message(`${action} usuario`,{
+  //     description: `Acción "${action}" realizada en ${userName}`,
+  //   })
+  // }
+
+  const handleEditClick = (usuario: UserInterface) => {
+    setSelectedUser(usuario)
+    setIsDialogUserOpen(true)
   }
 
+  const handleDialogClose = (open: boolean) => {
+    setIsDialogOpen(open)
+    if (!open) {
+      setSelectedUser(null)
+    }
+  }
+
+    const handleDeleteClick = (usuario: UserInterface) => {
+      setSelectedUser(usuario)
+      setIsDeleteOpen(true)
+    }
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Gestión de Usuarios</CardTitle>
-            <CardDescription>Administra las cuentas de redactores y supervisores</CardDescription>
-          </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Nuevo Usuario
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Crear Nuevo Usuario</DialogTitle>
-                <DialogDescription>Agrega un nuevo usuario al sistema</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="usuario@universidad.edu"
-                    value={newUserEmail}
-                    onChange={(e) => setNewUserEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Rol</Label>
-                  <Select value={newUserRole} onValueChange={setNewUserRole}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un rol" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="redactor">Redactor</SelectItem>
-                      <SelectItem value="supervisor">Supervisor</SelectItem>
-                      <SelectItem value="admin">Administrador</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button onClick={handleCreateUser} disabled={!newUserEmail || !newUserRole} className="w-full">
-                  Crear Usuario
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Gestión de Usuarios</CardTitle>
+              <CardDescription>Administra las cuentas de redactores y supervisores</CardDescription>
+            </div>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nuevo Usuario
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Rol</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Fecha de Creación</TableHead>
-              <TableHead>Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {mockUsers.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{getRoleBadge(user.role)}</TableCell>
-                <TableCell>{getStatusBadge(user.status)}</TableCell>
-                <TableCell>{user.createdAt}</TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleUserAction("Editar", user.name)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleUserAction("Eliminar", user.name)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Crear Nuevo Usuario</DialogTitle>
+                  <DialogDescription>Agrega un nuevo usuario al sistema</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="usuario@universidad.edu"
+                      value={newUserEmail}
+                      onChange={(e) => setNewUserEmail(e.target.value)}
+                    />
                   </div>
-                </TableCell>
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Rol</Label>
+                    <Select value={newUserRole} onValueChange={setNewUserRole}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un rol" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="redactor">Redactor</SelectItem>
+                        <SelectItem value="supervisor">Supervisor</SelectItem>
+                        <SelectItem value="admin">Administrador</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={handleCreateUser} disabled={!newUserEmail || !newUserRole} className="w-full">
+                    Crear Usuario
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Rol</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Fecha de Creación</TableHead>
+                <TableHead>Acciones</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+            </TableHeader>
+            <TableBody>
+              {mockUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{getRoleBadge(user.role)}</TableCell>
+                  <TableCell>{getStatusBadge(user.status)}</TableCell>
+                  <TableCell>{user.createdAt}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleEditClick(user)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(user)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      {selectedUser && (
+        <>
+          <EditUserDialog
+            isOpen={isDialogUserOpen}
+            setIsOpen={handleDialogClose}
+            usuario={selectedUser}
+            onSave={() => {}}
+          />
+          <DeleteUserDialog
+            isOpen={isDeleteOpen}
+            setIsOpen={(open) => {
+              setIsDeleteOpen(open)
+              if (!open) setSelectedUser(null)
+            }}
+            usuario={selectedUser}
+            onConfirm={() => {}}
+          />
+        </>
+      )}
+    </>
   )
 }

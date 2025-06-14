@@ -5,7 +5,11 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Eye, Edit, Trash2 } from "lucide-react"
-import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { ArticleInterface } from "@/entities/article"
+import { EditArticleDialog } from "./EditArticleDialog"
+import { DeleteArticleDialog } from "./DeleteArticleDialog"
 
 const allArticles = [
   {
@@ -53,7 +57,7 @@ const allArticles = [
     createdAt: "2024-01-11",
     publishedAt: "2024-01-12",
   },
-]
+] satisfies Partial<ArticleInterface>[]
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -64,64 +68,96 @@ const getStatusBadge = (status: string) => {
     case "rejected":
       return <Badge className="bg-red-100 text-red-800">Rechazado</Badge>
     case "draft":
-      return <Badge variant="secondary">Borrador</Badge>
+      return <Badge variant="secondary">Borrado</Badge>
     default:
       return <Badge variant="outline">Desconocido</Badge>
   }
 }
 
 export default function ArticleOverview() {
-
-  const handleAction = (action: string, title: string) => {
-    toast.message(`${action} artículo`, {
-      description: `Acción "${action}" realizada en "${title}"`,
-    })
-  }
+  const router = useRouter()
+  const [selectedArticle, setSelectedArticle] = useState<Partial<ArticleInterface> | null>(null)
+  const [editOpen, setEditOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Todos los Artículos</CardTitle>
-        <CardDescription>Vista general de todos los artículos en el sistema</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Título</TableHead>
-              <TableHead>Autor</TableHead>
-              <TableHead>Categoría</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Fecha de Creación</TableHead>
-              <TableHead>Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {allArticles.map((article) => (
-              <TableRow key={article.id}>
-                <TableCell className="font-medium">{article.title}</TableCell>
-                <TableCell>{article.author}</TableCell>
-                <TableCell className="capitalize">{article.category.replace("-", " ")}</TableCell>
-                <TableCell>{getStatusBadge(article.status)}</TableCell>
-                <TableCell>{article.createdAt}</TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleAction("Ver", article.title)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleAction("Editar", article.title)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleAction("Eliminar", article.title)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Todos los Artículos</CardTitle>
+          <CardDescription>Vista general de todos los artículos en el sistema</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Título</TableHead>
+                <TableHead>Autor</TableHead>
+                <TableHead>Categoría</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Fecha de Creación</TableHead>
+                <TableHead>Acciones</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+            </TableHeader>
+            <TableBody>
+              {allArticles.map((article) => (
+                <TableRow key={article.id}>
+                  <TableCell className="font-medium">{article.title}</TableCell>
+                  <TableCell>{article.author}</TableCell>
+                  <TableCell className="capitalize">{article.category.replace("-", " ")}</TableCell>
+                  <TableCell>{getStatusBadge(article.status)}</TableCell>
+                  <TableCell>{article.createdAt}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => router.push(`administrador/articulo/${article.id}`)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => {
+                        setSelectedArticle(article)
+                        setEditOpen(true)
+                      }}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => {
+                        setSelectedArticle(article)
+                        setDeleteOpen(true)
+                      }}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      <EditArticleDialog
+        open={editOpen}
+        onOpenChange={(value) => {
+          setEditOpen(value)
+          if (!value) setSelectedArticle(null)
+        }}
+        article={selectedArticle}
+        onSave={(updatedArticle) => {
+          // handle update logic here (API call or state update)
+          console.log("Save article", updatedArticle)
+        }}
+      />
+
+      <DeleteArticleDialog
+        open={deleteOpen}
+        onOpenChange={(value) => {
+          setDeleteOpen(value)
+          if (!value) setSelectedArticle(null)
+        }}
+        article={selectedArticle}
+        onConfirm={() => {
+          // handle delete logic here
+          console.log("Deleted article:", selectedArticle?.id)
+          setDeleteOpen(false)
+        }}
+      />
+    </>
   )
 }
