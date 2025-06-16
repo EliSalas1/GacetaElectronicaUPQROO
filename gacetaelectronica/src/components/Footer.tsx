@@ -8,7 +8,7 @@ export default function Footer() {
         <div>
           <h4 className="font-bold mb-2">Gaceta Universitaria</h4>
           <p className="text-orange-100">
-            Portal oficial de noticias, eventos e investigaciones de nuestra universidad.
+            Portal oficial de noticias, eventos e investigaciones de nuestra universidad. Gaceta UPQROO - scientia, tripalium et virtus 
           </p>
         </div>
 
@@ -36,7 +36,7 @@ export default function Footer() {
           <ul className="space-y-1 text-orange-100">
             <li>UPQROO</li>
             <li>gaceta@upqroo.edu.mx</li>
-            <li>+52 (123) 123-4567</li>
+            <li> 9982831859</li>
           </ul>
         </div>
       </div>
