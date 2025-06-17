@@ -1,0 +1,242 @@
+"use client"
+
+import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Plus, Edit, Trash2 } from "lucide-react"
+import { toast } from "sonner"
+import EditUserDialog from "./EditUserDialog"
+import { UserInterface } from "@/entities/user"
+import DeleteUserDialog from "./DeleteUserDialog"
+
+const mockUsers = [
+  {
+    id: 1,
+    name: "María González",
+    email: "maria.gonzalez@universidad.edu",
+    role: "redactor",
+    status: "active",
+    createdAt: "2024-01-10",
+  },
+  {
+    id: 2,
+    name: "Carlos Rodríguez",
+    email: "carlos.rodriguez@universidad.edu",
+    role: "supervisor",
+    status: "active",
+    createdAt: "2024-01-08",
+  },
+  {
+    id: 3,
+    name: "Ana Martínez",
+    email: "ana.martinez@universidad.edu",
+    role: "redactor",
+    status: "inactive",
+    createdAt: "2024-01-05",
+  },
+  {
+    id: 4,
+    name: "Luis Pérez",
+    email: "luis.perez@universidad.edu",
+    role: "redactor",
+    status: "active",
+    createdAt: "2024-01-03",
+  },
+  {
+    id: 5,
+    name: "Carmen López",
+    email: "carmen.lopez@universidad.edu",
+    role: "supervisor",
+    status: "active",
+    createdAt: "2024-01-01",
+  },
+]
+
+export default function UserManagement() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isDialogUserOpen, setIsDialogUserOpen] = useState(false)
+  const [newUserEmail, setNewUserEmail] = useState("")
+  const [newUserRole, setNewUserRole] = useState("")
+  const [selectedUser, setSelectedUser] = useState<UserInterface | null>(null)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case "admin":
+        return <Badge className="bg-purple-100 text-purple-800">Administrador</Badge>
+      case "supervisor":
+        return <Badge className="bg-blue-100 text-blue-800">Supervisor</Badge>
+      case "redactor":
+        return <Badge className="bg-green-100 text-green-800">Redactor</Badge>
+      default:
+        return <Badge variant="outline">Desconocido</Badge>
+    }
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "active":
+        return <Badge className="bg-green-100 text-green-800">Activo</Badge>
+      case "inactive":
+        return <Badge className="bg-gray-100 text-gray-800">Inactivo</Badge>
+      default:
+        return <Badge variant="outline">Desconocido</Badge>
+    }
+  }
+
+  const handleCreateUser = () => {
+    toast.message("Usuario creado", {
+      description: `Usuario ${newUserEmail} creado con rol ${newUserRole}`,
+    })
+    setNewUserEmail("")
+    setNewUserRole("")
+    setIsDialogOpen(false)
+  }
+
+  // const handleUserAction = (action: string, userName: string) => {
+  //   toast.message(`${action} usuario`,{
+  //     description: `Acción "${action}" realizada en ${userName}`,
+  //   })
+  // }
+
+  const handleEditClick = (usuario: UserInterface) => {
+    setSelectedUser(usuario)
+    setIsDialogUserOpen(true)
+  }
+
+  const handleDialogClose = (open: boolean) => {
+    setIsDialogOpen(open)
+    if (!open) {
+      setSelectedUser(null)
+    }
+  }
+
+    const handleDeleteClick = (usuario: UserInterface) => {
+      setSelectedUser(usuario)
+      setIsDeleteOpen(true)
+    }
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Gestión de Usuarios</CardTitle>
+              <CardDescription>Administra las cuentas de redactores y supervisores</CardDescription>
+            </div>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nuevo Usuario
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Crear Nuevo Usuario</DialogTitle>
+                  <DialogDescription>Agrega un nuevo usuario al sistema</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="usuario@universidad.edu"
+                      value={newUserEmail}
+                      onChange={(e) => setNewUserEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Rol</Label>
+                    <Select value={newUserRole} onValueChange={setNewUserRole}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un rol" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="redactor">Redactor</SelectItem>
+                        <SelectItem value="supervisor">Supervisor</SelectItem>
+                        <SelectItem value="admin">Administrador</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={handleCreateUser} disabled={!newUserEmail || !newUserRole} className="w-full">
+                    Crear Usuario
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Rol</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Fecha de Creación</TableHead>
+                <TableHead>Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {mockUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{getRoleBadge(user.role)}</TableCell>
+                  <TableCell>{getStatusBadge(user.status)}</TableCell>
+                  <TableCell>{user.createdAt}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleEditClick(user)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(user)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      {selectedUser && (
+        <>
+          <EditUserDialog
+            isOpen={isDialogUserOpen}
+            setIsOpen={handleDialogClose}
+            usuario={selectedUser}
+            onSave={() => {}}
+          />
+          <DeleteUserDialog
+            isOpen={isDeleteOpen}
+            setIsOpen={(open) => {
+              setIsDeleteOpen(open)
+              if (!open) setSelectedUser(null)
+            }}
+            usuario={selectedUser}
+            onConfirm={() => {}}
+          />
+        </>
+      )}
+    </>
+  )
+}
