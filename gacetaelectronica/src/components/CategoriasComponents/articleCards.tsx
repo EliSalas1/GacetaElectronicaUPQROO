@@ -3,7 +3,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
+import Link from "next/link"
 
+// Mapa de colores personalizados para cada tipo de etiqueta (tag)
 const tagColors = {
   "Artículo académico": "bg-blue-100 text-blue-800 border-blue-200",
   "Artículo de difusión": "bg-green-100 text-green-800 border-green-200",
@@ -14,8 +16,10 @@ const tagColors = {
   Logro: "bg-yellow-100 text-yellow-800 border-yellow-200",
 }
 
+// Componente que representa una tarjeta visual para mostrar información resumida de un artículo
 export default function ArticleCard({ article }: { article: any }) {
   return (
+    <Link href={`/articulo/${article.id}`} passHref>
     <Card className="h-full flex flex-col justify-between hover:shadow-lg transition-shadow bg-neutral-50 border-neutral-200 hover:border-orange-500 cursor-pointer">
         <div className="relative">
             <Image
@@ -26,6 +30,8 @@ export default function ArticleCard({ article }: { article: any }) {
             className="w-full h-48 object-cover rounded-t-lg"
             />
         </div>
+
+        {/* Cabecera de la tarjeta con la etiqueta, fecha, título y autor */}        
         <CardHeader>
             <div className="flex justify-between items-start mb-2">
                 <Badge className={`${tagColors[article.tag as keyof typeof tagColors]} border`}>
@@ -40,5 +46,6 @@ export default function ArticleCard({ article }: { article: any }) {
             <p className="text-neutral-700 line-clamp-3">{article.summary}</p>
           </CardContent>
         </Card>
+      </Link>
   )
 }

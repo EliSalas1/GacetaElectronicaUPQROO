@@ -1,3 +1,28 @@
+/**
+ * articlesData
+ * 
+ * Este objeto contiene una colección de artículos clasificados por categorías temáticas.
+ * Es utilizado para poblar componentes en una interfaz web, como tarjetas de artículo,
+ * vistas de categoría, o listados personalizados.
+ * 
+ * Estructura:
+ * {
+ *   categoria: [
+ *     {
+ *       id: number,            // Identificador único del artículo
+ *       title: string,         // Título del artículo
+ *       summary: string,       // Breve resumen del contenido
+ *       author: string,        // Nombre del autor o autora
+ *       date: string,          // Fecha de publicación (formato YYYY-MM-DD)
+ *       tag: string,           // Etiqueta del tipo de artículo (ej. "Artículo académico", "Arte", etc.)
+ *       image: string,         // Ruta de la imagen asociada al artículo
+ *     },
+ *     ...
+ *   ],
+ *   ...
+ * }
+ */
+
 export const articlesData = {
   ciencia: [
     {

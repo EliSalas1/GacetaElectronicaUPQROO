@@ -10,6 +10,7 @@ const categoryTitles = {
   logros: "Logros",
 }
 
+// Componente que muestra una sección de artículos agrupados por categoría
 export default function CategorySection({
   categoryKey,
   articles,
@@ -25,10 +26,14 @@ export default function CategorySection({
 
   return (
     <section className="mb-16">
+
+      {/* Título de la sección con botón para expandir/colapsar */}
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-3xl font-bold text-accent-900">
           {categoryTitles[categoryKey as keyof typeof categoryTitles]}
         </h2>
+
+        {/* Botón para expandir/colapsar la sección solo si hay más de 3 articulos */}
         {articles.length > 3 && (
           <Button
             variant="outline"

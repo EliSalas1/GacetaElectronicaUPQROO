@@ -4,12 +4,14 @@ import { useState } from "react"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import CategorySection from "@/components/CategoriasComponents/categorySection"
-import { articlesData } from "@/components/articlesMock"
+import { articlesData } from "@/components/CategoriasComponents/articlesMock"
 import ButtomUp from "@/components/CategoriasComponents/ButtomUp"
 
 export default function CategoriasPage() {
+  // Estado para llevar el control de qué categorías están expandidas
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
 
+  // Función que alterna el estado expandido/colapsado de una categoría específica
   const toggleCategory = (category: string) => {
     setExpandedCategories((prev) => ({
       ...prev,
@@ -18,11 +20,13 @@ export default function CategoriasPage() {
   }
 
   return (
+    // Contenedor principal
     <div className="min-h-screen bg-neutral-50">
       <Header />
       <div className="max-w-[1280px] mx-auto py-8">
         <h1 className="text-4xl font-bold text-center mb-12 text-accent-900">Categorías</h1>
 
+        {/* Renderiza una sección por cada categoría con sus artículos */}
         {Object.entries(articlesData).map(([categoryKey, articles]) => (
           <CategorySection
             key={categoryKey}
