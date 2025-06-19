@@ -23,25 +23,25 @@ export default function Header() {
             </span>
             <div className="absolute left-0 mt-2 w-52 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
               <Link
-                href="/categorias/social"
+                href="/categorias"
                 className="block px-4 py-2 text-black hover:bg-orange-100 hover:pl-6 transition-all"
               >
                 Ciencia y Tecnología
               </Link>
               <Link
-                href="/categorias/ciencia"
+                href="/categorias"
                 className="block px-4 py-2 text-black hover:bg-orange-100 hover:pl-6 transition-all"
               >
                 Humanidades
               </Link>
               <Link
-                href="/categorias/cultura"
+                href="/categorias"
                 className="block px-4 py-2 text-black hover:bg-orange-100 hover:pl-6 transition-all"
               >
                 Social y política
               </Link>
               <Link
-                href="/categorias/eventos"
+                href="/categorias"
                 className="block px-4 py-2 text-black hover:bg-orange-100 hover:pl-6 transition-all"
               >
                 Logros
