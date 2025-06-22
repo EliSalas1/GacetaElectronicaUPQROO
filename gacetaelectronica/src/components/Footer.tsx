@@ -2,7 +2,7 @@ import Link from "next/link"
 
 export default function Footer() {
   return (
-    <footer className="bg-orange-500 text-white">
+    <footer className="bg-[#FF6400] text-white">
       {/* Footer Inferior */}
       <div className="max-w-6xl mx-auto px-4 py-8 grid md:grid-cols-4 gap-8 text-center md:text-left text-xs border-t border-orange-400">
         <div>
@@ -41,7 +41,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="text-center text-orange-100 text-xs py-4 border-t border-orange-400">
+      <div className="text-center text-orange-100 text-xs py-4 border-t border-[#FF6400]">
         © 2025 Gaceta Universitaria. Todos los derechos reservados.
       </div>
     </footer>
