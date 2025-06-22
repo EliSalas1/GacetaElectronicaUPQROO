@@ -6,7 +6,7 @@ export interface ArticleInterface {
   content: string,
   status: string,
   etiqueta?: Etiqueta | string
-  publishedAt: string | null
+  publishedAt?: string | null
   createdAt: string,
 }
 
