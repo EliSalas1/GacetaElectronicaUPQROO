@@ -64,7 +64,7 @@ export default function ArticleEditor() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Crear Nuevo Artículo</CardTitle>
+        <CardTitle>Nuevo Artículo</CardTitle>
         <CardDescription>Completa todos los campos para crear un artículo para la gaceta electrónica</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
