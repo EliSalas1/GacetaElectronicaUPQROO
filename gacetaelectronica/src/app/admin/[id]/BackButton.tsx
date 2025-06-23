@@ -8,6 +8,6 @@ export function BackButton() {
   const router = useRouter()
 
   return (
-    <Button onClick={() => router.push('/administrador')}>Regresar</Button>
+    <Button onClick={() => router.push('/admin')}>Regresar</Button>
   )
 }

@@ -1,5 +1,4 @@
 // app/articulo/[id]/page.tsx
-import PrivateHeader from "@/components/PrivateHeader"
 import { ArticleInterface } from "@/entities/article"
 import { notFound } from "next/navigation"
 import { BackButton } from "./BackButton"
@@ -17,7 +16,7 @@ const mockArticles: ArticleInterface[] = [
     title: "La evolución del software libre",
     author: "Carlos Méndez",
     category: "Tecnología",
-    state: "Publicado",
+    status: "Publicado",
     createdAt: "2024-06-01",
     content:
       "El software libre ha evolucionado significativamente desde sus inicios en la década de 1980. Hoy en día, muchos proyectos críticos utilizan licencias abiertas...",
@@ -27,7 +26,7 @@ const mockArticles: ArticleInterface[] = [
     title: "Impacto del cambio climático en México",
     author: "Ana López",
     category: "Ciencia",
-    state: "Publicado",
+    status: "Publicado",
     createdAt: "2024-05-15",
     content:
       "Los efectos del cambio climático en México incluyen sequías prolongadas, aumento en la temperatura y fenómenos meteorológicos extremos...",
@@ -45,7 +44,6 @@ export default async function ArticlePage({ params }: PageProps) {
 
   return (
     <>
-      <PrivateHeader/>
       <div className="max-w-3xl mx-auto p-6 space-y-4">
         <BackButton/>
         <h1 className="text-3xl font-bold">{article.title}</h1>
