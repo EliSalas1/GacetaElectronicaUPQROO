@@ -9,6 +9,9 @@ import ArticleOverview from "@/components/administrador/ArticleOverview"
 import PrivateHeader from "@/components/PrivateHeader"
 import AgregarEvento from "@/components/administrador/AgregarEvento"
 
+// import { useInitializeUser } from "@/hooks/useInitializeUser"
+
+
 // interface AdminDashboardProps {
 //   user: {
 //     name?: string | null
@@ -18,7 +21,9 @@ import AgregarEvento from "@/components/administrador/AgregarEvento"
 // }
 
 export default function Page() {
-  const [activeTab, setActiveTab] = useState("overview")
+
+  // useInitializeUser("Administrador")
+ const [activeTab, setActiveTab] = useState("overview")
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -36,6 +41,7 @@ export default function Page() {
             <TabsTrigger value="users">Usuarios</TabsTrigger>
             <TabsTrigger value="articles">Artículos</TabsTrigger>
             <TabsTrigger value="addEvent">Añadir evento</TabsTrigger>
+
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -93,12 +99,13 @@ export default function Page() {
           <TabsContent value="articles">
             <ArticleOverview />
           </TabsContent>
-
           <TabsContent value="addEvent">
             <AgregarEvento />
           </TabsContent>
+
         </Tabs>
       </div>
     </div>
   )
 }
+
