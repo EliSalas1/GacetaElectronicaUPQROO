@@ -7,6 +7,7 @@ import { Users, FileText, Settings, Plus } from "lucide-react"
 import UserManagement from "@/components/administrador/UserManagement"
 import ArticleOverview from "@/components/administrador/ArticleOverview"
 import PrivateHeader from "@/components/PrivateHeader"
+import { useInitializeUser } from "@/hooks/useInitializeUser"
 
 // interface AdminDashboardProps {
 //   user: {
@@ -17,6 +18,7 @@ import PrivateHeader from "@/components/PrivateHeader"
 // }
 
 export default function Page() {
+  useInitializeUser("Administrador")
   const [activeTab, setActiveTab] = useState("overview")
 
   return (

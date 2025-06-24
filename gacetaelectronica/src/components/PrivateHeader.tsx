@@ -11,18 +11,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { LogOut, User } from "lucide-react"
+import { useUser } from "@/contexts/UserContext"
 
 export default function PrivateHeader() {
-  // La información de ambas constantes deberán venir del usuario logeado
-  // TODO: Hay que hacer un contexto globalr useContext() que obtendrá la sesión del usuario y la mantendrá.
-  // El contexto se utilizará aquí para obtener la información del usuario.
-  const user = {
-    name: "Administrador",
-    email: "test@test.com",
-    image: "https://via.placeholder.com/150",
-  }
+  const { user, role, logout } = useUser()
 
-  const role = "Administrador"
+  // Si no hay usuario, mostrar valores por defecto
+  if (!user || !role) {
+    return null // o un componente de loading
+  }
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
@@ -55,7 +52,7 @@ export default function PrivateHeader() {
                 <span>Perfil</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={logout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Salir</span>
               </DropdownMenuItem>

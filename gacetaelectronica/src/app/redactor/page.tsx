@@ -8,8 +8,10 @@ import { Clock, CheckCircle } from "lucide-react"
 import ArticleEditor from "@/components/redactor/ArticleEditor"
 import MyArticles from "@/components/redactor/MyArticles"
 import PrivateHeader from "@/components/PrivateHeader"
+import { useInitializeUser } from "@/hooks/useInitializeUser"
 
 export default function Page() {
+  useInitializeUser("Redactor")
   const [activeTab, setActiveTab] = useState("overview")
 
   return (
@@ -29,30 +31,30 @@ export default function Page() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-  <div className="grid gap-6 md:grid-cols-2 justify-center">
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Artículos Publicados</CardTitle>
-        <CheckCircle className="h-4 w-4 text-green-600" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">12</div>
-        <p className="text-xs text-muted-foreground">En total</p>
-      </CardContent>
-    </Card>
+            <div className="grid gap-6 md:grid-cols-2 justify-center">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Artículos Publicados</CardTitle>
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">12</div>
+                  <p className="text-xs text-muted-foreground">En total</p>
+                </CardContent>
+              </Card>
 
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">En Revisión</CardTitle>
-        <Clock className="h-4 w-4 text-yellow-600" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">3</div>
-        <p className="text-xs text-muted-foreground">Pendientes de aprobación</p>
-      </CardContent>
-    </Card>
-  </div>
-</TabsContent>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">En Revisión</CardTitle>
+                  <Clock className="h-4 w-4 text-yellow-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">3</div>
+                  <p className="text-xs text-muted-foreground">Pendientes de aprobación</p>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
           <TabsContent value="new-article">
             <ArticleEditor />
