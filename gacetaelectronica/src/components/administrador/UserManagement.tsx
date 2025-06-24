@@ -117,17 +117,11 @@ export default function UserManagement() {
     setIsDialogUserOpen(true)
   }
 
-  const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open)
-    if (!open) {
-      setSelectedUser(null)
-    }
+  const handleDeleteClick = (usuario: UserInterface) => {
+    console.log(isDialogUserOpen);
+    setSelectedUser(usuario)
+    setIsDeleteOpen(true)
   }
-
-    const handleDeleteClick = (usuario: UserInterface) => {
-      setSelectedUser(usuario)
-      setIsDeleteOpen(true)
-    }
 
   return (
     <>
@@ -162,9 +156,9 @@ export default function UserManagement() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="role">Rol</Label>
+                    <Label className="w-full" htmlFor="role">Rol</Label>
                     <Select value={newUserRole} onValueChange={setNewUserRole}>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Selecciona un rol" />
                       </SelectTrigger>
                       <SelectContent>
@@ -222,7 +216,10 @@ export default function UserManagement() {
         <>
           <EditUserDialog
             isOpen={isDialogUserOpen}
-            setIsOpen={handleDialogClose}
+            setIsOpen={(open) => {
+              setIsDialogUserOpen(open)
+              if(!open) setSelectedUser(null)
+            }}
             usuario={selectedUser}
             onSave={() => {}}
           />
