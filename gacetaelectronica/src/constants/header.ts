@@ -1,13 +1,13 @@
 export const HEADER_OPTIONS_BY_ROLE: Record<string, Record<string, string>[]> = {
   admin: [{
-    label: "Resumen",
-    href: "/admin/resumen",
+    label: "Inicio",
+    href: "/",
   },{
-    label: "Articulos",
-    href: "/admin/articulos",
+    label: "Categorías",
+    href: "/categorias",
   }, {
-    label: "Usuarios",
-    href: "/admin/usuarios",
+    label: "Panel de Administración",
+    href: "/administrador",
   }],
   editor: [],
 }
