@@ -50,7 +50,7 @@ export default function Header() {
           </div>
 
           <Link
-            href="/crear-articulo"
+            href="/guia-articulo"
             className="hover:text-orange-200 transition-colors"
           >
             Guía para artículos
