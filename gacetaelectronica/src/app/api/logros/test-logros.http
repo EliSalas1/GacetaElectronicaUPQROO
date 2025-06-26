@@ -1,0 +1,8 @@
+### Crear un nuevo logro (POST /api/logros)
+DELETE http://localhost:3000/api/logros?id=11
+Content-Type: application/json
+
+{
+  "titulo": "Mi primer logro",
+  "descripcion": "Descripción del logro para probar POST"
+}
