@@ -10,13 +10,13 @@ export async function GET(req: NextRequest) {
     if (id) {
       const [rows] = await conn
         .promise()
-        .query<any[]>('SELECT * FROM evento WHERE IdEvento = ?', [id]);
+        .query('SELECT * FROM evento WHERE IdEvento = ?', [id]) as [any[], any];
 
       if ((rows as any[]).length === 0) {
         return new Response('Evento no encontrado', { status: 404 });
       }
 
-      return Response.json(rows[0]); // Devuelve evento específico
+      return Response.json((rows as any[])[0]); // Devuelve un evento específico
     } else {
       const [rows] = await conn.promise().query('SELECT * FROM evento');
       return Response.json(rows); // Devuelve todos los eventos
@@ -39,6 +39,15 @@ export async function POST(req: NextRequest) {
     }
 
     const conn = await getConnection();
+
+    // Verifica que no haya evento con el mismo nombre
+    const [exists] = await conn
+      .promise()
+      .query('SELECT * FROM evento WHERE Nombre = ?', [nombre]);
+    if ((exists as any[]).length > 0) {
+      return new Response('Ya existe un evento con ese nombre', { status: 409 });
+    }
+
     const [result] = await conn.promise().query(
       `INSERT INTO evento (Nombre, DesCorta, DesLarga, Fecha, Hora, Lugar)
        VALUES (?, ?, ?, ?, ?, ?)`,
@@ -55,7 +64,7 @@ export async function POST(req: NextRequest) {
   }
 }
 // ✅ POST: http://localhost:3000/api/eventos
-// Body JSON:
+// JSON Body:
 // {
 //   "nombre": "Feria tecnológica",
 //   "desCorta": "Exposición de proyectos",
@@ -76,6 +85,23 @@ export async function PUT(req: NextRequest) {
     }
 
     const conn = await getConnection();
+
+    // Verifica que el ID exista
+    const [exists] = await conn
+      .promise()
+      .query('SELECT * FROM evento WHERE IdEvento = ?', [id]);
+    if ((exists as any[]).length === 0) {
+      return new Response('Evento no encontrado', { status: 404 });
+    }
+
+    // Verifica que no exista otro evento con el mismo nombre
+    const [duplicate] = await conn
+      .promise()
+      .query('SELECT * FROM evento WHERE Nombre = ? AND IdEvento != ?', [nombre, id]);
+    if ((duplicate as any[]).length > 0) {
+      return new Response('Ya existe otro evento con ese nombre', { status: 409 });
+    }
+
     await conn.promise().query(
       `UPDATE evento
        SET Nombre = ?, DesCorta = ?, DesLarga = ?, Fecha = ?, Hora = ?, Lugar = ?
@@ -90,7 +116,7 @@ export async function PUT(req: NextRequest) {
   }
 }
 // ✅ PUT: http://localhost:3000/api/eventos?id=1
-// Body JSON igual que en POST
+// JSON Body igual que en POST
 
 // ✅ Eliminar un evento por ID (?id=)
 export async function DELETE(req: NextRequest) {
@@ -100,6 +126,15 @@ export async function DELETE(req: NextRequest) {
     if (!id) return new Response('ID requerido', { status: 400 });
 
     const conn = await getConnection();
+
+    // Verifica que el evento exista
+    const [exists] = await conn
+      .promise()
+      .query('SELECT * FROM evento WHERE IdEvento = ?', [id]);
+    if ((exists as any[]).length === 0) {
+      return new Response('Evento no encontrado', { status: 404 });
+    }
+
     await conn.promise().query('DELETE FROM evento WHERE IdEvento = ?', [id]);
 
     return Response.json({ message: 'Evento eliminado' });

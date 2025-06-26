@@ -1,22 +1,20 @@
 import { NextRequest } from 'next/server';
 import getConnection from '@/lib/db';
 
+// ✅ Obtener todas las etiquetas o una por ID (?id=)
 export async function GET(req: NextRequest) {
   try {
     const conn = await getConnection();
-    const id = req.nextUrl.searchParams.get('id'); // Si hay un ID, consulta específica
+    const id = req.nextUrl.searchParams.get('id');
 
     if (id) {
-      const [rows] = await conn
-        .promise()
-        .query('SELECT * FROM etiquetas WHERE idEtiqueta = ?', [id]) as [any[], any];
-
+      const [rows] = await conn.promise().query('SELECT * FROM etiquetas WHERE idEtiqueta = ?', [id]) as [any[], any];
       if (rows.length === 0) {
         return new Response('Etiqueta no encontrada', { status: 404 });
       }
       return Response.json(rows[0]);
     } else {
-      const [rows] = await conn.promise().query('SELECT * FROM etiquetas'); // Todos los registros
+      const [rows] = await conn.promise().query('SELECT * FROM etiquetas');
       return Response.json(rows);
     }
   } catch (err) {
@@ -24,73 +22,75 @@ export async function GET(req: NextRequest) {
     return new Response('Error en la base de datos', { status: 500 });
   }
 }
-//ENDPOINT GET	http://localhost:3000/api/etiquetas
-//ENDPOINT GET OBTENER POR ID http://localhost:3000/api/etiquetas?id=1
+// ✅ GET Todos: http://localhost:3000/api/etiquetas
+// ✅ GET Por ID: http://localhost:3000/api/etiquetas?id=1
 
 // ✅ Crear una nueva etiqueta
 export async function POST(req: NextRequest) {
   try {
-    const { nombre } = await req.json(); // Extrae el nombre del body de la solicitud
-
-    if (!nombre) {
-      return new Response('El nombre es requerido', { status: 400 });
-    }
+    const { nombre } = await req.json();
+    if (!nombre || nombre.trim() === '') return new Response('El nombre es requerido', { status: 400 });
 
     const conn = await getConnection();
-    const [result] = await conn
-      .promise()
-      .query('INSERT INTO etiquetas (Nombre) VALUES (?)', [nombre]); // Inserta en la tabla
+    const [duplicado] = await conn.promise().query('SELECT * FROM etiquetas WHERE Nombre = ?', [nombre]);
+    if ((duplicado as any[]).length > 0) return new Response('Etiqueta duplicada', { status: 409 });
 
-    return Response.json({
-      message: 'Etiqueta creada',
-      id: (result as any).insertId, // Retorna el ID generado
-    });
+    const [result] = await conn.promise().query('INSERT INTO etiquetas (Nombre) VALUES (?)', [nombre]);
+    return Response.json({ message: 'Etiqueta creada', id: (result as any).insertId });
   } catch (err) {
     console.error(err);
     return new Response('Error al insertar', { status: 500 });
   }
 }
-//ENDPOINT POST	http://localhost:3000/api/etiquetas
+// ✅ POST: http://localhost:3000/api/etiquetas
+// Body JSON:
+// {
+//   "nombre": "Nueva etiqueta"
+// }
 
-// ✅ Actualizar una etiqueta por ID (pasado como query param: ?id=)
+// ✅ Actualizar una etiqueta por ID (?id=)
 export async function PUT(req: NextRequest) {
   try {
-    const searchParams = req.nextUrl.searchParams;
-    const id = searchParams.get('id'); // ID desde URL
-    const { nombre } = await req.json(); // Nombre desde body
+    const id = req.nextUrl.searchParams.get('id');
+    const { nombre } = await req.json();
 
-    if (!id || !nombre) {
-      return new Response('ID y nombre son requeridos', { status: 400 });
-    }
+    if (!id || !nombre || nombre.trim() === '') return new Response('ID y nombre son requeridos', { status: 400 });
 
     const conn = await getConnection();
-    const [result] = await conn
-      .promise()
-      .query('UPDATE etiquetas SET Nombre = ? WHERE idEtiqueta = ?', [nombre, id]); // Actualiza registro
+    const [existente] = await conn.promise().query('SELECT * FROM etiquetas WHERE idEtiqueta = ?', [id]);
+    if ((existente as any[]).length === 0) return new Response('ID no válido', { status: 404 });
 
+    const [duplicado] = await conn.promise().query('SELECT * FROM etiquetas WHERE Nombre = ? AND idEtiqueta != ?', [nombre, id]);
+    if ((duplicado as any[]).length > 0) return new Response('Etiqueta duplicada', { status: 409 });
+
+    await conn.promise().query('UPDATE etiquetas SET Nombre = ? WHERE idEtiqueta = ?', [nombre, id]);
     return Response.json({ message: 'Etiqueta actualizada' });
   } catch (err) {
     console.error(err);
     return new Response('Error al actualizar', { status: 500 });
   }
 }
-//ENDPOINT PUT	http://localhost:3000/api/etiquetas?id=1
+// ✅ PUT: http://localhost:3000/api/etiquetas?id=1
+// Body JSON:
+// {
+//   "nombre": "Nombre actualizado"
+// }
 
-// ✅ Eliminar una etiqueta por ID (pasado como query param: ?id=)
+// ✅ Eliminar una etiqueta por ID (?id=)
 export async function DELETE(req: NextRequest) {
   try {
-    const searchParams = req.nextUrl.searchParams;
-    const id = searchParams.get('id'); // ID desde URL
-
-    if (!id) return new Response('ID es requerido', { status: 400 });
+    const id = req.nextUrl.searchParams.get('id');
+    if (!id) return new Response('ID requerido', { status: 400 });
 
     const conn = await getConnection();
-    await conn.promise().query('DELETE FROM etiquetas WHERE idEtiqueta = ?', [id]); // Elimina el registro
+    const [existente] = await conn.promise().query('SELECT * FROM etiquetas WHERE idEtiqueta = ?', [id]);
+    if ((existente as any[]).length === 0) return new Response('ID no válido', { status: 404 });
 
+    await conn.promise().query('DELETE FROM etiquetas WHERE idEtiqueta = ?', [id]);
     return Response.json({ message: 'Etiqueta eliminada' });
   } catch (err) {
     console.error(err);
     return new Response('Error al eliminar', { status: 500 });
   }
 }
-//ENDPOINT DELETE	http://localhost:3000/api/etiquetas?id=1
+// ✅ DELETE: http://localhost:3000/api/etiquetas?id=1
