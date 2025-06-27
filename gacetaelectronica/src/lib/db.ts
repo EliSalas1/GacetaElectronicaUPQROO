@@ -21,7 +21,7 @@ async function openSshTunnel(): Promise<void> {
   return new Promise((resolve, reject) => {
     if (tunnelEstablished) return resolve();
 
-    const sshCommand = `plink.exe -ssh gestionvinculacion@academico.upqroo.edu.mx -P 22 -pw GVUpqroo25* -N -L 3307:localhost:3306`;
+    const sshCommand = `"C:\\plink.exe" -ssh gestionvinculacion@academico.upqroo.edu.mx -P 22 -pw GVUpqroo25* -N -L 3307:localhost:3306`;
 
     sshProcess = exec(sshCommand, (error) => {
       if (error) {

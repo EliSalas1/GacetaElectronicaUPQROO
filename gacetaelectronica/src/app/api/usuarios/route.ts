@@ -28,25 +28,8 @@ export async function POST(req: NextRequest) {
   try {
     const { Nombre, Apellido, Correo, Rol, Estado, Contraseña } = await req.json();
 
-    // Validación de campos requeridos
     if (!Nombre || !Apellido || !Correo || !Rol || Estado === undefined || !Contraseña) {
       return new Response('Todos los campos son requeridos', { status: 400 });
-    }
-
-    // Validación 6: evitar espacios vacíos
-    if (Nombre.trim() === '' || Apellido.trim() === '' || Correo.trim() === '') {
-      return new Response('Nombre, apellido y correo no pueden estar vacíos', { status: 400 });
-    }
-
-    // Validación 5: longitud máxima
-    if (Nombre.length > 50 || Apellido.length > 50) {
-      return new Response('Nombre o apellido demasiado largo (máximo 50 caracteres)', { status: 400 });
-    }
-
-    // Validación 1: formato de correo
-    const correoRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!correoRegex.test(Correo)) {
-      return new Response('Formato de correo inválido', { status: 400 });
     }
 
     const pool = await getConnection();
@@ -80,22 +63,6 @@ export async function PUT(req: NextRequest) {
 
     if (!id || !Nombre || !Apellido || !Correo || !Rol || Estado === undefined || !Contraseña) {
       return new Response('Todos los campos son requeridos', { status: 400 });
-    }
-
-    // Validación 6: evitar espacios vacíos
-    if (Nombre.trim() === '' || Apellido.trim() === '' || Correo.trim() === '') {
-      return new Response('Nombre, apellido y correo no pueden estar vacíos', { status: 400 });
-    }
-
-    // Validación 5: longitud máxima
-    if (Nombre.length > 50 || Apellido.length > 50) {
-      return new Response('Nombre o apellido demasiado largo (máximo 50 caracteres)', { status: 400 });
-    }
-
-    // Validación 1: formato de correo
-    const correoRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!correoRegex.test(Correo)) {
-      return new Response('Formato de correo inválido', { status: 400 });
     }
 
     const pool = await getConnection();
