@@ -1,20 +1,27 @@
 import { allNotices } from "@/entities/article";
 import { Home } from "@/entities/user";
 import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-//asigna un color dependiendo la categoria
-function getCategoryColor(category: string): string {
-  switch (category) {
-    case "Ciencia y Tecnología":
-      return "bg-blue-100 text-blue-800";
-    case "Humanidades":
-      return "bg-purple-100 text-purple-800";
-    case "Logros":
-      return "bg-yellow-100 text-yellow-800";
-    case "Social y política":
-      return "bg-green-100 text-green-800";
+// Asigna un color dependiendo la etiqueta
+function getTagColor(tag: string): string {
+  switch (tag) {
+    case "Artículo académico":
+      return "bg-blue-100 text-blue-800 border-blue-200";
+    case "Artículo de difusión":
+      return "bg-green-100 text-green-800 border-green-200";
+    case "Nota social":
+      return "bg-emerald-100 text-emerald-800 border-emerald-200";
+    case "Arte":
+      return "bg-purple-100 text-purple-800 border-purple-200";
+    case "Historieta":
+      return "bg-pink-100 text-pink-800 border-pink-200";
+    case "Relato corto":
+      return "bg-indigo-100 text-indigo-800 border-indigo-200";
+    case "Logro":
+      return "bg-yellow-100 text-yellow-800 border-yellow-200";
     default:
-      return "bg-gray-200 text-gray-700";
+      return "bg-gray-200 text-gray-700 border-gray-300";
   }
 }
 
@@ -33,11 +40,8 @@ export default function NoticesList() {
 
           {/* Contenido */}
           <div className="p-6 flex flex-col flex-grow">
-            <span
-              className={`inline-flex max-w-fit text-xs px-2 py-1 rounded-full mb-3 font-medium ${getCategoryColor(
-                news.category
-              )}`}
-            >
+            {/* Categoría en color neutro */}
+            <span className="inline-flex max-w-fit text-xs px-2 py-1 rounded-full mb-3 font-medium bg-gray-200 text-gray-700">
               {news.category}
             </span>
 
@@ -53,12 +57,21 @@ export default function NoticesList() {
               A. {news.author}
             </div>
 
+            {/* ETIQUETAS CON COLOR */}
             {Array.isArray(news.etiqueta) && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {news.etiqueta.map((tag, i) => (
                   <span
                     key={i}
-                    className="border border-gray-300 rounded px-2 py-1 text-xs max-w-xs truncate"
+                    className={`
+                      inline-block
+                      px-2 py-1
+                      rounded-full
+                      text-xs
+                      font-medium
+                      ${getTagColor(tag)}
+                      max-w-xs truncate
+                    `}
                   >
                     {tag}
                   </span>
@@ -66,13 +79,19 @@ export default function NoticesList() {
               </div>
             )}
 
-            <a
-              href={`#noticia-completa-${news.id}`}
-              className="inline-flex items-center justify-center gap-2 w-full bg-[#4C0000] hover:bg-[#390000] text-white py-2 rounded text-sm font-medium transition"
+            <Button
+              asChild
+              variant="outline"
+              className="bg-white text-[#4C0000] border border-[#4C0000] hover:bg-[#4C0000] hover:text-white w-full transition"
             >
-              Leer artículo completo
-              <ArrowRight className="w-4 h-4" />
-            </a>
+              <a
+                href={`#noticia-completa-${news.id}`}
+                className="flex items-center justify-center gap-2"
+              >
+                Leer artículo completo
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            </Button>
           </div>
         </div>
       ))}

@@ -16,7 +16,7 @@ export default function HomeCarousel() {
   }, []);
 
   return (
-    <div className="max-w-5xl mx-auto px-4">
+    <div className="max-w-3xl mx-auto">
       <div className="relative overflow-hidden">
         <div className="bg-white rounded-md shadow-sm overflow-hidden">
           <div
