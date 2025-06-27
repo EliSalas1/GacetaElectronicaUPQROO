@@ -1,7 +1,8 @@
-import { exec } from 'child_process';
-import mysql, { Connection } from 'mysql2';
+import mysql, { Pool } from 'mysql2/promise';
+import { exec, ChildProcess } from 'child_process';
 
-let connection: Connection | null = null;
+let pool: Pool | null = null;
+let sshProcess: ChildProcess | null = null;
 let tunnelEstablished = false;
 
 const dbConfig = {
@@ -9,24 +10,27 @@ const dbConfig = {
   port: 3307,
   user: 'gacetaup',
   password: 'gacetaUP2025',
-  database: 'gaceta_bd'
+  database: 'gaceta_bd',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 };
 
 // Abre el túnel SSH si no está abierto
-function openSshTunnel(): Promise<void> {
+async function openSshTunnel(): Promise<void> {
   return new Promise((resolve, reject) => {
     if (tunnelEstablished) return resolve();
 
     const sshCommand = `plink.exe -ssh gestionvinculacion@academico.upqroo.edu.mx -P 22 -pw GVUpqroo25* -N -L 3307:localhost:3306`;
 
-    const sshProcess = exec(sshCommand, (error) => {
+    sshProcess = exec(sshCommand, (error) => {
       if (error) {
         console.error('❌ Error creando túnel SSH:', error);
         return reject(error);
       }
     });
 
-    // Esperamos 1 segundo para que el túnel se abra
+    // Esperar 1 segundo para establecer el túnel
     setTimeout(() => {
       tunnelEstablished = true;
       console.log('✅ Túnel SSH creado con éxito');
@@ -35,20 +39,31 @@ function openSshTunnel(): Promise<void> {
   });
 }
 
-export default async function getConnection(): Promise<Connection> {
-  if (connection) return connection;
+// Maneja el cierre del túnel cuando el proceso termina
+function setupTunnelCleanup() {
+  const cleanup = () => {
+    if (sshProcess) {
+      console.log('\n⛔ Cerrando túnel SSH...');
+      sshProcess.kill();
+      sshProcess = null;
+      tunnelEstablished = false;
+    }
+    process.exit();
+  };
 
-  await openSshTunnel();
+  process.on('SIGINT', cleanup);   // Ctrl+C
+  process.on('SIGTERM', cleanup);  // kill
+  process.on('exit', cleanup);     // salida normal
+}
 
-  return new Promise((resolve, reject) => {
-    connection = mysql.createConnection(dbConfig);
-    connection.connect((err) => {
-      if (err) {
-        console.error('❌ Error conectando a MySQL:', err);
-        return reject(err);
-      }
-      console.log('✅ Conectado a la base de datos MySQL');
-      resolve(connection!);
-    });
-  });
+// Obtiene el pool de conexiones
+export default async function getConnection(): Promise<Pool> {
+  if (!pool) {
+    await openSshTunnel();
+    setupTunnelCleanup(); // solo la primera vez
+    pool = mysql.createPool(dbConfig);
+    console.log('✅ Pool de conexiones MySQL creado');
+  }
+
+  return pool;
 }
