@@ -1,8 +1,6 @@
-// src/app/api/articulos/route.ts
 import { NextRequest } from 'next/server';
 import getConnection from '@/lib/db';
 
-// Tipos para TypeScript
 interface Articulo {
   IdArticulo: number;
   Titulo: string;
@@ -22,83 +20,77 @@ interface Articulo {
   Recursos?: any[];
 }
 
-// ✅ GET: Obtener artículos (todos, por ID o con filtros)
+// ✅ GET: Obtener artículos
 export async function GET(req: NextRequest) {
   try {
-    const conn = await getConnection();
+    const pool = await getConnection();
     const id = req.nextUrl.searchParams.get('id');
     const include = req.nextUrl.searchParams.get('include') || '';
 
     if (id) {
-      // Validar que el ID sea numérico
       if (isNaN(Number(id))) {
         return new Response('ID inválido', { status: 400 });
       }
 
-      const [rows] = await conn
-        .promise()
-        .query('SELECT * FROM articulos WHERE IdArticulo = ?', [id]) as [Articulo[], any];
+      const [rows] = await pool.query(
+        'SELECT * FROM Articulos WHERE IdArticulo = ?', [id]
+      ) as [Articulo[], any];
 
       if (rows.length === 0) {
         return new Response('Artículo no encontrado', { status: 404 });
       }
 
       const articulo = rows[0];
-      
-      // Cargar relaciones según el parámetro include
+
       if (include.includes('categoria')) {
-        const [categoria] = await conn
-          .promise()
-          .query('SELECT * FROM Categorias WHERE IdCategoria = ?', [articulo.IdCategoria]);
+        const [categoria] = await pool.query(
+          'SELECT * FROM Categorias WHERE IdCategoria = ?', [articulo.IdCategoria]
+        ) as [any[], any];
         articulo.Categoria = categoria[0];
       }
 
       if (include.includes('autor')) {
-        const [autor] = await conn
-          .promise()
-          .query('SELECT IdUsuarios, Nombre, Apellido FROM Usuarios WHERE IdUsuarios = ?', [articulo.IdAutor]);
+        const [autor] = await pool.query(
+          'SELECT IdUsuarios, Nombre, Apellido FROM Usuarios WHERE IdUsuarios = ?', [articulo.IdAutor]
+        ) as [any[], any];
         articulo.Autor = autor[0];
       }
 
       if (include.includes('revisor') && articulo.IdRevisor) {
-        const [revisor] = await conn
-          .promise()
-          .query('SELECT IdUsuarios, Nombre, Apellido FROM Usuarios WHERE IdUsuarios = ?', [articulo.IdRevisor]);
+        const [revisor] = await pool.query(
+          'SELECT IdUsuarios, Nombre, Apellido FROM Usuarios WHERE IdUsuarios = ?', [articulo.IdRevisor]
+        ) as [any[], any];
         articulo.Revisor = revisor[0];
       }
 
       if (include.includes('etiquetas')) {
-        const [etiquetas] = await conn
-          .promise()
-          .query(`
-            SELECT e.* FROM Etiquetas e
-            JOIN ArticuloEtiqueta ae ON e.IdEtiqueta = ae.Etiquetas_IdEtiqueta
-            WHERE ae.Articulos_idArticulo = ?
-          `, [id]);
+        const [etiquetas] = await pool.query(`
+          SELECT e.* FROM Etiquetas e
+          JOIN ArticuloEtiqueta ae ON e.IdEtiqueta = ae.Etiquetas_IdEtiqueta
+          WHERE ae.Articulos_idArticulo = ?
+        `, [id]) as [any[], any];
         articulo.Etiquetas = etiquetas;
       }
 
       if (include.includes('recursos')) {
-        const [recursos] = await conn
-          .promise()
-          .query('SELECT * FROM Recursos WHERE articulos_idArticulo = ?', [id]);
+        const [recursos] = await pool.query(
+          'SELECT * FROM Recursos WHERE articulos_idArticulo = ?', [id]
+        ) as [any[], any];
         articulo.Recursos = recursos;
       }
 
       return Response.json(articulo);
     } else {
-      // Obtener todos los artículos con filtros básicos
       const status = req.nextUrl.searchParams.get('status');
       const categoria = req.nextUrl.searchParams.get('categoria');
       const limit = parseInt(req.nextUrl.searchParams.get('limit') || '10');
       const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0');
 
-      // Validar parámetros de paginación
       if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
         return new Response('Parámetros de paginación inválidos', { status: 400 });
       }
 
-      let query = 'SELECT * FROM articulos';
+      let query = 'SELECT * FROM Articulos';
       const params: (string | number)[] = [];
 
       if (status) {
@@ -112,69 +104,56 @@ export async function GET(req: NextRequest) {
         params.push(categoria);
       }
 
-      // Para MariaDB/MySQL necesitamos asegurarnos que LIMIT y OFFSET sean números
       query += ' LIMIT ? OFFSET ?';
       params.push(limit, offset);
 
-      const [rows] = await conn.promise().query(query, params);
+      const [rows] = await pool.query(query, params) as [any[], any];
       return Response.json(rows);
     }
   } catch (err) {
-    console.error('Error en GET:', err);
-    return new Response('Error en la base de datos', { status: 500 });
+    console.error('Error en GET articulos:', err);
+    return new Response('Error al obtener artículos', { status: 500 });
   }
 }
 
 // ✅ POST: Crear nuevo artículo
 export async function POST(req: NextRequest) {
   try {
-    const {
-      Titulo,
-      Resumen,
-      Contenido,
-      IdCategoria,
-      IdAutor
-    } = await req.json();
+    const { Titulo, Resumen, Contenido, IdCategoria, IdAutor } = await req.json();
 
-    // Validaciones básicas
     if (!Titulo || !Resumen || !Contenido || !IdCategoria || !IdAutor) {
       return new Response('Todos los campos son requeridos', { status: 400 });
     }
 
-    const conn = await getConnection();
+    const pool = await getConnection();
 
-    // Validar que exista la categoría
-    const [categoriaExist] = await conn
-      .promise()
-      .query('SELECT * FROM Categorias WHERE IdCategoria = ?', [IdCategoria]) as [any[], any];
-
+    const [categoriaExist] = await pool.query(
+      'SELECT * FROM Categorias WHERE IdCategoria = ?', [IdCategoria]
+    ) as [any[], any];
     if (categoriaExist.length === 0) {
       return new Response('Categoría no encontrada', { status: 404 });
     }
 
-    // Validar que exista el autor
-    const [autorExist] = await conn
-      .promise()
-      .query('SELECT * FROM Usuarios WHERE IdUsuarios = ? AND Rol = "autor"', [IdAutor]) as [any[], any];
-
+    const [autorExist] = await pool.query(
+      'SELECT * FROM Usuarios WHERE IdUsuarios = ? AND Rol = "autor"', [IdAutor]
+    ) as [any[], any];
     if (autorExist.length === 0) {
       return new Response('Autor no encontrado o no tiene rol válido', { status: 404 });
     }
 
-    const [result] = await conn
-      .promise()
-      .query(
-        'INSERT INTO Articulos (Titulo, Resumen, Contenido, IdCategoria, IdAutor, FechaCreacion, Estatus) VALUES (?, ?, ?, ?, ?, NOW(), 1)',
-        [Titulo, Resumen, Contenido, IdCategoria, IdAutor]
-      );
+    const [result] = await pool.query(
+      `INSERT INTO Articulos (Titulo, Resumen, Contenido, IdCategoria, IdAutor, FechaCreacion, Estatus)
+       VALUES (?, ?, ?, ?, ?, NOW(), 1)`,
+      [Titulo.trim(), Resumen.trim(), Contenido.trim(), IdCategoria, IdAutor]
+    );
 
     return Response.json({
       message: 'Artículo creado',
-      id: (result as any).insertId,
+      id: (result as any).insertId
     }, { status: 201 });
   } catch (err) {
-    console.error('Error en POST:', err);
-    return new Response('Error al insertar', { status: 500 });
+    console.error('Error en POST articulos:', err);
+    return new Response('Error al crear artículo', { status: 500 });
   }
 }
 
@@ -182,96 +161,53 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get('id');
-    const {
-      Titulo,
-      Resumen,
-      Contenido,
-      IdCategoria,
-      IdRevisor,
-      Comentario,
-      Estatus
-    } = await req.json();
+    const { Titulo, Resumen, Contenido, IdCategoria, IdRevisor, Comentario, Estatus } = await req.json();
 
-    // Validaciones
     if (!id || isNaN(Number(id))) {
       return new Response('ID válido requerido', { status: 400 });
     }
 
-    const conn = await getConnection();
+    const pool = await getConnection();
 
-    // Validar que exista el artículo
-    const [articuloExist] = await conn
-      .promise()
-      .query('SELECT * FROM Articulos WHERE IdArticulo = ?', [id]) as [any[], any];
-
+    const [articuloExist] = await pool.query(
+      'SELECT * FROM Articulos WHERE IdArticulo = ?', [id]
+    ) as [any[], any];
     if (articuloExist.length === 0) {
       return new Response('Artículo no encontrado', { status: 404 });
     }
 
-    // Validar categoría si se va a actualizar
     if (IdCategoria) {
-      const [categoriaExist] = await conn
-        .promise()
-        .query('SELECT * FROM Categorias WHERE IdCategoria = ?', [IdCategoria]) as [any[], any];
-
+      const [categoriaExist] = await pool.query(
+        'SELECT * FROM Categorias WHERE IdCategoria = ?', [IdCategoria]
+      ) as [any[], any];
       if (categoriaExist.length === 0) {
         return new Response('Categoría no encontrada', { status: 404 });
       }
     }
 
-    // Validar revisor si se va a actualizar
     if (IdRevisor) {
-      const [revisorExist] = await conn
-        .promise()
-        .query('SELECT * FROM Usuarios WHERE IdUsuarios = ? AND Rol = "revisor"', [IdRevisor]) as [any[], any];
-
+      const [revisorExist] = await pool.query(
+        'SELECT * FROM Usuarios WHERE IdUsuarios = ? AND Rol = "revisor"', [IdRevisor]
+      ) as [any[], any];
       if (revisorExist.length === 0) {
         return new Response('Revisor no encontrado o no tiene rol válido', { status: 404 });
       }
     }
 
-    // Construir query dinámica
-    let query = 'UPDATE articulos SET ';
+    let query = 'UPDATE Articulos SET ';
     const params = [];
     const updates = [];
 
-    if (Titulo) {
-      updates.push('Titulo = ?');
-      params.push(Titulo);
-    }
-
-    if (Resumen) {
-      updates.push('Resumen = ?');
-      params.push(Resumen);
-    }
-
-    if (Contenido) {
-      updates.push('Contenido = ?');
-      params.push(Contenido);
-    }
-
-    if (IdCategoria) {
-      updates.push('IdCategoria = ?');
-      params.push(IdCategoria);
-    }
-
-    if (IdRevisor) {
-      updates.push('IdRevisor = ?');
-      params.push(IdRevisor);
-    }
-
-    if (Comentario !== undefined) {
-      updates.push('Comentario = ?');
-      params.push(Comentario);
-    }
-
+    if (Titulo) { updates.push('Titulo = ?'); params.push(Titulo.trim()); }
+    if (Resumen) { updates.push('Resumen = ?'); params.push(Resumen.trim()); }
+    if (Contenido) { updates.push('Contenido = ?'); params.push(Contenido.trim()); }
+    if (IdCategoria) { updates.push('IdCategoria = ?'); params.push(IdCategoria); }
+    if (IdRevisor) { updates.push('IdRevisor = ?'); params.push(IdRevisor); }
+    if (Comentario !== undefined) { updates.push('Comentario = ?'); params.push(Comentario.trim()); }
     if (Estatus !== undefined) {
       updates.push('Estatus = ?');
       params.push(Estatus);
-      
-      if (Estatus === 3) { // Suponiendo que 3 es "Publicado"
-        updates.push('FechaRevision = NOW()');
-      }
+      if (Estatus === 3) updates.push('FechaRevision = NOW()');
     }
 
     if (updates.length === 0) {
@@ -281,12 +217,12 @@ export async function PUT(req: NextRequest) {
     query += updates.join(', ') + ' WHERE IdArticulo = ?';
     params.push(id);
 
-    await conn.promise().query(query, params);
+    await pool.query(query, params);
 
     return Response.json({ message: 'Artículo actualizado' });
   } catch (err) {
-    console.error('Error en PUT:', err);
-    return new Response('Error al actualizar', { status: 500 });
+    console.error('Error en PUT articulos:', err);
+    return new Response('Error al actualizar artículo', { status: 500 });
   }
 }
 
@@ -294,43 +230,26 @@ export async function PUT(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get('id');
-
-    // Validación: ID requerido y numérico
     if (!id || isNaN(Number(id))) {
       return new Response('ID válido requerido', { status: 400 });
     }
 
-    const conn = await getConnection();
+    const pool = await getConnection();
 
-    // Validación: existencia previa
-    const [exist] = await conn
-      .promise()
-      .query('SELECT * FROM articulos WHERE IdArticulo = ?', [id]) as [any[], any];
-
+    const [exist] = await pool.query(
+      'SELECT * FROM Articulos WHERE IdArticulo = ?', [id]
+    ) as [any[], any];
     if (exist.length === 0) {
       return new Response('Artículo no encontrado', { status: 404 });
     }
 
-    // Eliminar relaciones primero (etiquetas y recursos)
-    await conn.promise().query(
-      'DELETE FROM ArticuloEtiqueta WHERE articulos_idArticulo = ?',
-      [id]
-    );
-
-    await conn.promise().query(
-      'DELETE FROM Recursos WHERE articulos_idArticulo = ?',
-      [id]
-    );
-
-    // Luego eliminar el artículo
-    await conn.promise().query(
-      'DELETE FROM articulos WHERE IdArticulo = ?',
-      [id]
-    );
+    await pool.query('DELETE FROM ArticuloEtiqueta WHERE articulos_idArticulo = ?', [id]);
+    await pool.query('DELETE FROM Recursos WHERE articulos_idArticulo = ?', [id]);
+    await pool.query('DELETE FROM Articulos WHERE IdArticulo = ?', [id]);
 
     return Response.json({ message: 'Artículo eliminado correctamente' });
   } catch (err) {
-    console.error('Error en DELETE:', err);
-    return new Response('Error al eliminar', { status: 500 });
+    console.error('Error en DELETE articulos:', err);
+    return new Response('Error al eliminar artículo', { status: 500 });
   }
 }

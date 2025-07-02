@@ -1,35 +1,29 @@
 import { NextRequest } from 'next/server';
 import getConnection from '@/lib/db';
 
-// ✅ Obtener todos los eventos o uno por ID (?id=)
+// ✅ GET: Obtener todos los eventos o uno por ID
 export async function GET(req: NextRequest) {
   try {
-    const conn = await getConnection();
+    const pool = await getConnection();
     const id = req.nextUrl.searchParams.get('id');
 
     if (id) {
-      const [rows] = await conn
-        .promise()
-        .query('SELECT * FROM evento WHERE IdEvento = ?', [id]) as [any[], any];
-
-      if ((rows as any[]).length === 0) {
+      const [rows] = await pool.query('SELECT * FROM Evento WHERE IdEvento = ?', [id]) as [any[], any];
+      if (rows.length === 0) {
         return new Response('Evento no encontrado', { status: 404 });
       }
-
-      return Response.json((rows as any[])[0]); // Devuelve un evento específico
+      return Response.json(rows[0]);
     } else {
-      const [rows] = await conn.promise().query('SELECT * FROM evento');
-      return Response.json(rows); // Devuelve todos los eventos
+      const [rows] = await pool.query('SELECT * FROM Evento') as [any[], any];
+      return Response.json(rows);
     }
   } catch (err) {
-    console.error(err);
+    console.error('Error en GET eventos:', err);
     return new Response('Error al obtener eventos', { status: 500 });
   }
 }
-// ✅ GET Todos: http://localhost:3000/api/eventos
-// ✅ GET Por ID: http://localhost:3000/api/eventos?id=1
 
-// ✅ Crear un nuevo evento
+// ✅ POST: Crear nuevo evento
 export async function POST(req: NextRequest) {
   try {
     const { nombre, desCorta, desLarga, fecha, hora, lugar } = await req.json();
@@ -38,20 +32,19 @@ export async function POST(req: NextRequest) {
       return new Response('Todos los campos son requeridos', { status: 400 });
     }
 
-    const conn = await getConnection();
-
-    // Verifica que no haya evento con el mismo nombre
-    const [exists] = await conn
-      .promise()
-      .query('SELECT * FROM evento WHERE Nombre = ?', [nombre]);
-    if ((exists as any[]).length > 0) {
+    const pool = await getConnection();
+    const [exists] = await pool.query(
+      'SELECT * FROM Evento WHERE Nombre = ?',
+      [nombre.trim()]
+    ) as [any[], any];
+    if (exists.length > 0) {
       return new Response('Ya existe un evento con ese nombre', { status: 409 });
     }
 
-    const [result] = await conn.promise().query(
-      `INSERT INTO evento (Nombre, DesCorta, DesLarga, Fecha, Hora, Lugar)
+    const [result] = await pool.query(
+      `INSERT INTO Evento (Nombre, DesCorta, DesLarga, Fecha, Hora, Lugar)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [nombre, desCorta, desLarga, fecha, hora, lugar]
+      [nombre.trim(), desCorta.trim(), desLarga.trim(), fecha, hora, lugar.trim()]
     );
 
     return Response.json({
@@ -59,22 +52,12 @@ export async function POST(req: NextRequest) {
       id: (result as any).insertId,
     });
   } catch (err) {
-    console.error(err);
+    console.error('Error en POST eventos:', err);
     return new Response('Error al crear evento', { status: 500 });
   }
 }
-// ✅ POST: http://localhost:3000/api/eventos
-// JSON Body:
-// {
-//   "nombre": "Feria tecnológica",
-//   "desCorta": "Exposición de proyectos",
-//   "desLarga": "Evento para mostrar innovaciones tecnológicas",
-//   "fecha": "2025-07-01",
-//   "hora": "10:00",
-//   "lugar": "Auditorio UPQROO"
-// }
 
-// ✅ Actualizar un evento por ID (?id=)
+// ✅ PUT: Actualizar evento por ID
 export async function PUT(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get('id');
@@ -84,63 +67,54 @@ export async function PUT(req: NextRequest) {
       return new Response('Todos los campos son requeridos', { status: 400 });
     }
 
-    const conn = await getConnection();
+    const pool = await getConnection();
 
-    // Verifica que el ID exista
-    const [exists] = await conn
-      .promise()
-      .query('SELECT * FROM evento WHERE IdEvento = ?', [id]);
-    if ((exists as any[]).length === 0) {
+    const [exists] = await pool.query('SELECT * FROM Evento WHERE IdEvento = ?', [id]) as [any[], any];
+    if (exists.length === 0) {
       return new Response('Evento no encontrado', { status: 404 });
     }
 
-    // Verifica que no exista otro evento con el mismo nombre
-    const [duplicate] = await conn
-      .promise()
-      .query('SELECT * FROM evento WHERE Nombre = ? AND IdEvento != ?', [nombre, id]);
-    if ((duplicate as any[]).length > 0) {
+    const [duplicate] = await pool.query(
+      'SELECT * FROM Evento WHERE Nombre = ? AND IdEvento != ?',
+      [nombre.trim(), id]
+    ) as [any[], any];
+    if (duplicate.length > 0) {
       return new Response('Ya existe otro evento con ese nombre', { status: 409 });
     }
 
-    await conn.promise().query(
-      `UPDATE evento
+    await pool.query(
+      `UPDATE Evento
        SET Nombre = ?, DesCorta = ?, DesLarga = ?, Fecha = ?, Hora = ?, Lugar = ?
        WHERE IdEvento = ?`,
-      [nombre, desCorta, desLarga, fecha, hora, lugar, id]
+      [nombre.trim(), desCorta.trim(), desLarga.trim(), fecha, hora, lugar.trim(), id]
     );
 
     return Response.json({ message: 'Evento actualizado' });
   } catch (err) {
-    console.error(err);
+    console.error('Error en PUT eventos:', err);
     return new Response('Error al actualizar evento', { status: 500 });
   }
 }
-// ✅ PUT: http://localhost:3000/api/eventos?id=1
-// JSON Body igual que en POST
 
-// ✅ Eliminar un evento por ID (?id=)
+// ✅ DELETE: Eliminar evento por ID
 export async function DELETE(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get('id');
+    if (!id || isNaN(Number(id))) {
+      return new Response('ID válido requerido', { status: 400 });
+    }
 
-    if (!id) return new Response('ID requerido', { status: 400 });
-
-    const conn = await getConnection();
-
-    // Verifica que el evento exista
-    const [exists] = await conn
-      .promise()
-      .query('SELECT * FROM evento WHERE IdEvento = ?', [id]);
-    if ((exists as any[]).length === 0) {
+    const pool = await getConnection();
+    const [exists] = await pool.query('SELECT * FROM Evento WHERE IdEvento = ?', [id]) as [any[], any];
+    if (exists.length === 0) {
       return new Response('Evento no encontrado', { status: 404 });
     }
 
-    await conn.promise().query('DELETE FROM evento WHERE IdEvento = ?', [id]);
+    await pool.query('DELETE FROM Evento WHERE IdEvento = ?', [id]);
 
     return Response.json({ message: 'Evento eliminado' });
   } catch (err) {
-    console.error(err);
+    console.error('Error en DELETE eventos:', err);
     return new Response('Error al eliminar evento', { status: 500 });
   }
 }
-// ✅ DELETE: http://localhost:3000/api/eventos?id=1

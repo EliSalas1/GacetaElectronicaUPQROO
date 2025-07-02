@@ -4,26 +4,22 @@ import getConnection from '@/lib/db';
 // ✅ GET: Obtener todos los logros o uno por ID
 export async function GET(req: NextRequest) {
   try {
-    const conn = await getConnection();
+    const pool = await getConnection();
     const id = req.nextUrl.searchParams.get('id');
 
     if (id) {
-      const [rows] = await conn
-        .promise()
-        .query('SELECT * FROM logros WHERE IdLogro = ?', [id]) as [any[], any];
-
+      const [rows] = await pool.query('SELECT * FROM Logros WHERE IdLogro = ?', [id]) as [any[], any];
       if (rows.length === 0) {
         return new Response('Logro no encontrado', { status: 404 });
       }
-
       return Response.json(rows[0]);
     } else {
-      const [rows] = await conn.promise().query('SELECT * FROM logros');
+      const [rows] = await pool.query('SELECT * FROM Logros') as [any[], any];
       return Response.json(rows);
     }
   } catch (err) {
-    console.error(err);
-    return new Response('Error en la base de datos', { status: 500 });
+    console.error('Error en GET logros:', err);
+    return new Response('Error al obtener logros', { status: 500 });
   }
 }
 
@@ -36,18 +32,19 @@ export async function POST(req: NextRequest) {
       return new Response('Título y descripción son requeridos', { status: 400 });
     }
 
-    const conn = await getConnection();
-    const [result] = await conn
-      .promise()
-      .query('INSERT INTO logros (Titulo, Descripcion) VALUES (?, ?)', [titulo, descripcion]);
+    const pool = await getConnection();
+    const [result] = await pool.query(
+      'INSERT INTO Logros (Titulo, Descripcion) VALUES (?, ?)',
+      [titulo.trim(), descripcion.trim()]
+    );
 
     return Response.json({
       message: 'Logro creado',
       id: (result as any).insertId,
     });
   } catch (err) {
-    console.error(err);
-    return new Response('Error al insertar el logro', { status: 500 });
+    console.error('Error en POST logros:', err);
+    return new Response('Error al crear logro', { status: 500 });
   }
 }
 
@@ -61,15 +58,21 @@ export async function PUT(req: NextRequest) {
       return new Response('ID, título y descripción son requeridos', { status: 400 });
     }
 
-    const conn = await getConnection();
-    await conn
-      .promise()
-      .query('UPDATE logros SET Titulo = ?, Descripcion = ? WHERE IdLogro = ?', [titulo, descripcion, id]);
+    const pool = await getConnection();
+    const [exists] = await pool.query('SELECT * FROM Logros WHERE IdLogro = ?', [id]) as [any[], any];
+    if (exists.length === 0) {
+      return new Response('Logro no encontrado', { status: 404 });
+    }
+
+    await pool.query(
+      'UPDATE Logros SET Titulo = ?, Descripcion = ? WHERE IdLogro = ?',
+      [titulo.trim(), descripcion.trim(), id]
+    );
 
     return Response.json({ message: 'Logro actualizado' });
   } catch (err) {
-    console.error(err);
-    return new Response('Error al actualizar el logro', { status: 500 });
+    console.error('Error en PUT logros:', err);
+    return new Response('Error al actualizar logro', { status: 500 });
   }
 }
 
@@ -78,16 +81,21 @@ export async function DELETE(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get('id');
 
-    if (!id) {
-      return new Response('ID es requerido', { status: 400 });
+    if (!id || isNaN(Number(id))) {
+      return new Response('ID válido requerido', { status: 400 });
     }
 
-    const conn = await getConnection();
-    await conn.promise().query('DELETE FROM logros WHERE IdLogro = ?', [id]);
+    const pool = await getConnection();
+    const [exists] = await pool.query('SELECT * FROM Logros WHERE IdLogro = ?', [id]) as [any[], any];
+    if (exists.length === 0) {
+      return new Response('Logro no encontrado', { status: 404 });
+    }
+
+    await pool.query('DELETE FROM Logros WHERE IdLogro = ?', [id]);
 
     return Response.json({ message: 'Logro eliminado' });
   } catch (err) {
-    console.error(err);
-    return new Response('Error al eliminar el logro', { status: 500 });
+    console.error('Error en DELETE logros:', err);
+    return new Response('Error al eliminar logro', { status: 500 });
   }
 }
