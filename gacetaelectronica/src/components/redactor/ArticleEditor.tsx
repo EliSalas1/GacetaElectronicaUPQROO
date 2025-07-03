@@ -99,7 +99,7 @@ export default function ArticleEditor() {
             <Label htmlFor="summary">Resumen</Label>
             <Textarea
               id="summary"
-              placeholder="Escribe un resumen breve del artículo"
+              placeholder="Escribe un resumen máximo de 300 palabras"
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               rows={3}
