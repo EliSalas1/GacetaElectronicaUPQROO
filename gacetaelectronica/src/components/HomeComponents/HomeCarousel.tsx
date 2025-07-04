@@ -36,7 +36,7 @@ export default function HomeCarousel() {
               >
                 {/* Text content */}
                 <div className="w-full md:w-1/2 p-4 flex flex-col justify-center">
-                  <span className="inline-block px-2 py-1 rounded-full text-xs mb-2 bg-green-100 text-green-800 w-fit">
+                  <span className="inline-block px-2 py-1 rounded-full text-xs mb-2 bg-gray-200 text-black w-fit">
                     {item.category}
                   </span>
                   <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
