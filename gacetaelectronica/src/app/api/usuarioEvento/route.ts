@@ -44,3 +44,72 @@ export async function GET(req: NextRequest) {
 GET de eventos segun usuario http://localhost:3000/api/usuarioEvento?usuarioId=1
 GET usuarios segun evento http://localhost:3000/api/usuarioEvento?eventoId=2
 */
+
+// ✅ Crear relación Usuario - Evento
+export async function POST(req: NextRequest) {
+  try {
+    const conn = await getConnection();
+    const body = await req.json();
+
+    const { usuariosId, eventosId } = body;
+
+    if (!usuariosId || !eventosId) {
+      return new Response('usuariosId y eventosId son requeridos', { status: 400 });
+    }
+
+    const usuarios = Array.isArray(usuariosId) ? usuariosId : [usuariosId];
+    const eventos = Array.isArray(eventosId) ? eventosId : [eventosId];
+
+    // ✅ Validar existencia de usuarios
+    const [usuariosExist] = await conn.query(
+      `SELECT idUsuarios FROM Usuarios WHERE idUsuarios IN (${usuarios.map(() => '?').join(',')})`,
+      usuarios
+    );
+    if ((usuariosExist as any[]).length !== usuarios.length) {
+      return new Response('Uno o más usuarios no existen', { status: 400 });
+    }
+
+    // ✅ Validar existencia de eventos
+    const [eventosExist] = await conn.query(
+      `SELECT IdEvento FROM Evento WHERE IdEvento IN (${eventos.map(() => '?').join(',')})`,
+      eventos
+    );
+    if ((eventosExist as any[]).length !== eventos.length) {
+      return new Response('Uno o más eventos no existen', { status: 400 });
+    }
+
+    // ✅ Insertar relaciones evitando duplicados
+    for (const usuarioId of usuarios) {
+      for (const eventoId of eventos) {
+        const [existing] = await conn.query(
+          `SELECT * FROM UsuarioEvento WHERE Usuarios_IdUsuarios = ? AND Evento_IdEvento = ?`,
+          [usuarioId, eventoId]
+        );
+
+        if ((existing as any[]).length === 0) {
+          await conn.query(
+            `INSERT INTO UsuarioEvento (Usuarios_IdUsuarios, Evento_IdEvento) VALUES (?, ?)`,
+            [usuarioId, eventoId]
+          );
+        }
+      }
+    }
+
+    return Response.json({ message: 'Relación(es) Usuario-Evento creada(s)' });
+  } catch (err) {
+    console.error(err);
+    return new Response('Error al crear relación Usuario-Evento', { status: 500 });
+  }
+}
+
+/*
+🧪 POST Endpoint:
+http://localhost:3000/api/usuarioEvento
+
+📦 JSON Body Ejemplo 1:
+{
+  "usuariosId": [1, 2], 
+  "eventosId": 3
+}
+  Puede ser de esa forma o con mas eventos y solo un usuario
+*/
