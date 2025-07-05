@@ -42,3 +42,68 @@ export async function GET(req: NextRequest) {
 GET etiquetas segun articulo http://localhost:3000/api/articuloEtiqueta?articuloId=1
 GET articulos segun etiqueta http://localhost:3000/api/articuloEtiqueta?etiquetaId=2
 */
+
+// ✅ Crear relación Artículo-Etiqueta con múltiples inserciones
+export async function POST(req: NextRequest) {
+  try {
+    const conn = await getConnection();
+    const body = await req.json();
+
+    const { articulos, etiquetas } = body;
+
+    if (!articulos || !etiquetas || !Array.isArray(articulos) || !Array.isArray(etiquetas)) {
+      return new Response('Debes enviar arrays de articulos y etiquetas', { status: 400 });
+    }
+
+    // 🔍 Validar existencia de artículos
+    const [articulosExist] = await conn.query(
+      `SELECT IdArticulo FROM Articulos WHERE IdArticulo IN (${articulos.map(() => '?').join(',')})`,
+      articulos
+    );
+    if ((articulosExist as any[]).length !== articulos.length) {
+      return new Response('Uno o más articulos no existen', { status: 400 });
+    }
+
+    // 🔍 Validar existencia de etiquetas
+    const [etiquetasExist] = await conn.query(
+      `SELECT IdEtiqueta FROM Etiquetas WHERE IdEtiqueta IN (${etiquetas.map(() => '?').join(',')})`,
+      etiquetas
+    );
+    if ((etiquetasExist as any[]).length !== etiquetas.length) {
+      return new Response('Uno o más etiquetas no existen', { status: 400 });
+    }
+
+    // Insertar relaciones evitando duplicados
+    for (const articuloId of articulos) {
+      for (const etiquetaId of etiquetas) {
+        const [existing] = await conn.query(
+          `SELECT * FROM ArticuloEtiqueta WHERE Articulos_idArticulo = ? AND Etiquetas_IdEtiqueta = ?`,
+          [articuloId, etiquetaId]
+        );
+
+        if ((existing as any[]).length === 0) {
+          await conn.query(
+            `INSERT INTO ArticuloEtiqueta (Articulos_idArticulo, Etiquetas_IdEtiqueta) VALUES (?, ?)`,
+            [articuloId, etiquetaId]
+          );
+        }
+      }
+    }
+
+    return Response.json({ message: 'Relaciones Artículo-Etiqueta creadas con éxito'});
+  } catch (err) {
+    console.error(err);
+    return new Response('Error al crear relaciones Artículo-Etiqueta', { status: 500 });
+  }
+}
+
+/*
+🧪 POST Endpoint:
+http://localhost:3000/api/articuloEtiqueta
+
+📦 Body JSON de ejemplo:
+{
+  "articulos": [1],
+  "etiquetas": [2, 3]
+}
+*/
