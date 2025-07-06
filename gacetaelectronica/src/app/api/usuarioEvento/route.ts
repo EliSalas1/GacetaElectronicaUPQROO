@@ -38,7 +38,6 @@ export async function GET(req: NextRequest) {
     return new Response('Error en UsuarioEvento', { status: 500 });
   }
 }
-
 /*
 🧪 Endpoints de prueba:
 GET de eventos segun usuario http://localhost:3000/api/usuarioEvento?usuarioId=1

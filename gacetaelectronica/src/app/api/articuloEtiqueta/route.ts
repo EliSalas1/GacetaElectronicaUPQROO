@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import getConnection from '@/lib/db';
 
-// ✅ Obtener etiquetas por artículo o artículos por etiqueta
+/// ✅ Obtener etiquetas por artículo o artículos por etiqueta (GET)
 export async function GET(req: NextRequest) {
   try {
     const conn = await getConnection();
@@ -107,3 +107,63 @@ http://localhost:3000/api/articuloEtiqueta
   "etiquetas": [2, 3]
 }
 */
+
+// ✅ Actualizar relación entre artículo y etiqueta (PUT)
+export async function PUT(req: NextRequest) {
+  try {
+    const conn = await getConnection();
+    const { articuloId, etiquetaId, nuevaEtiquetaId } = await req.json();
+
+    if (!articuloId || !etiquetaId || !nuevaEtiquetaId) {
+      return new Response('Se requieren articuloId, etiquetaId y nuevaEtiquetaId', { status: 400 });
+    }
+
+    // ✅ Actualizar la relación entre el artículo y la nueva etiqueta
+    const [result]: any = await conn.query(
+      `UPDATE ArticuloEtiqueta 
+       SET Etiquetas_idEtiqueta = ? 
+       WHERE Articulos_idArticulo = ? AND Etiquetas_idEtiqueta = ?`,
+      [nuevaEtiquetaId, articuloId, etiquetaId]
+    );
+
+    // Verificamos si la actualización afectó filas
+    if (result && result.affectedRows > 0) {
+      return new Response('Relación actualizada correctamente', { status: 200 });
+    } else {
+      return new Response('No se encontró la relación para actualizar', { status: 404 });
+    }
+  } catch (err) {
+    console.error(err);
+    return new Response('Error al actualizar relación', { status: 500 });
+  }
+}
+
+// ✅ Eliminar relación entre artículo y etiqueta (DELETE)
+export async function DELETE(req: NextRequest) {
+  try {
+    const conn = await getConnection();
+    const articuloId = req.nextUrl.searchParams.get('articuloId');
+    const etiquetaId = req.nextUrl.searchParams.get('etiquetaId');
+
+    if (!articuloId || !etiquetaId) {
+      return new Response('Se requieren articuloId y etiquetaId', { status: 400 });
+    }
+
+    // ✅ Eliminar la relación entre el artículo y la etiqueta
+    const [result]: any = await conn.query(
+      `DELETE FROM ArticuloEtiqueta 
+       WHERE Articulos_idArticulo = ? AND Etiquetas_idEtiqueta = ?`,
+      [articuloId, etiquetaId]
+    );
+
+    // Verificamos si se eliminó correctamente
+    if (result && result.affectedRows > 0) {
+      return new Response('Relación eliminada correctamente', { status: 200 });
+    } else {
+      return new Response('No se encontró la relación para eliminar', { status: 404 });
+    }
+  } catch (err) {
+    console.error(err);
+    return new Response('Error al eliminar relación', { status: 500 });
+  }
+}
