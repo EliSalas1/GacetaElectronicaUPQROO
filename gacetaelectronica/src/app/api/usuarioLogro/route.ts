@@ -112,3 +112,91 @@ http://localhost:3000/api/usuarioLogro
 }
 Puede ser de esa forma o con mas usuarios y solo un logro
 */
+// ✅ Actualizar relación Usuario - Logro (PUT)
+export async function PUT(req: NextRequest) {
+  try {
+    const conn = await getConnection();
+    const body = await req.json();
+
+    const { usuarioId, logroId, nuevoLogroId } = body;
+
+    if (!usuarioId || !logroId || !nuevoLogroId) {
+      return new Response('usuarioId, logroId y nuevoLogroId son requeridos', { status: 400 });
+    }
+
+    // ✅ Validar existencia del usuario
+    const [usuarioExist] = await conn.query(
+      `SELECT idUsuarios FROM Usuarios WHERE idUsuarios = ?`,
+      [usuarioId]
+    );
+    if ((usuarioExist as any[]).length === 0) {
+      return new Response('El usuario no existe', { status: 400 });
+    }
+
+    // ✅ Validar existencia del logro original
+    const [logroExist] = await conn.query(
+      `SELECT IdLogro FROM Logros WHERE IdLogro = ?`,
+      [logroId]
+    );
+    if ((logroExist as any[]).length === 0) {
+      return new Response('El logro original no existe', { status: 400 });
+    }
+
+    // ✅ Validar existencia del nuevo logro
+    const [nuevoLogroExist] = await conn.query(
+      `SELECT IdLogro FROM Logros WHERE IdLogro = ?`,
+      [nuevoLogroId]
+    );
+    if ((nuevoLogroExist as any[]).length === 0) {
+      return new Response('El nuevo logro no existe', { status: 400 });
+    }
+
+    // ✅ Actualizar la relación entre el usuario y el nuevo logro
+    await conn.query(
+      `UPDATE UsuarioLogro 
+       SET Logros_IdLogro = ? 
+       WHERE Usuarios_IdUsuarios = ? AND Logros_IdLogro = ?`,
+      [nuevoLogroId, usuarioId, logroId]
+    );
+
+    return new Response('Relación actualizada correctamente', { status: 200 });
+  } catch (err) {
+    console.error(err);
+    return new Response('Error al actualizar relación Usuario-Logro', { status: 500 });
+  }
+}
+// ✅ Eliminar relación Usuario - Logro (DELETE)
+export async function DELETE(req: NextRequest) {
+  try {
+    const conn = await getConnection();
+    const usuarioId = req.nextUrl.searchParams.get('usuarioId');
+    const logroId = req.nextUrl.searchParams.get('logroId');
+
+    if (!usuarioId || !logroId) {
+      return new Response('Se requieren usuarioId y logroId', { status: 400 });
+    }
+
+    // ✅ Verificar si la relación existe
+    const [existing] = await conn.query(
+      `SELECT * FROM UsuarioLogro 
+       WHERE Usuarios_IdUsuarios = ? AND Logros_IdLogro = ?`,
+      [usuarioId, logroId]
+    );
+
+    if ((existing as any[]).length === 0) {
+      return new Response('La relación no existe', { status: 404 });
+    }
+
+    // ✅ Eliminar la relación entre el usuario y el logro
+    await conn.query(
+      `DELETE FROM UsuarioLogro 
+       WHERE Usuarios_IdUsuarios = ? AND Logros_IdLogro = ?`,
+      [usuarioId, logroId]
+    );
+
+    return new Response('Relación eliminada correctamente', { status: 200 });
+  } catch (err) {
+    console.error(err);
+    return new Response('Error al eliminar relación Usuario-Logro', { status: 500 });
+  }
+}

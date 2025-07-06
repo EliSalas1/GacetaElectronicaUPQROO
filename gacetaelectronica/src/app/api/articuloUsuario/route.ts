@@ -150,4 +150,3 @@ export async function DELETE(req: NextRequest) {
     return new Response('Error al eliminar relación', { status: 500 });
   }
 }
->>>>>>> Stashed changes

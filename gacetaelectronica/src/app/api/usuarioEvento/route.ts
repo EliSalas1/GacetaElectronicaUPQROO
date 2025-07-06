@@ -112,3 +112,91 @@ http://localhost:3000/api/usuarioEvento
 }
   Puede ser de esa forma o con mas eventos y solo un usuario
 */
+// ✅ Actualizar relación Usuario - Evento (PUT)
+export async function PUT(req: NextRequest) {
+  try {
+    const conn = await getConnection();
+    const body = await req.json();
+
+    const { usuarioId, eventoId, nuevoEventoId } = body;
+
+    if (!usuarioId || !eventoId || !nuevoEventoId) {
+      return new Response('usuarioId, eventoId y nuevoEventoId son requeridos', { status: 400 });
+    }
+
+    // ✅ Validar existencia del usuario
+    const [usuarioExist] = await conn.query(
+      `SELECT idUsuarios FROM Usuarios WHERE idUsuarios = ?`,
+      [usuarioId]
+    );
+    if ((usuarioExist as any[]).length === 0) {
+      return new Response('El usuario no existe', { status: 400 });
+    }
+
+    // ✅ Validar existencia del evento original
+    const [eventoExist] = await conn.query(
+      `SELECT IdEvento FROM Evento WHERE IdEvento = ?`,
+      [eventoId]
+    );
+    if ((eventoExist as any[]).length === 0) {
+      return new Response('El evento original no existe', { status: 400 });
+    }
+
+    // ✅ Validar existencia del nuevo evento
+    const [nuevoEventoExist] = await conn.query(
+      `SELECT IdEvento FROM Evento WHERE IdEvento = ?`,
+      [nuevoEventoId]
+    );
+    if ((nuevoEventoExist as any[]).length === 0) {
+      return new Response('El nuevo evento no existe', { status: 400 });
+    }
+
+    // ✅ Actualizar la relación entre el usuario y el evento
+    await conn.query(
+      `UPDATE UsuarioEvento 
+       SET Evento_IdEvento = ? 
+       WHERE Usuarios_IdUsuarios = ? AND Evento_IdEvento = ?`,
+      [nuevoEventoId, usuarioId, eventoId]
+    );
+
+    return new Response('Relación actualizada correctamente', { status: 200 });
+  } catch (err) {
+    console.error(err);
+    return new Response('Error al actualizar relación Usuario-Evento', { status: 500 });
+  }
+}
+// ✅ Eliminar relación Usuario - Evento (DELETE)
+export async function DELETE(req: NextRequest) {
+  try {
+    const conn = await getConnection();
+    const usuarioId = req.nextUrl.searchParams.get('usuarioId');
+    const eventoId = req.nextUrl.searchParams.get('eventoId');
+
+    if (!usuarioId || !eventoId) {
+      return new Response('Se requieren usuarioId y eventoId', { status: 400 });
+    }
+
+    // ✅ Verificar si la relación existe
+    const [existing] = await conn.query(
+      `SELECT * FROM UsuarioEvento 
+       WHERE Usuarios_IdUsuarios = ? AND Evento_IdEvento = ?`,
+      [usuarioId, eventoId]
+    );
+
+    if ((existing as any[]).length === 0) {
+      return new Response('La relación no existe', { status: 404 });
+    }
+
+    // ✅ Eliminar la relación entre el usuario y el evento
+    await conn.query(
+      `DELETE FROM UsuarioEvento 
+       WHERE Usuarios_IdUsuarios = ? AND Evento_IdEvento = ?`,
+      [usuarioId, eventoId]
+    );
+
+    return new Response('Relación eliminada correctamente', { status: 200 });
+  } catch (err) {
+    console.error(err);
+    return new Response('Error al eliminar relación Usuario-Evento', { status: 500 });
+  }
+}
