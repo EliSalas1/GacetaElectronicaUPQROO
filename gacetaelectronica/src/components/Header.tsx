@@ -84,12 +84,12 @@ export default function Header() {
               </div>
             </div>
 
-            <Link
-              href="/crear-articulo"
-              className="hover:text-orange-200 transition-colors duration-200 font-medium"
-            >
-              Guía para artículos
-            </Link>
+          <Link
+            href="/guia-articulo"
+            className="hover:text-orange-200 transition-colors"
+          >
+            Guía para artículos
+          </Link>
 
             {/* AUTH SECTION */}
             {!isLoggedIn ? (

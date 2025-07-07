@@ -10,6 +10,7 @@ import { useState } from "react"
 import { ArticleInterface } from "@/entities/article"
 import { EditArticleDialog } from "./EditArticleDialog"
 import { DeleteArticleDialog } from "./DeleteArticleDialog"
+import EventOverview from "./EventsOverview"
 
 const allArticles = [
   {
@@ -81,7 +82,7 @@ export default function ArticleOverview() {
   const [deleteOpen, setDeleteOpen] = useState(false)
 
   return (
-    <>
+    <main className="flex flex-col gap-6">
       <Card>
         <CardHeader>
           <CardTitle>Todos los Artículos</CardTitle>
@@ -158,6 +159,8 @@ export default function ArticleOverview() {
           setDeleteOpen(false)
         }}
       />
-    </>
+
+      <EventOverview />
+    </main>
   )
 }
