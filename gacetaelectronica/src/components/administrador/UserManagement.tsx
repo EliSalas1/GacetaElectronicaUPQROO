@@ -21,6 +21,7 @@ import { toast } from "sonner"
 import EditUserDialog from "./EditUserDialog"
 import { UserInterface } from "@/entities/user"
 import DeleteUserDialog from "./DeleteUserDialog"
+import FilterSearchBar from "../FilterSearchBar"
 
 const mockUsers = [
   {
@@ -132,48 +133,64 @@ export default function UserManagement() {
               <CardTitle>Gestión de Usuarios</CardTitle>
               <CardDescription>Administra las cuentas de redactores y supervisores</CardDescription>
             </div>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Nuevo Usuario
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Crear Nuevo Usuario</DialogTitle>
-                  <DialogDescription>Agrega un nuevo usuario al sistema</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="usuario@universidad.edu"
-                      value={newUserEmail}
-                      onChange={(e) => setNewUserEmail(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="w-full" htmlFor="role">Rol</Label>
-                    <Select value={newUserRole} onValueChange={setNewUserRole}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Selecciona un rol" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="redactor">Redactor</SelectItem>
-                        <SelectItem value="supervisor">Supervisor</SelectItem>
-                        <SelectItem value="admin">Administrador</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button onClick={handleCreateUser} disabled={!newUserEmail || !newUserRole} className="w-full">
-                    Crear Usuario
+            <div className="flex gap-4">
+              <FilterSearchBar
+                searchValue={""}
+                onSearchChange={() => {}}
+                filterBy={""}
+                onFilterByChange={() => {}}
+                filterValue={""}
+                onFilterValueChange={() => {}}
+                availableFields={[
+                  { label: "Categoría", value: "category" },
+                  { label: "Estado", value: "status" },
+                  { label: "Fecha", value: "createdAt" }
+                ]}
+                getFilterValues={(field) => []}
+              />
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Nuevo Usuario
                   </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Crear Nuevo Usuario</DialogTitle>
+                    <DialogDescription>Agrega un nuevo usuario al sistema</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="usuario@universidad.edu"
+                        value={newUserEmail}
+                        onChange={(e) => setNewUserEmail(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="w-full" htmlFor="role">Rol</Label>
+                      <Select value={newUserRole} onValueChange={setNewUserRole}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecciona un rol" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="redactor">Redactor</SelectItem>
+                          <SelectItem value="supervisor">Supervisor</SelectItem>
+                          <SelectItem value="admin">Administrador</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button onClick={handleCreateUser} disabled={!newUserEmail || !newUserRole} className="w-full">
+                      Crear Usuario
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
