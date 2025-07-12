@@ -5,7 +5,7 @@ import { eventos } from "@/entities/article";
 import EventModal from "@/components/HomeComponents/EventModal";
 import { Event } from "@/entities/user";
 import { CalendarDays, Clock, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 
 
 export default function Events() {
@@ -17,7 +17,7 @@ export default function Events() {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold">Próximos Eventos</h2>
 
-        <Button
+        {/* <Button
           asChild
           variant="outline"
           className="ml-4 bg-white text-[#4C0000] border border-[#4C0000] hover:bg-[#4C0000] hover:text-white text-sm px-3 py-1 h-auto"
@@ -25,7 +25,7 @@ export default function Events() {
           <a href="#eventos" className="flex items-center gap-2">
             Ver todos →
           </a>
-        </Button>
+        </Button> */}
       </div>
 
       {/* Separador debajo del header */}

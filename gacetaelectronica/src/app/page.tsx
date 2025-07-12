@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 
 import HomeCarousel from "@/components/HomeComponents/HomeCarousel";
 import About from "@/components/HomeComponents/About";
-import SearchBar from "@/components/HomeComponents/SearchBar";
+// import SearchBar from "@/components/HomeComponents/SearchBar";
 import NoticesList from "@/components/HomeComponents/NoticesList";
 import Events from "@/components/HomeComponents/Events";
 import Contact from "@/components/HomeComponents/Contact";
@@ -34,7 +34,8 @@ export default function HomePage() {
 
       {/* Sección informativa: Acerca de + Búsqueda */}
       <About />
-      <SearchBar />
+
+      {/* <SearchBar /> */}
 
       {/* Sección combinada: Noticias y Eventos */}
       <section className="py-12 bg-gray-50">
