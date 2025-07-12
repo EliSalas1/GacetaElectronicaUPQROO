@@ -64,11 +64,11 @@ export async function GET(req: NextRequest) {
       }
 
       if (include.includes('etiquetas')) {
-        const [etiquetas] = await pool.query(`
-          SELECT e.* FROM Etiquetas e
-          JOIN ArticuloEtiqueta ae ON e.IdEtiqueta = ae.Etiquetas_IdEtiqueta
-          WHERE ae.Articulos_idArticulo = ?
-        `, [id]) as [any[], any];
+        const [etiquetas] = await pool.query(` 
+          SELECT e.* FROM Etiquetas e 
+          JOIN ArticuloEtiqueta ae ON e.IdEtiqueta = ae.Etiquetas_IdEtiqueta 
+          WHERE ae.Articulos_idArticulo = ?`, [id]
+        ) as [any[], any];
         articulo.Etiquetas = etiquetas;
       }
 
@@ -119,32 +119,28 @@ export async function GET(req: NextRequest) {
 // ✅ POST: Crear nuevo artículo
 export async function POST(req: NextRequest) {
   try {
-    const { Titulo, Resumen, Contenido, IdCategoria, IdAutor } = await req.json();
+    const { Titulo, Resumen, Contenido, IdCategoria } = await req.json();
 
-    if (!Titulo || !Resumen || !Contenido || !IdCategoria || !IdAutor) {
+    if (!Titulo || !Resumen || !Contenido || !IdCategoria) {
       return new Response('Todos los campos son requeridos', { status: 400 });
     }
 
     const pool = await getConnection();
 
+    // Verifica si la categoría existe
     const [categoriaExist] = await pool.query(
       'SELECT * FROM Categorias WHERE IdCategoria = ?', [IdCategoria]
     ) as [any[], any];
+
     if (categoriaExist.length === 0) {
       return new Response('Categoría no encontrada', { status: 404 });
     }
 
-    const [autorExist] = await pool.query(
-      'SELECT * FROM Usuarios WHERE IdUsuarios = ? AND Rol = "autor"', [IdAutor]
-    ) as [any[], any];
-    if (autorExist.length === 0) {
-      return new Response('Autor no encontrado o no tiene rol válido', { status: 404 });
-    }
-
+    // Inserta el nuevo artículo
     const [result] = await pool.query(
-      `INSERT INTO Articulos (Titulo, Resumen, Contenido, IdCategoria, IdAutor, FechaCreacion, Estatus)
-       VALUES (?, ?, ?, ?, ?, NOW(), 1)`,
-      [Titulo.trim(), Resumen.trim(), Contenido.trim(), IdCategoria, IdAutor]
+      `INSERT INTO Articulos (Titulo, Resumen, Contenido, IdCategoria, FechaCreacion, Estatus)
+       VALUES (?, ?, ?, ?, NOW(), 1)`,
+      [Titulo.trim(), Resumen.trim(), Contenido.trim(), IdCategoria]
     );
 
     return Response.json({
@@ -161,7 +157,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get('id');
-    const { Titulo, Resumen, Contenido, IdCategoria, IdRevisor, Comentario, Estatus } = await req.json();
+    const { Titulo, Resumen, Contenido, IdCategoria, Estatus } = await req.json();
 
     if (!id || isNaN(Number(id))) {
       return new Response('ID válido requerido', { status: 400 });
@@ -185,15 +181,6 @@ export async function PUT(req: NextRequest) {
       }
     }
 
-    if (IdRevisor) {
-      const [revisorExist] = await pool.query(
-        'SELECT * FROM Usuarios WHERE IdUsuarios = ? AND Rol = "revisor"', [IdRevisor]
-      ) as [any[], any];
-      if (revisorExist.length === 0) {
-        return new Response('Revisor no encontrado o no tiene rol válido', { status: 404 });
-      }
-    }
-
     let query = 'UPDATE Articulos SET ';
     const params = [];
     const updates = [];
@@ -202,13 +189,7 @@ export async function PUT(req: NextRequest) {
     if (Resumen) { updates.push('Resumen = ?'); params.push(Resumen.trim()); }
     if (Contenido) { updates.push('Contenido = ?'); params.push(Contenido.trim()); }
     if (IdCategoria) { updates.push('IdCategoria = ?'); params.push(IdCategoria); }
-    if (IdRevisor) { updates.push('IdRevisor = ?'); params.push(IdRevisor); }
-    if (Comentario !== undefined) { updates.push('Comentario = ?'); params.push(Comentario.trim()); }
-    if (Estatus !== undefined) {
-      updates.push('Estatus = ?');
-      params.push(Estatus);
-      if (Estatus === 3) updates.push('FechaRevision = NOW()');
-    }
+    if (Estatus !== undefined) { updates.push('Estatus = ?'); params.push(Estatus); }
 
     if (updates.length === 0) {
       return new Response('No hay datos para actualizar', { status: 400 });

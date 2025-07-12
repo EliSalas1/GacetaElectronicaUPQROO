@@ -1,5 +1,6 @@
 import mysql, { Pool } from 'mysql2/promise';
 import { exec, ChildProcess } from 'child_process';
+import os from 'os';
 
 let pool: Pool | null = null;
 let sshProcess: ChildProcess | null = null;
@@ -21,7 +22,11 @@ async function openSshTunnel(): Promise<void> {
   return new Promise((resolve, reject) => {
     if (tunnelEstablished) return resolve();
 
-    const sshCommand = `"C:\\plink.exe" -ssh gestionvinculacion@academico.upqroo.edu.mx -P 22 -pw GVUpqroo25* -N -L 3307:localhost:3306`;
+    // Verifica el sistema operativo para decidir el comando adecuado
+    const isWindows = os.platform() === 'win32';
+    const sshCommand = isWindows
+      ? `"C:\\plink.exe" -ssh gestionvinculacion@academico.upqroo.edu.mx -P 22 -pw GVUpqroo25* -N -L 3307:localhost:3306`
+      : `ssh -N -L 3307:localhost:3306 gestionvinculacion@academico.upqroo.edu.mx -p 22`;
 
     sshProcess = exec(sshCommand, (error) => {
       if (error) {
