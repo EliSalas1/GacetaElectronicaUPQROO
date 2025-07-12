@@ -3,12 +3,14 @@
 import { Button } from "@/components/ui/button"
 import CustomDialog from "../Dialog"
 import { UserInterface } from "@/entities/user"
+import { useState } from "react"
+import { Spinner } from "../Spinner"
 
 interface EliminarUsuarioDialogProps {
   isOpen: boolean
   setIsOpen: (open: boolean) => void
   usuario: UserInterface
-  onConfirm: () => void
+  onConfirm: (idUsuarios: number) => void
 }
 
 export default function DeleteUserDialog({
@@ -17,6 +19,14 @@ export default function DeleteUserDialog({
   usuario,
   onConfirm,
 }: EliminarUsuarioDialogProps) {
+  const [loading, setLoading] = useState(false)
+
+  const onConfirmHandler = async () => {
+    setLoading(true)
+    await onConfirm(usuario.idUsuarios)
+    setLoading(false)
+  }
+
   return (
     <CustomDialog
       isOpen={isOpen}
@@ -33,15 +43,15 @@ export default function DeleteUserDialog({
           <Button variant="outline" onClick={() => setIsOpen(false)}>
             Cancelar
           </Button>
-          <Button variant="destructive" onClick={onConfirm}>
-            Eliminar
+          <Button disabled={loading} variant={loading ? "ghost" : "destructive"} onClick={() => onConfirmHandler()}>
+            {loading ? <Spinner/> : "Eliminar"}
           </Button>
         </div>
       }
     >
       <p>
-        Estás a punto de eliminar al usuario <strong>{usuario.name}</strong> (
-        {usuario.email}). Esta acción no se puede deshacer.
+        Estás a punto de eliminar al usuario <strong>{usuario.Nombre}</strong> (
+        {usuario.Correo}). Esta acción no se puede deshacer.
       </p>
     </CustomDialog>
   )

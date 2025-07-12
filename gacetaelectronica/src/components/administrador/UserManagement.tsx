@@ -22,49 +22,8 @@ import EditUserDialog from "./EditUserDialog"
 import { UserInterface } from "@/entities/user"
 import DeleteUserDialog from "./DeleteUserDialog"
 import FilterSearchBar from "../FilterSearchBar"
-
-const mockUsers = [
-  {
-    id: 1,
-    name: "María González",
-    email: "maria.gonzalez@universidad.edu",
-    role: "redactor",
-    status: "active",
-    createdAt: "2024-01-10",
-  },
-  {
-    id: 2,
-    name: "Carlos Rodríguez",
-    email: "carlos.rodriguez@universidad.edu",
-    role: "supervisor",
-    status: "active",
-    createdAt: "2024-01-08",
-  },
-  {
-    id: 3,
-    name: "Ana Martínez",
-    email: "ana.martinez@universidad.edu",
-    role: "redactor",
-    status: "inactive",
-    createdAt: "2024-01-05",
-  },
-  {
-    id: 4,
-    name: "Luis Pérez",
-    email: "luis.perez@universidad.edu",
-    role: "redactor",
-    status: "active",
-    createdAt: "2024-01-03",
-  },
-  {
-    id: 5,
-    name: "Carmen López",
-    email: "carmen.lopez@universidad.edu",
-    role: "supervisor",
-    status: "active",
-    createdAt: "2024-01-01",
-  },
-]
+import { useFetch } from "@/hooks/useFetch"
+import { Spinner } from "../Spinner"
 
 export default function UserManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -73,25 +32,28 @@ export default function UserManagement() {
   const [newUserRole, setNewUserRole] = useState("")
   const [selectedUser, setSelectedUser] = useState<UserInterface | null>(null)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const {data, loading} = useFetch<UserInterface[]>('api/usuarios')
 
   const getRoleBadge = (role: string) => {
     switch (role) {
-      case "admin":
+      case "Admin":
         return <Badge className="bg-purple-100 text-purple-800">Administrador</Badge>
-      case "supervisor":
-        return <Badge className="bg-blue-100 text-blue-800">Supervisor</Badge>
-      case "redactor":
-        return <Badge className="bg-green-100 text-green-800">Redactor</Badge>
+      case "Autor":
+        return <Badge className="bg-blue-100 text-blue-800">Autor</Badge>
+      case "Revisor":
+        return <Badge className="bg-green-100 text-green-800">Revisor</Badge>
+      case "Usuario":
+        return <Badge className="bg-green-100 text-green-800">Usuario</Badge>
       default:
         return <Badge variant="outline">Desconocido</Badge>
     }
   }
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: number) => {
     switch (status) {
-      case "active":
+      case 1:
         return <Badge className="bg-green-100 text-green-800">Activo</Badge>
-      case "inactive":
+      case 0:
         return <Badge className="bg-gray-100 text-gray-800">Inactivo</Badge>
       default:
         return <Badge variant="outline">Desconocido</Badge>
@@ -107,11 +69,35 @@ export default function UserManagement() {
     setIsDialogOpen(false)
   }
 
-  // const handleUserAction = (action: string, userName: string) => {
-  //   toast.message(`${action} usuario`,{
-  //     description: `Acción "${action}" realizada en ${userName}`,
-  //   })
-  // }
+  async function deleteUser(id: number): Promise<void> {
+    if (!id || isNaN(id)) {
+      toast.error("ID de usuario inválido");
+      return;
+    }
+
+    const url = `/api/usuarios?id=${id}`;
+
+    try {
+      const res = await fetch(url, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || res.statusText);
+      }
+
+      const json = await res.json();
+
+      toast.success(json.message || "Usuario eliminado correctamente");
+    } catch (err) {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error("Ocurrió un error desconocido");
+      }
+    }
+  }
 
   const handleEditClick = (usuario: UserInterface) => {
     setSelectedUser(usuario)
@@ -206,25 +192,26 @@ export default function UserManagement() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{getRoleBadge(user.role)}</TableCell>
-                  <TableCell>{getStatusBadge(user.status)}</TableCell>
-                  <TableCell>{user.createdAt}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleEditClick(user)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(user)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                {loading ? <TableRow><Spinner/></TableRow> : ""}
+                {Array.isArray(data) && data.map((user) => (
+                  <TableRow key={user.idUsuarios}>
+                    <TableCell className="font-medium">{user.Nombre}</TableCell>
+                    <TableCell>{user.Correo}</TableCell>
+                    <TableCell>{getRoleBadge(user.Rol)}</TableCell>
+                    <TableCell>{getStatusBadge(Number(user.Estado))}</TableCell>
+                    <TableCell>{user.FechaCreacion}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => handleEditClick(user)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(user)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </CardContent>
@@ -247,7 +234,7 @@ export default function UserManagement() {
               if (!open) setSelectedUser(null)
             }}
             usuario={selectedUser}
-            onConfirm={() => {}}
+            onConfirm={deleteUser}
           />
         </>
       )}
