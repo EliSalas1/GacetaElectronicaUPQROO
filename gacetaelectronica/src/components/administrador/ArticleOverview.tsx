@@ -5,12 +5,13 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Eye, Edit, Trash2 } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { ArticleInterface } from "@/entities/article"
 import { EditArticleDialog } from "./EditArticleDialog"
 import { DeleteArticleDialog } from "./DeleteArticleDialog"
 import EventOverview from "./EventsOverview"
+import { ViewArticleDialog } from "./ViewArticleDialog"
+import FilterSearchBar from "../FilterSearchBar"
 
 const allArticles = [
   {
@@ -76,17 +77,35 @@ const getStatusBadge = (status: string) => {
 }
 
 export default function ArticleOverview() {
-  const router = useRouter()
   const [selectedArticle, setSelectedArticle] = useState<Partial<ArticleInterface> | null>(null)
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [viewOpen, setViewOpen] = useState(false)
 
   return (
     <main className="flex flex-col gap-6">
       <Card>
-        <CardHeader>
-          <CardTitle>Todos los Artículos</CardTitle>
-          <CardDescription>Vista general de todos los artículos en el sistema</CardDescription>
+        <CardHeader className="flex justify-between">
+          <div>
+            <CardTitle>Todos los Artículos</CardTitle>
+            <CardDescription>Vista general de todos los artículos en el sistema</CardDescription>
+          </div>
+          <div>
+            <FilterSearchBar
+              searchValue={""}
+              onSearchChange={() => {}}
+              filterBy={""}
+              onFilterByChange={() => {}}
+              filterValue={""}
+              onFilterValueChange={() => {}}
+              availableFields={[
+                { label: "Categoría", value: "category" },
+                { label: "Estado", value: "status" },
+                { label: "Fecha", value: "createdAt" }
+              ]}
+              getFilterValues={(field) => []}
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -110,7 +129,14 @@ export default function ArticleOverview() {
                   <TableCell>{article.createdAt}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => router.push(`administrador/articulo/${article.id}`)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedArticle(article)
+                          setViewOpen(true)
+                        }}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => {
@@ -159,7 +185,14 @@ export default function ArticleOverview() {
           setDeleteOpen(false)
         }}
       />
-
+      <ViewArticleDialog
+        open={viewOpen}
+        onOpenChange={(value) => {
+          setViewOpen(value)
+          if (!value) setSelectedArticle(null)
+        }}
+        article={selectedArticle}
+      />
       <EventOverview />
     </main>
   )

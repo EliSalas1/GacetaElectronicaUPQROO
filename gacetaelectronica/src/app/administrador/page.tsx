@@ -8,6 +8,8 @@ import UserManagement from "@/components/administrador/UserManagement"
 import ArticleOverview from "@/components/administrador/ArticleOverview"
 import PrivateHeader from "@/components/PrivateHeader"
 import AgregarEvento from "@/components/administrador/AgregarEvento"
+import { useFetch } from "@/hooks/useFetch"
+import { Spinner } from "@/components/Spinner"
 
 // import { useInitializeUser } from "@/hooks/useInitializeUser"
 
@@ -21,9 +23,9 @@ import AgregarEvento from "@/components/administrador/AgregarEvento"
 // }
 
 export default function Page() {
-
-  // useInitializeUser("Administrador")
  const [activeTab, setActiveTab] = useState("overview")
+ const {data, loading} = useFetch('api/usuarios')
+ const {data: dataArticulos, loading: loadingArticulos} = useFetch('api/articulos')
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -52,8 +54,14 @@ export default function Page() {
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">24</div>
-                  <p className="text-xs text-muted-foreground">+2 desde el mes pasado</p>
+                  {
+                    loading 
+                      ? <Spinner/>
+                      : <>
+                          <div className="text-2xl font-bold">{Array.isArray(data) ? data.length : ''}</div>
+                          <p className="text-xs text-muted-foreground">+2 desde el mes pasado</p>
+                        </>
+                  }
                 </CardContent>
               </Card>
 
@@ -63,8 +71,14 @@ export default function Page() {
                   <FileText className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">156</div>
-                  <p className="text-xs text-muted-foreground">+12 esta semana</p>
+                  {
+                    loadingArticulos 
+                      ? <Spinner/>
+                      : <>
+                          <div className="text-2xl font-bold">{Array.isArray(dataArticulos) ? dataArticulos.filter(item => item.Estatus === 3).length : ""}</div>
+                          <p className="text-xs text-muted-foreground">+12 esta semana</p>
+                        </>
+                  }
                 </CardContent>
               </Card>
 
@@ -74,8 +88,14 @@ export default function Page() {
                   <Settings className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">8</div>
-                  <p className="text-xs text-muted-foreground">Pendientes de aprobación</p>
+                  {
+                    loadingArticulos 
+                      ? <Spinner/>
+                      : <>
+                          <div className="text-2xl font-bold">{Array.isArray(dataArticulos) ? dataArticulos.filter(item => item.Estatus === 1).length : ""}</div>
+                          <p className="text-xs text-muted-foreground">Pendientes de aprobación</p>
+                        </>
+                  }
                 </CardContent>
               </Card>
 
@@ -85,8 +105,12 @@ export default function Page() {
                   <Plus className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">12</div>
-                  <p className="text-xs text-muted-foreground">De 18 total</p>
+                  {
+                    loading 
+                      ? <Spinner/> 
+                      : <><div className="text-2xl font-bold">{Array.isArray(data) ? data.filter(item => item.Rol === "Autor") : ''}</div>
+                  <p className="text-xs text-muted-foreground">De 18 total</p></>
+                  }
                 </CardContent>
               </Card>
             </div>
