@@ -22,7 +22,7 @@ export default function Events() {
           variant="outline"
           className="ml-4 bg-white text-[#4C0000] border border-[#4C0000] hover:bg-[#4C0000] hover:text-white text-sm px-3 py-1 h-auto"
         >
-          <a href="#eventos" className="flex items-center gap-2">
+          <a href="/publica/alleventpage" className="flex items-center gap-2">
             Ver todos →
           </a>
         </Button>
