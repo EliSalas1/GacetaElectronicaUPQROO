@@ -14,5 +14,6 @@ export const HEADER_OPTIONS_BY_ROLE: Record<string, Record<string, string>[]> = 
 
 export enum ROLE_NAME {
   "admin" = "Administrador",
-  "editor" = "Editor"
+  "editor" = "Editor",
+  "redactor" = "Redactor"
 }

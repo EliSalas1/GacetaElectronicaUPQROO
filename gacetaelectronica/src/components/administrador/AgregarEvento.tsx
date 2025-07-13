@@ -21,6 +21,7 @@ import {
   CardContent,
   CardFooter,
 } from '@/components/ui/card'
+import { CirclePlus, PencilIcon } from 'lucide-react'
 
 export default function CreateEventForm() {
   const [longDescription, setLongDescription] = useState('')
@@ -33,7 +34,7 @@ export default function CreateEventForm() {
   }
 
   return (
-    <Card className="max-w-md mx-auto">
+    <Card className="w-full mx-auto">
       <CardHeader>
         <CardTitle>Crear evento</CardTitle>
       </CardHeader>
@@ -44,7 +45,7 @@ export default function CreateEventForm() {
             <Input id="title" name="title" placeholder="Ej. Fiesta universitaria" required />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4 md:grid-col-2">
             <div>
               <Label className='mb-1' htmlFor="date">Fecha</Label>
               <Input id="date" name="date" type="date" required />
@@ -53,26 +54,26 @@ export default function CreateEventForm() {
               <Label className='mb-1' htmlFor="time">Hora</Label>
               <Input id="time" name="time" type="time" required />
             </div>
+            <div>
+              <Label className='mb-1' htmlFor="location">Lugar</Label>
+              <Input id="location" name="location" placeholder="Ej. Auditorio principal" required />
+            </div>
           </div>
 
-          <div>
-            <Label className='mb-1' htmlFor="location">Lugar</Label>
-            <Input id="location" name="location" placeholder="Ej. Auditorio principal" required />
-          </div>
 
           <div>
             <Label className='mb-1' htmlFor="shortDesc">Descripción corta</Label>
             <Textarea
               id="shortDesc"
               name="shortDesc"
-              rows={2}
+              rows={3}
               placeholder="Una breve descripción..."
             />
           </div>
 
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button type="button" variant="outline">Agregar descripción larga</Button>
+              <Button className='cursor-pointer w-full' type="button" variant="outline"><PencilIcon/> Agregar descripción larga</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -84,7 +85,7 @@ export default function CreateEventForm() {
               <Textarea
                 value={longDescription}
                 onChange={(e) => setLongDescription(e.target.value)}
-                rows={6}
+                rows={8}
                 placeholder="Detalles extendidos del evento..."
               />
               <DialogFooter>
@@ -95,8 +96,8 @@ export default function CreateEventForm() {
         </form>
       </CardContent>
       <CardFooter>
-        <Button type="submit" form="event-form" className="w-full">
-          Crear Evento
+        <Button type="submit" form="event-form" className="w-full cursor-pointer">
+          <CirclePlus /> Crear Evento
         </Button>
       </CardFooter>
     </Card>

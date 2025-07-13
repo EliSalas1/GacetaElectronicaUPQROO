@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Eye, Edit, Trash2 } from 'lucide-react'
 
 import { Card } from '@/components/ui/card'
@@ -22,6 +21,8 @@ import { Button } from '@/components/ui/button'
 import { EventInterface } from '@/entities/event'
 import { EditEventDialog } from './EditEventDialog'
 import { DeleteEventDialog } from './DeleteEventDialog'
+import { ViewEventDialog } from "./ViewEventDialog"
+import FilterSearchBar from '../FilterSearchBar'
 
 const allEvents: EventInterface[] = [
   {
@@ -55,17 +56,33 @@ const allEvents: EventInterface[] = [
 ]
 
 export default function EventOverview() {
-  const router = useRouter()
   const [selectedEvent, setSelectedEvent] = useState<EventInterface | null>(null)
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [viewOpen, setViewOpen] = useState(false)
 
   return (
     <>
       <Card>
-        <CardHeader>
-          <CardTitle>Todos los Eventos</CardTitle>
-          <CardDescription>Vista general de los eventos registrados</CardDescription>
+        <CardHeader className='flex justify-between'>
+          <div>
+            <CardTitle>Todos los Eventos</CardTitle>
+            <CardDescription>Vista general de los eventos registrados</CardDescription>
+          </div>
+          <FilterSearchBar 
+            searchValue={""}
+            onSearchChange={() => {}}
+            filterBy={""}
+            onFilterByChange={() => {}}
+            filterValue={""}
+            onFilterValueChange={() => {}}
+            availableFields={[
+              { label: "Categoría", value: "category" },
+              { label: "Estado", value: "status" },
+              { label: "Fecha", value: "createdAt" }
+            ]}
+            getFilterValues={(field) => []}
+          />
         </CardHeader>
         <CardContent>
           <Table>
@@ -89,9 +106,17 @@ export default function EventOverview() {
                   <TableCell>{event.shortDescription}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => router.push(`/administrador/evento/${event.id}`)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedEvent(event)
+                          setViewOpen(true)
+                        }}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
+
                       <Button
                         variant="ghost"
                         size="sm"
@@ -145,6 +170,15 @@ export default function EventOverview() {
           setDeleteOpen(false)
         }}
       />
+      <ViewEventDialog
+        open={viewOpen}
+        onOpenChange={(value) => {
+          setViewOpen(value)
+          if (!value) setSelectedEvent(null)
+        }}
+        event={selectedEvent}
+      />
+
     </>
   )
 }

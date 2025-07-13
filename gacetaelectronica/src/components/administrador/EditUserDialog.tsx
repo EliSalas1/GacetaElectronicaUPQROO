@@ -30,15 +30,14 @@ export default function EditUserDialog({
   usuario,
   onSave,
 }: EditarUsuarioDialogProps) {
-    const [nombre, setNombre] = useState(usuario.name)
-    const [rol, setRol] = useState(usuario.role)
-    const [estado, setEstado] = useState(usuario.status)
+    const [nombre, setNombre] = useState(usuario.Nombre)
+    const [rol, setRol] = useState(usuario.Rol)
+    const [estado, setEstado] = useState(usuario.Estado.toString())
 
     const handleGuardarCambios = () => {
-      onSave({ nombre, rol, estado, email: usuario.email })
+      onSave({ nombre, rol, estado, email: usuario.Correo })
       setIsOpen(false)
     }
-
 
   return (
     <CustomDialog
@@ -69,9 +68,10 @@ export default function EditUserDialog({
             <SelectValue placeholder="Selecciona un rol" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="redactor">Redactor</SelectItem>
-            <SelectItem value="supervisor">Supervisor</SelectItem>
-            <SelectItem value="admin">Administrador</SelectItem>
+            <SelectItem value="Admin">Administrador</SelectItem>
+            <SelectItem value="Autor">Autor</SelectItem>
+            <SelectItem value="Revisor">Revisor</SelectItem>
+            <SelectItem value="Usuario">Usuario</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -83,8 +83,8 @@ export default function EditUserDialog({
             <SelectValue placeholder="Selecciona un estado" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="activo">Activo</SelectItem>
-            <SelectItem value="inactivo">Inactivo</SelectItem>
+            <SelectItem value="1">Activo</SelectItem>
+            <SelectItem value="0">Inactivo</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -93,7 +93,7 @@ export default function EditUserDialog({
         <Label htmlFor="email">Correo Electrónico</Label>
         <Input
           id="email"
-          value={usuario.email}
+          value={usuario.Correo}
           disabled
           className="opacity-70"
         />
