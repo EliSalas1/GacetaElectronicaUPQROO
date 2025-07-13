@@ -10,21 +10,28 @@ import PrivateHeader from "@/components/PrivateHeader"
 import AgregarEvento from "@/components/administrador/AgregarEvento"
 import { useFetch } from "@/hooks/useFetch"
 import { Spinner } from "@/components/Spinner"
+import { UserInterface } from "@/entities/user"
 
-// import { useInitializeUser } from "@/hooks/useInitializeUser"
+type ItemConFecha = {
+  FechaCreacion: string;
+  [key: string]: any;
+};
 
+function filtrarPorUltimoMes<T extends ItemConFecha>(items: T[]): T[] {
+  const ahora = new Date();
+  const haceUnMes = new Date();
+  haceUnMes.setMonth(ahora.getMonth() - 1);
 
-// interface AdminDashboardProps {
-//   user: {
-//     name?: string | null
-//     email?: string | null
-//     image?: string | null
-//   }
-// }
+  return items.filter(item => {
+    const fecha = new Date(item.FechaCreacion);
+    return fecha >= haceUnMes && fecha <= ahora;
+  });
+}
+
 
 export default function Page() {
  const [activeTab, setActiveTab] = useState("overview")
- const {data, loading} = useFetch('api/usuarios')
+ const {data, loading} = useFetch<UserInterface>('api/usuarios')
  const {data: dataArticulos, loading: loadingArticulos} = useFetch('api/articulos')
 
   return (
@@ -59,7 +66,7 @@ export default function Page() {
                       ? <Spinner/>
                       : <>
                           <div className="text-2xl font-bold">{Array.isArray(data) ? data.length : ''}</div>
-                          <p className="text-xs text-muted-foreground">+2 desde el mes pasado</p>
+                          <p className="text-xs text-muted-foreground">+{Array.isArray(data) ? filtrarPorUltimoMes(data).length : "0"} desde el mes pasado</p>
                         </>
                   }
                 </CardContent>
@@ -76,7 +83,7 @@ export default function Page() {
                       ? <Spinner/>
                       : <>
                           <div className="text-2xl font-bold">{Array.isArray(dataArticulos) ? dataArticulos.filter(item => item.Estatus === 3).length : ""}</div>
-                          <p className="text-xs text-muted-foreground">+12 esta semana</p>
+                          <p className="text-xs text-muted-foreground">+{Array.isArray(dataArticulos) ? filtrarPorUltimoMes(dataArticulos).length : "0"} esta semana</p>
                         </>
                   }
                 </CardContent>
@@ -108,8 +115,8 @@ export default function Page() {
                   {
                     loading 
                       ? <Spinner/> 
-                      : <><div className="text-2xl font-bold">{Array.isArray(data) ? data.filter(item => item.Rol === "Autor") : ''}</div>
-                  <p className="text-xs text-muted-foreground">De 18 total</p></>
+                      : <><div className="text-2xl font-bold">{Array.isArray(data) ? data.filter(item => item.Rol === "Autor").length : ''}</div>
+                  <p className="text-xs text-muted-foreground">De {Array.isArray(data) ? data.length : "0"} total</p></>
                   }
                 </CardContent>
               </Card>

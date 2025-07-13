@@ -11,17 +11,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { UserInterface } from '@/entities/user'
+import { Spinner } from '../Spinner'
 
 interface EditarUsuarioDialogProps {
   isOpen: boolean
   setIsOpen: (open: boolean) => void
   usuario: UserInterface
-  onSave: (updatedUser: {
-    nombre: string
-    rol: string
-    estado: string
-    email: string
-  }) => void
+  onSave: (updatedUser: Partial<UserInterface>) => void
 }
 
 export default function EditUserDialog({
@@ -33,10 +29,25 @@ export default function EditUserDialog({
     const [nombre, setNombre] = useState(usuario.Nombre)
     const [rol, setRol] = useState(usuario.Rol)
     const [estado, setEstado] = useState(usuario.Estado.toString())
+    const [isLoading, setIsLoading] = useState(false)
 
-    const handleGuardarCambios = () => {
-      onSave({ nombre, rol, estado, email: usuario.Correo })
-      setIsOpen(false)
+    const handleGuardarCambios = async () => {
+      setIsLoading(true)
+      try {
+        await onSave({
+          idUsuarios: usuario.idUsuarios,
+          Nombre: nombre, 
+          Apellido: usuario.Apellido,
+          Rol: rol, 
+          Estado: estado, 
+          Correo: usuario.Correo, 
+          Contraseña: usuario.Contraseña
+        })
+        setIsOpen(false)
+      } catch {
+
+        setIsLoading(false)
+      }
     }
 
   return (
@@ -46,8 +57,8 @@ export default function EditUserDialog({
       title="Editar Usuario"
       description="Modifica la información del usuario"
       footer={
-        <Button onClick={handleGuardarCambios} className="w-full">
-          Guardar Cambios
+        <Button disabled={isLoading} onClick={handleGuardarCambios} className="w-full">
+          {isLoading ? <Spinner/> : "Guardar Cambios" }
         </Button>
       }
     >
