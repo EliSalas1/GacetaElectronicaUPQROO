@@ -30,7 +30,7 @@ export default function ArticleEditor() {
     "investigaciones",
   ]
 
-   const availableTags = [
+  const availableTags = [
     "educación",
     "tecnología",
     "cultura",
@@ -60,6 +60,18 @@ export default function ArticleEditor() {
       description: "Tu artículo ha sido enviado para revisión",
     })
   }
+
+  const handleSummaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const text = e.target.value
+    const wordCount = text.trim().split(/\s+/).filter(Boolean).length
+
+    if (wordCount <= 300) {
+      setSummary(text)
+    } else {
+      toast.error("El resumen no puede exceder las 300 palabras.")
+    }
+  }
+
 
   return (
     <Card>
@@ -99,11 +111,16 @@ export default function ArticleEditor() {
             <Label htmlFor="summary">Resumen</Label>
             <Textarea
               id="summary"
-              placeholder="Escribe un resumen breve del artículo"
+              placeholder="Escribe un resumen breve del artículo (máx. 300 palabras)"
               value={summary}
-              onChange={(e) => setSummary(e.target.value)}
+              onChange={handleSummaryChange}
               rows={3}
             />
+
+            <p className="text-sm text-gray-500">
+              {summary.trim().split(/\s+/).filter(Boolean).length} / 300 palabras
+            </p>
+
           </div>
 
           <div className="space-y-2">
@@ -117,27 +134,38 @@ export default function ArticleEditor() {
             />
           </div>
 
-         <div className="space-y-2">
-  <Label>Etiquetas</Label>
-  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-    {availableTags.map((tag) => (
-      <div key={tag} className="flex items-center space-x-2">
-        <Checkbox
-          id={tag}
-          checked={tags.includes(tag)}
-          onCheckedChange={(checked) => {
-            if (checked) {
-              setTags((prev) => [...prev, tag])
-            } else {
-              setTags((prev) => prev.filter((t) => t !== tag))
-            }
-          }}
-        />
-        <Label htmlFor={tag} className="capitalize">{tag}</Label>
-      </div>
-    ))}
-  </div>
-</div>
+          <div className="space-y-2">
+            <Label>Etiquetas</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {availableTags.map((tag) => (
+                <div key={tag} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={tag}
+                    checked={tags.includes(tag)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        if (tags.length < 3) {
+                          setTags((prev) => [...prev, tag])
+                        } else {
+                          toast.error("Solo puedes seleccionar hasta 3 etiquetas.")
+                        }
+                      } else {
+                        setTags((prev) => prev.filter((t) => t !== tag))
+                      }
+                    }}
+
+                  />
+                  <Label htmlFor={tag} className="capitalize">{tag}</Label>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-sm text-gray-500">
+              {tags.length} / 3 etiquetas seleccionadas
+            </p>
+            
+          </div>
+
 
           <div className="space-y-2">
             <Label>Archivos Multimedia</Label>
