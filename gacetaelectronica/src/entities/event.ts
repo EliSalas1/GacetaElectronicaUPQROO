@@ -1,10 +1,10 @@
 export interface EventInterface {
-  id: number
-  title: string
-  date: string // formato YYYY-MM-DD
-  time: string // formato HH:MM
-  location: string
-  shortDescription: string
-  longDescription?: string
+  IdEvento: number
+  Nombre: string
+  Fecha: string // formato YYYY-MM-DD
+  Hora: string // formato HH:MM
+  Lugar: string
+  DesCorta: string
+  DesLarga?: string
   status: 'published' | 'pending' | 'draft' | 'cancelled'
 }

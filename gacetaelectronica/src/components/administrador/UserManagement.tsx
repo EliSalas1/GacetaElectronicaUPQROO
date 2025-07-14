@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,7 +32,10 @@ export default function UserManagement() {
   const [newUserRole, setNewUserRole] = useState("")
   const [selectedUser, setSelectedUser] = useState<UserInterface | null>(null)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+
+  const [serachValue, setSearchValue] = useState<string>("")
   const {data, loading} = useFetch<UserInterface[]>('api/usuarios')
+  const [filteredData, setFilteredData] = useState<UserInterface[]>([])
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -110,6 +113,43 @@ export default function UserManagement() {
     setIsDeleteOpen(true)
   }
 
+  const handleOnUpdateUser = async (user: Partial<UserInterface>) => {
+    const params = new URLSearchParams({ id: String(user.idUsuarios) });
+
+    const response = await fetch(`/api/usuarios?${params.toString()}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        Nombre: user.Nombre,
+        Apellido: user.Apellido,
+        Correo: user.Correo,
+        Rol: user.Rol,
+        Estado: user.Estado,
+        Contraseña: user.Contraseña,
+      }),
+    });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    toast.error(errorText || "Error al actualizar usuario");
+    throw new Error(`Error ${response.status}: ${errorText}`);
+  }
+
+  toast.success("Usuario actualizado correctamente");
+  return await response.json();
+  }
+
+  useEffect(() => {
+    if(serachValue && Array.isArray(data)) {
+      const filteredDataVal = data.filter(item => item.Nombre.toLowerCase().includes(serachValue.toLowerCase()) || item.Correo.toLowerCase().includes(serachValue.toLowerCase()));
+      setFilteredData(filteredDataVal);
+    } else if(Array.isArray(data)) {
+      setFilteredData(data)
+    }
+  }, [serachValue, data])
+
   return (
     <>
       <Card>
@@ -121,8 +161,8 @@ export default function UserManagement() {
             </div>
             <div className="flex gap-4">
               <FilterSearchBar
-                searchValue={""}
-                onSearchChange={() => {}}
+                searchValue={serachValue}
+                onSearchChange={setSearchValue}
                 filterBy={""}
                 onFilterByChange={() => {}}
                 filterValue={""}
@@ -192,8 +232,8 @@ export default function UserManagement() {
               </TableRow>
             </TableHeader>
             <TableBody>
-                {loading ? <TableRow><Spinner/></TableRow> : ""}
-                {Array.isArray(data) && data.map((user) => (
+                {loading ? <TableRow><TableCell colSpan={6} className="text-center flex justify-center"><Spinner/></TableCell></TableRow> : ""}
+                {filteredData.map((user) => (
                   <TableRow key={user.idUsuarios}>
                     <TableCell className="font-medium">{user.Nombre}</TableCell>
                     <TableCell>{user.Correo}</TableCell>
@@ -225,7 +265,7 @@ export default function UserManagement() {
               if(!open) setSelectedUser(null)
             }}
             usuario={selectedUser}
-            onSave={() => {}}
+            onSave={handleOnUpdateUser}
           />
           <DeleteUserDialog
             isOpen={isDeleteOpen}
