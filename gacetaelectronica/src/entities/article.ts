@@ -8,6 +8,7 @@ export interface ArticleInterface {
   etiqueta?: Etiqueta | string
   publishedAt?: string | null
   createdAt: string,
+  imageurl: string,
 }
 
 export enum Categoria {
@@ -43,6 +44,7 @@ export const featuredNotices: Home[] = [
     etiqueta: [Tag.Logro, Tag.ArticuloAcademico],
     publishedAt: "2024-01-05",
     createdAt: "2024-01-03",
+    imageUrl: "/images/campus-verde.jpg",
   },
   {
     id: 2,
@@ -54,6 +56,7 @@ export const featuredNotices: Home[] = [
     etiqueta: [Tag.NotaSocial, Tag.ArticuloDifusion],
     publishedAt: "2024-01-12",
     createdAt: "2024-01-10",
+    imageUrl: "/images/campus-verde.jpg",
   },
   {
     id: 3,
@@ -65,6 +68,7 @@ export const featuredNotices: Home[] = [
     etiqueta: [Tag.Arte, Tag.NotaSocial],
     publishedAt: "2024-01-10",
     createdAt: "2024-01-08",
+    imageUrl: "/images/campus-verde.jpg",
   },
   {
     id: 4,
@@ -76,6 +80,7 @@ export const featuredNotices: Home[] = [
     etiqueta: [Tag.Logro],
     publishedAt: "2024-01-08",
     createdAt: "2024-01-06",
+    imageUrl: "/images/campus-verde.jpg",
   },
   {
     id: 5,
@@ -87,6 +92,7 @@ export const featuredNotices: Home[] = [
     etiqueta: [Tag.ArticuloAcademico],
     publishedAt: "2024-01-14",
     createdAt: "2024-01-11",
+    imageUrl: "/images/campus-verde.jpg",
   },
 ];
 
@@ -101,6 +107,7 @@ export const allNotices: Home[] = [
     etiqueta: [Tag.Arte, Tag.NotaSocial],
     publishedAt: "2024-01-10",
     createdAt: "2024-01-08",
+    imageUrl: "/images/campus-verde.jpg",
   },
   {
     id: 2,
@@ -112,6 +119,7 @@ export const allNotices: Home[] = [
     etiqueta: [Tag.Logro],
     publishedAt: "2024-01-08",
     createdAt: "2024-01-06",
+    imageUrl: "/images/campus-verde.jpg",
   },
   {
     id: 3,
@@ -123,6 +131,7 @@ export const allNotices: Home[] = [
     etiqueta: [Tag.Historieta],
     publishedAt: "2024-01-15",
     createdAt: "2024-01-12",
+    imageUrl: "/images/campus-verde.jpg",
   },
   {
     id: 4,
@@ -134,6 +143,7 @@ export const allNotices: Home[] = [
     etiqueta: [Tag.ArticuloAcademico],
     publishedAt: "2024-01-14",
     createdAt: "2024-01-11",
+    imageUrl: "/images/campus-verde.jpg",
   },
 ];
 

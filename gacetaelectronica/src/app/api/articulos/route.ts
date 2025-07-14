@@ -60,7 +60,15 @@ export async function GET(req: NextRequest) {
 // ✅ POST: Crear nuevo artículo
 export async function POST(req: NextRequest) {
   try {
-    const { Titulo, Resumen, Contenido, IdCategoria } = await req.json();
+    const body = await req.json();
+    
+    // Verificar si es una creación completa con recursos y etiquetas
+    if (body.recursos || body.etiquetas) {
+      return await createArticleWithRelations(req);
+    }
+    
+    // Creación simple de artículo
+    const { Titulo, Resumen, Contenido, IdCategoria } = body;
 
     if (!Titulo || !Resumen || !Contenido || !IdCategoria) {
       return new Response('Todos los campos son requeridos', { status: 400 });
@@ -91,6 +99,114 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error('Error en POST articulos:', err);
     return new Response('Error al crear artículo', { status: 500 });
+  }
+}
+
+// Función para crear artículo con relaciones en transacción
+async function createArticleWithRelations(req: NextRequest) {
+  const pool = await getConnection();
+  const connection = await pool.getConnection();
+  
+  try {
+    await connection.beginTransaction();
+    
+    const { Titulo, Resumen, Contenido, IdCategoria, recursos, etiquetas } = await req.json();
+
+    if (!Titulo || !Resumen || !Contenido || !IdCategoria) {
+      return new Response('Todos los campos son requeridos', { status: 400 });
+    }
+
+    // Verifica si la categoría existe
+    const [categoriaExist] = await connection.query(
+      'SELECT * FROM Categorias WHERE IdCategoria = ?', [IdCategoria]
+    ) as [any[], any];
+
+    if (categoriaExist.length === 0) {
+      await connection.rollback();
+      return new Response('Categoría no encontrada', { status: 404 });
+    }
+
+    // Inserta el nuevo artículo
+    const [result] = await connection.query(
+      `INSERT INTO Articulos (Titulo, Resumen, Contenido, IdCategoria, FechaCreacion, Estatus)
+       VALUES (?, ?, ?, ?, NOW(), 1)`,
+      [Titulo.trim(), Resumen.trim(), Contenido.trim(), IdCategoria]
+    );
+
+    const articuloId = (result as any).insertId;
+
+    // Guardar recursos si existen
+    if (recursos && Array.isArray(recursos) && recursos.length > 0) {
+      for (const recurso of recursos) {
+        const { nombre, ruta } = recurso;
+        
+        if (!nombre || !ruta) {
+          await connection.rollback();
+          return new Response('Datos de recurso incompletos (nombre y ruta son requeridos)', { status: 400 });
+        }
+
+        // Verifica si el recurso con el mismo nombre ya existe
+        const [exists] = await connection.query(
+          'SELECT * FROM Recursos WHERE Nombre = ?', [nombre]
+        ) as [any[], any];
+        
+        if (exists.length > 0) {
+          await connection.rollback();
+          return new Response(`Ya existe un recurso con el nombre: ${nombre}`, { status: 409 });
+        }
+
+        // Inserta el recurso (solo Nombre y Ruta)
+        await connection.query(
+          'INSERT INTO Recursos (Nombre, Ruta, Articulos_idArticulo) VALUES (?, ?, ?)',
+          [nombre, ruta, articuloId]
+        );
+      }
+    }
+
+    // Guardar etiquetas si existen
+    if (etiquetas && Array.isArray(etiquetas) && etiquetas.length > 0) {
+      for (const etiquetaId of etiquetas) {
+        // Verifica si la etiqueta existe
+        const [etiquetaExist] = await connection.query(
+          'SELECT * FROM Etiquetas WHERE IdEtiqueta = ?', [etiquetaId]
+        ) as [any[], any];
+        
+        if (etiquetaExist.length === 0) {
+          await connection.rollback();
+          return new Response(`Etiqueta con ID ${etiquetaId} no encontrada`, { status: 404 });
+        }
+
+        // Verifica si la relación ya existe
+        const [relationExist] = await connection.query(
+          'SELECT * FROM ArticuloEtiqueta WHERE Articulos_idArticulo = ? AND Etiquetas_IdEtiqueta = ?',
+          [articuloId, etiquetaId]
+        ) as [any[], any];
+        
+        if (relationExist.length === 0) {
+          // Inserta la relación
+          await connection.query(
+            'INSERT INTO ArticuloEtiqueta (Articulos_idArticulo, Etiquetas_IdEtiqueta) VALUES (?, ?)',
+            [articuloId, etiquetaId]
+          );
+        }
+      }
+    }
+
+    await connection.commit();
+
+    return Response.json({
+      message: 'Artículo creado con relaciones',
+      id: articuloId,
+      recursosGuardados: recursos ? recursos.length : 0,
+      etiquetasGuardadas: etiquetas ? etiquetas.length : 0
+    }, { status: 201 });
+
+  } catch (err) {
+    await connection.rollback();
+    console.error('Error en createArticleWithRelations:', err);
+    return new Response('Error al crear artículo con relaciones', { status: 500 });
+  } finally {
+    connection.release();
   }
 }
 
