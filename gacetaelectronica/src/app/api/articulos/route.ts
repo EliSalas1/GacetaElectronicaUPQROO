@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import getConnection from '@/lib/db';
+import Articulo from '@/app/publica/articulo/[id]/page';
 
 interface Articulo {
   IdArticulo: number;
@@ -23,99 +24,39 @@ interface Articulo {
 // ✅ GET: Obtener artículos
 export async function GET(req: NextRequest) {
   try {
-    const pool = await getConnection();
-    const id = req.nextUrl.searchParams.get('id');
-    const include = req.nextUrl.searchParams.get('include') || '';
+    const pool = await getConnection()
 
-    if (id) {
-      if (isNaN(Number(id))) {
-        return new Response('ID inválido', { status: 400 });
-      }
+    const limit = parseInt(req.nextUrl.searchParams.get('limit') || '10')
+    const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0')
 
-      const [rows] = await pool.query(
-        'SELECT * FROM Articulos WHERE IdArticulo = ?', [id]
-      ) as [Articulo[], any];
-
-      if (rows.length === 0) {
-        return new Response('Artículo no encontrado', { status: 404 });
-      }
-
-      const articulo = rows[0];
-
-      if (include.includes('categoria')) {
-        const [categoria] = await pool.query(
-          'SELECT * FROM Categorias WHERE IdCategoria = ?', [articulo.IdCategoria]
-        ) as [any[], any];
-        articulo.Categoria = categoria[0];
-      }
-
-      if (include.includes('autor')) {
-        const [autor] = await pool.query(
-          'SELECT IdUsuarios, Nombre, Apellido FROM Usuarios WHERE IdUsuarios = ?', [articulo.IdAutor]
-        ) as [any[], any];
-        articulo.Autor = autor[0];
-      }
-
-      if (include.includes('revisor') && articulo.IdRevisor) {
-        const [revisor] = await pool.query(
-          'SELECT IdUsuarios, Nombre, Apellido FROM Usuarios WHERE IdUsuarios = ?', [articulo.IdRevisor]
-        ) as [any[], any];
-        articulo.Revisor = revisor[0];
-      }
-
-      if (include.includes('etiquetas')) {
-        const [etiquetas] = await pool.query(` 
-          SELECT e.* FROM Etiquetas e 
-          JOIN ArticuloEtiqueta ae ON e.IdEtiqueta = ae.Etiquetas_IdEtiqueta 
-          WHERE ae.Articulos_idArticulo = ?`, [id]
-        ) as [any[], any];
-        articulo.Etiquetas = etiquetas;
-      }
-
-      if (include.includes('recursos')) {
-        const [recursos] = await pool.query(
-          'SELECT * FROM Recursos WHERE articulos_idArticulo = ?', [id]
-        ) as [any[], any];
-        articulo.Recursos = recursos;
-      }
-
-      return Response.json(articulo);
-    } else {
-      const status = req.nextUrl.searchParams.get('status');
-      const categoria = req.nextUrl.searchParams.get('categoria');
-      const limit = parseInt(req.nextUrl.searchParams.get('limit') || '10');
-      const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0');
-
-      if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
-        return new Response('Parámetros de paginación inválidos', { status: 400 });
-      }
-
-      let query = 'SELECT * FROM Articulos';
-      const params: (string | number)[] = [];
-
-      if (status) {
-        query += ' WHERE Estatus = ?';
-        params.push(status);
-      }
-
-      if (categoria) {
-        query += params.length ? ' AND' : ' WHERE';
-        query += ' IdCategoria = ?';
-        params.push(categoria);
-      }
-
-      query += ' LIMIT ? OFFSET ?';
-      params.push(limit, offset);
-
-      const [rows] = await pool.query(query, params) as [any[], any];
-      return Response.json(rows);
+    if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
+      return new Response('Parámetros de paginación inválidos', { status: 400 })
     }
+
+    const [rows] = await pool.query(
+  `SELECT 
+     a.IdArticulo AS id,
+     a.Titulo AS title,
+     DATE_FORMAT(a.FechaCreacion, '%Y-%m-%d') AS createdAt,
+     CASE a.Estatus
+       WHEN 1 THEN 'published'
+       WHEN 2 THEN 'pending'
+       ELSE 'unknown'
+     END AS status,
+     COALESCE(c.Nombre, 'Sin Categoría') AS category,
+     'Sin autor' AS author
+   FROM Articulos a
+   LEFT JOIN Categorias c ON a.IdCategoria = c.IdCategoria
+   ORDER BY a.FechaCreacion DESC
+   LIMIT ? OFFSET ?`,
+  [limit, offset]
+) as [any[], any]
+    return Response.json(rows)
   } catch (err) {
-    console.error('Error en GET articulos:', err);
-    return new Response('Error al obtener artículos', { status: 500 });
+    console.error('Error en GET articulos:', err)
+    return new Response('Error al obtener artículos', { status: 500 })
   }
 }
-
 // ✅ POST: Crear nuevo artículo
 export async function POST(req: NextRequest) {
   try {
@@ -233,4 +174,5 @@ export async function DELETE(req: NextRequest) {
     console.error('Error en DELETE articulos:', err);
     return new Response('Error al eliminar artículo', { status: 500 });
   }
+
 }

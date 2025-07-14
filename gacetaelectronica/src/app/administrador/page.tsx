@@ -11,21 +11,21 @@ import AgregarEvento from "@/components/administrador/AgregarEvento"
 import { useFetch } from "@/hooks/useFetch"
 import { Spinner } from "@/components/Spinner"
 
-// import { useInitializeUser } from "@/hooks/useInitializeUser"
-
-
-// interface AdminDashboardProps {
-//   user: {
-//     name?: string | null
-//     email?: string | null
-//     image?: string | null
-//   }
-// }
-
 export default function Page() {
- const [activeTab, setActiveTab] = useState("overview")
- const {data, loading} = useFetch('api/usuarios')
- const {data: dataArticulos, loading: loadingArticulos} = useFetch('api/articulos')
+  const [activeTab, setActiveTab] = useState("overview")
+  const { data, loading } = useFetch("api/usuarios")
+  const { data: dataArticulos, loading: loadingArticulos } = useFetch("api/articulos")
+
+  const totalUsuarios = Array.isArray(data) ? data.length : 0
+  const articulosPublicados = Array.isArray(dataArticulos)
+    ? dataArticulos.filter((item) => item.Estatus === 3).length
+    : 0
+  const articulosEnRevision = Array.isArray(dataArticulos)
+    ? dataArticulos.filter((item) => item.Estatus === 1).length
+    : 0
+  const redactoresActivos = Array.isArray(data)
+    ? data.filter((item) => item.Rol === "Autor").length
+    : 0
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -34,7 +34,9 @@ export default function Page() {
       <div className="container mx-auto p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Panel de Administración</h1>
-          <p className="text-muted-foreground">Gestiona usuarios, supervisa contenido y configura el sistema</p>
+          <p className="text-muted-foreground">
+            Gestiona usuarios, supervisa contenido y configura el sistema
+          </p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -43,7 +45,6 @@ export default function Page() {
             <TabsTrigger value="users">Usuarios</TabsTrigger>
             <TabsTrigger value="articles">Artículos</TabsTrigger>
             <TabsTrigger value="addEvent">Añadir evento</TabsTrigger>
-
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -54,14 +55,14 @@ export default function Page() {
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  {
-                    loading 
-                      ? <Spinner/>
-                      : <>
-                          <div className="text-2xl font-bold">{Array.isArray(data) ? data.length : ''}</div>
-                          <p className="text-xs text-muted-foreground">+2 desde el mes pasado</p>
-                        </>
-                  }
+                  {loading ? (
+                    <Spinner />
+                  ) : (
+                    <>
+                      <div className="text-2xl font-bold">{totalUsuarios}</div>
+                      <p className="text-xs text-muted-foreground">+2 desde el mes pasado</p>
+                    </>
+                  )}
                 </CardContent>
               </Card>
 
@@ -71,14 +72,14 @@ export default function Page() {
                   <FileText className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  {
-                    loadingArticulos 
-                      ? <Spinner/>
-                      : <>
-                          <div className="text-2xl font-bold">{Array.isArray(dataArticulos) ? dataArticulos.filter(item => item.Estatus === 3).length : ""}</div>
-                          <p className="text-xs text-muted-foreground">+12 esta semana</p>
-                        </>
-                  }
+                  {loadingArticulos ? (
+                    <Spinner />
+                  ) : (
+                    <>
+                      <div className="text-2xl font-bold">{articulosPublicados}</div>
+                      <p className="text-xs text-muted-foreground">+12 esta semana</p>
+                    </>
+                  )}
                 </CardContent>
               </Card>
 
@@ -88,14 +89,14 @@ export default function Page() {
                   <Settings className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  {
-                    loadingArticulos 
-                      ? <Spinner/>
-                      : <>
-                          <div className="text-2xl font-bold">{Array.isArray(dataArticulos) ? dataArticulos.filter(item => item.Estatus === 1).length : ""}</div>
-                          <p className="text-xs text-muted-foreground">Pendientes de aprobación</p>
-                        </>
-                  }
+                  {loadingArticulos ? (
+                    <Spinner />
+                  ) : (
+                    <>
+                      <div className="text-2xl font-bold">{articulosEnRevision}</div>
+                      <p className="text-xs text-muted-foreground">Pendientes de aprobación</p>
+                    </>
+                  )}
                 </CardContent>
               </Card>
 
@@ -105,12 +106,14 @@ export default function Page() {
                   <Plus className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  {
-                    loading 
-                      ? <Spinner/> 
-                      : <><div className="text-2xl font-bold">{Array.isArray(data) ? data.filter(item => item.Rol === "Autor") : ''}</div>
-                  <p className="text-xs text-muted-foreground">De 18 total</p></>
-                  }
+                  {loading ? (
+                    <Spinner />
+                  ) : (
+                    <>
+                      <div className="text-2xl font-bold">{redactoresActivos}</div>
+                      <p className="text-xs text-muted-foreground">De {totalUsuarios} total</p>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -123,13 +126,12 @@ export default function Page() {
           <TabsContent value="articles">
             <ArticleOverview />
           </TabsContent>
+
           <TabsContent value="addEvent">
             <AgregarEvento />
           </TabsContent>
-
         </Tabs>
       </div>
     </div>
   )
 }
-
