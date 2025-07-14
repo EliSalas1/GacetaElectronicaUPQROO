@@ -12,64 +12,18 @@ import { DeleteArticleDialog } from "./DeleteArticleDialog"
 import EventOverview from "./EventsOverview"
 import { ViewArticleDialog } from "./ViewArticleDialog"
 import FilterSearchBar from "../FilterSearchBar"
+import { useFetch } from "@/hooks/useFetch"
+import { Spinner } from "../Spinner"
 
-const allArticles = [
-  {
-    id: 1,
-    title: "Nueva investigación en biotecnología",
-    author: "María González",
-    category: "investigaciones",
-    status: "published",
-    createdAt: "2024-01-15",
-    publishedAt: "2024-01-16",
-  },
-  {
-    id: 2,
-    title: "Evento cultural de fin de año",
-    author: "Carlos Rodríguez",
-    category: "eventos",
-    status: "pending",
-    createdAt: "2024-01-14",
-    publishedAt: null,
-  },
-  {
-    id: 3,
-    title: "Convocatoria para becas de estudio",
-    author: "Ana Martínez",
-    category: "convocatorias",
-    status: "rejected",
-    createdAt: "2024-01-13",
-    publishedAt: null,
-  },
-  {
-    id: 4,
-    title: "Proyecto de sostenibilidad ambiental",
-    author: "Luis Pérez",
-    category: "proyectos",
-    status: "draft",
-    createdAt: "2024-01-12",
-    publishedAt: null,
-  },
-  {
-    id: 5,
-    title: "Conferencia sobre inteligencia artificial",
-    author: "Carmen López",
-    category: "eventos",
-    status: "published",
-    createdAt: "2024-01-11",
-    publishedAt: "2024-01-12",
-  },
-] satisfies Partial<ArticleInterface>[]
-
-const getStatusBadge = (status: string) => {
+const getStatusBadge = (status: number) => {
   switch (status) {
-    case "published":
+    case 1:
       return <Badge className="bg-green-100 text-green-800">Publicado</Badge>
-    case "pending":
+    case 2:
       return <Badge className="bg-yellow-100 text-yellow-800">En Revisión</Badge>
-    case "rejected":
+    case 3:
       return <Badge className="bg-red-100 text-red-800">Rechazado</Badge>
-    case "draft":
+    case 4:
       return <Badge variant="secondary">Borrado</Badge>
     default:
       return <Badge variant="outline">Desconocido</Badge>
@@ -81,6 +35,8 @@ export default function ArticleOverview() {
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [viewOpen, setViewOpen] = useState(false)
+
+  const { data, loading } = useFetch<ArticleInterface>('/api/articulos')
 
   return (
     <main className="flex flex-col gap-6">
@@ -112,7 +68,7 @@ export default function ArticleOverview() {
             <TableHeader>
               <TableRow>
                 <TableHead>Título</TableHead>
-                <TableHead>Autor</TableHead>
+                <TableHead>Resumen</TableHead>
                 <TableHead>Categoría</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Fecha de Creación</TableHead>
@@ -120,13 +76,14 @@ export default function ArticleOverview() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {allArticles.map((article) => (
-                <TableRow key={article.id}>
-                  <TableCell className="font-medium">{article.title}</TableCell>
-                  <TableCell>{article.author}</TableCell>
-                  <TableCell className="capitalize">{article.category.replace("-", " ")}</TableCell>
-                  <TableCell>{getStatusBadge(article.status)}</TableCell>
-                  <TableCell>{article.createdAt}</TableCell>
+              {loading ? <TableRow><TableCell colSpan={6} className="text-center flex justify-center"><Spinner/></TableCell></TableRow> : ""}
+              {Array.isArray(data) && data.map((article) => (
+                <TableRow key={article.idArticulo}>
+                  <TableCell className="font-medium">{article.Titulo}</TableCell>
+                  <TableCell>{article.Resumen}</TableCell>
+                  <TableCell className="capitalize">{article.IdCategoria}</TableCell>
+                  <TableCell>{getStatusBadge(article.Estatus)}</TableCell>
+                  <TableCell>{article.FechaCreacion}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button
@@ -181,7 +138,7 @@ export default function ArticleOverview() {
         article={selectedArticle}
         onConfirm={() => {
           // handle delete logic here
-          console.log("Deleted article:", selectedArticle?.id)
+          console.log("Deleted article:", selectedArticle?.IdCategoria)
           setDeleteOpen(false)
         }}
       />
