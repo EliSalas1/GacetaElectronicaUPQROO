@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
         )
 
         results.push({
-          id: (result as any).insertId,
+          IdRecurso: (result as any).insertId,
           nombre,
           ruta
         })

@@ -193,11 +193,12 @@ async function createArticleWithRelations(req: NextRequest) {
     );
 
     const articuloId = (result as any).insertId;
+    const recursosCreados = [];
 
     // Guardar recursos si existen
     if (recursos && Array.isArray(recursos) && recursos.length > 0) {
       for (const recurso of recursos) {
-        const { nombre, ruta } = recurso;
+        const { nombre, ruta} = recurso;
         
         if (!nombre || !ruta) {
           await connection.rollback();
@@ -215,10 +216,18 @@ async function createArticleWithRelations(req: NextRequest) {
         }
 
         // Inserta el recurso (solo Nombre y Ruta)
-        await connection.query(
+        const [recursoResult] = await connection.query(
           'INSERT INTO Recursos (Nombre, Ruta, Articulos_idArticulo) VALUES (?, ?, ?)',
           [nombre, ruta, articuloId]
         );
+        
+        // Obtener el IdRecurso insertado y agregarlo al array de recursos creados
+        const IdRecurso = (recursoResult as any).insertId;
+        recursosCreados.push({
+          IdRecurso,
+          nombre,
+          ruta
+        });
       }
     }
 
@@ -257,6 +266,7 @@ async function createArticleWithRelations(req: NextRequest) {
       message: 'Artículo creado con relaciones',
       id: articuloId,
       recursosGuardados: recursos ? recursos.length : 0,
+      recursos: recursosCreados,
       etiquetasGuardadas: etiquetas ? etiquetas.length : 0
     }, { status: 201 });
 

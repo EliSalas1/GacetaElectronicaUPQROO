@@ -15,9 +15,8 @@ const resourceTypes = [
 ]
 
 interface GoogleDriveResource {
-  id: string
+  idRecurso: string
   nombre: string
-  tipo: string
   ruta: string
 }
 
@@ -31,13 +30,12 @@ export default function GoogleDriveResourceDialog({ onResourcesAdded, trigger }:
   const [resources, setResources] = useState<GoogleDriveResource[]>([])
   const [currentResource, setCurrentResource] = useState({
     nombre: "",
-    tipo: "",
     ruta: ""
   })
 
   // Función para agregar recurso manualmente (link)
   const handleAddResource = async () => {
-    if (!currentResource.tipo) {
+    if (!currentResource.nombre) {
       toast.error("Debes seleccionar un tipo de recurso")
       return
     }
@@ -46,33 +44,32 @@ export default function GoogleDriveResourceDialog({ onResourcesAdded, trigger }:
       return
     }
     // Validar la URL usando la API
-    const validation = await validateGoogleDriveUrl(currentResource.ruta, currentResource.tipo)
+    const validation = await validateGoogleDriveUrl(currentResource.ruta, currentResource.nombre)
     if (!validation.valid) {
       toast.error(validation.error || "El link no es una URL válida de Google Drive")
       return
     }
     // Generar nombre automático
-    const autoName = currentResource.tipo.charAt(0).toUpperCase() + currentResource.tipo.slice(1)
+    const autoName = currentResource.nombre.charAt(0).toUpperCase() + currentResource.nombre.slice(1)
     const newResource: GoogleDriveResource = {
-      id: Date.now().toString(),
-      nombre: autoName,
-      tipo: currentResource.tipo,
+      idRecurso: Date.now().toString(),
+      nombre: currentResource.nombre,
       ruta: currentResource.ruta
     }
     setResources([...resources, newResource])
-    setCurrentResource({ nombre: "", tipo: "", ruta: "" })
+    setCurrentResource({ nombre: "", ruta: "" })
     toast.success("Recurso agregado correctamente")
   }
 
   // Validación de URL
-  const validateGoogleDriveUrl = async (url: string, tipo: string): Promise<{ valid: boolean; error?: string }> => {
+  const validateGoogleDriveUrl = async (url: string, nombre: string): Promise<{ valid: boolean; error?: string }> => {
     try {
       const response = await fetch('/api/drive/validate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url, tipo }),
+        body: JSON.stringify({ url, nombre }),
       })
       const data = await response.json()
       if (!response.ok) {
@@ -86,7 +83,7 @@ export default function GoogleDriveResourceDialog({ onResourcesAdded, trigger }:
   }
 
   const removeResource = (id: string) => {
-    setResources(resources.filter(resource => resource.id !== id))
+    setResources(resources.filter(resource => resource.idRecurso !== id))
   }
 
   const handleAccept = () => {
@@ -135,12 +132,12 @@ export default function GoogleDriveResourceDialog({ onResourcesAdded, trigger }:
           {/* Formulario para agregar recurso manualmente */}
           <div className="space-y-4 p-4 border rounded-lg">
             <div className="space-y-2">
-              <Label htmlFor="tipo">Tipo de archivo:</Label>
+              <Label htmlFor="nombre">Tipo de archivo:</Label>
               <select
-                id="tipo"
+                id="nombre"
                 className="w-full p-2 border rounded-md"
-                value={currentResource.tipo}
-                onChange={(e) => setCurrentResource({ ...currentResource, tipo: e.target.value })}
+                value={currentResource.nombre}
+                onChange={(e) => setCurrentResource({ ...currentResource, nombre: e.target.value })}
               >
                 <option value="">Selecciona un tipo</option>
                 {resourceTypes.map((type) => (
@@ -179,9 +176,9 @@ export default function GoogleDriveResourceDialog({ onResourcesAdded, trigger }:
               <Label>Recursos de Google Drive agregados ({resources.length}):</Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {resources.map((resource) => (
-                  <div key={resource.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div key={resource.idRecurso} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                     <span className="text-sm">{resource.nombre}</span>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => removeResource(resource.id)}>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => removeResource(resource.idRecurso)}>
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
