@@ -25,7 +25,7 @@ export default function ArticleEditor() {
     id: string
     nombre: string
     tipo: string
-    link: string
+    ruta: string
   }>>([])
 
   const categories = [
@@ -37,6 +37,17 @@ export default function ArticleEditor() {
     "convocatorias",
     "investigaciones",
   ]
+
+  // Mapeo de categorías a IDs (basado en la estructura de la BD)
+  const categoryMapping: { [key: string]: number } = {
+    "noticias": 1,
+    "proyectos": 2,
+    "eventos": 3,
+    "actividades-culturales": 4,
+    "actividades-deportivas": 5,
+    "convocatorias": 6,
+    "investigaciones": 7,
+  }
 
   const availableTags = [
     "educación",
@@ -67,7 +78,7 @@ export default function ArticleEditor() {
     id: string
     nombre: string
     tipo: string
-    link: string
+    ruta: string
   }>) => {
     setGoogleDriveResources(resources)
   }
@@ -99,54 +110,90 @@ export default function ArticleEditor() {
         return
       }
 
-      // Simular el envío del artículo (aquí se enviaría a la API de artículos)
-      console.log("Datos del artículo a enviar:", {
-        title,
-        summary,
-        content,
-        category,
-        tags
-      })
+      // Validar que la categoría existe en el mapeo
+      if (!categoryMapping[category]) {
+        toast.error("Categoría inválida seleccionada")
+        return
+      }
 
-      // Enviar recursos de Google Drive si existen
-      if (googleDriveResources.length > 0) {
+      // Validar que se haya agregado al menos 1 recurso de Google Drive
+      if (googleDriveResources.length === 0) {
+        toast.error("Debes agregar al menos 1 recurso de Google Drive", {
+          description: "Haz clic en 'Agregar Recursos de Google Drive' para añadir imágenes, videos o documentos"
+        })
+        return
+      }
+
+      // Mostrar loading
+      toast.loading("Enviando artículo...")
+
+      // Preparar datos del artículo
+      const articuloData = {
+        Titulo: title.trim(),
+        Resumen: summary.trim(),
+        Contenido: content.trim(),
+        IdCategoria: categoryMapping[category]
+      }
+
+      // Preparar recursos de Google Drive si existen
+      const recursos = googleDriveResources.length > 0 ? 
+        googleDriveResources.map(resource => ({
+          nombre: resource.nombre,
+          ruta: resource.ruta,
+          tipo: resource.tipo
+        })) : undefined
+
+      // Preparar etiquetas si existen
+      let etiquetas = undefined
+      if (tags.length > 0) {
         try {
-          const response = await fetch('/api/recursos/batch', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              recursos: googleDriveResources.map(resource => ({
-                nombre: resource.nombre,
-                link: resource.link,
-                tipo: resource.tipo
-              })),
-              articuloId: 1 // Esto debería ser el ID del artículo creado
-            }),
-          })
+          // Obtener IDs de etiquetas por nombre
+          const etiquetasResponse = await fetch('/api/etiquetas')
+          if (etiquetasResponse.ok) {
+            const etiquetasDisponibles = await etiquetasResponse.json()
+            
+            // Mapear nombres de etiquetas a IDs
+            const etiquetaIds = tags.map(tagName => {
+              const etiqueta = etiquetasDisponibles.find((e: any) => 
+                e.Nombre.toLowerCase() === tagName.toLowerCase()
+              )
+              return etiqueta ? etiqueta.IdEtiqueta : null
+            }).filter(id => id !== null)
 
-          if (!response.ok) {
-            const errorData = await response.json()
-            toast.error(`Error al guardar recursos: ${errorData.message || 'Error desconocido'}`)
-            return
-          }
-
-          const result = await response.json()
-          console.log("Recursos guardados:", result)
-          
-          if (result.errors && result.errors.length > 0) {
-            toast.warning(`Algunos recursos no se pudieron guardar: ${result.errors.join(', ')}`)
+            if (etiquetaIds.length > 0) {
+              etiquetas = etiquetaIds
+            }
           }
         } catch (error) {
-          console.error("Error al guardar recursos:", error)
-          toast.error("Error al guardar los recursos de Google Drive")
-          return
+          console.error("Error al obtener etiquetas:", error)
+          // Continuamos sin etiquetas
         }
       }
 
-      toast.success("Artículo enviado", {
-        description: "Tu artículo ha sido enviado para revisión",
+      // Crear artículo con todas las relaciones en una sola transacción
+      const response = await fetch('/api/articulos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...articuloData,
+          recursos,
+          etiquetas
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        toast.error(`Error al enviar artículo: ${errorData.message || 'Error desconocido'}`)
+        return
+      }
+
+      const result = await response.json()
+      console.log("Artículo enviado correctamente:", result)
+
+      toast.success("Artículo enviado correctamente", {
+        description: `Tu artículo ha sido enviado para revisión${result.recursosGuardados ? ` con ${result.recursosGuardados} recursos` : ''}${result.etiquetasGuardadas ? ` y ${result.etiquetasGuardadas} etiquetas` : ''}`,
       })
 
       // Limpiar el formulario
@@ -270,8 +317,12 @@ export default function ArticleEditor() {
 
 
           <div className="space-y-2">
-            <Label>Recursos de Google Drive</Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <Label>Recursos de Google Drive *</Label>
+            <div className={`border-2 border-dashed rounded-lg p-6 text-center ${
+              googleDriveResources.length === 0 
+                ? 'border-red-300 bg-red-50' 
+                : 'border-gray-300'
+            }`}>
               <GoogleDriveResourceDialog 
                 onResourcesAdded={handleGoogleDriveResourcesAdded}
                 trigger={
@@ -284,6 +335,11 @@ export default function ArticleEditor() {
               <p className="mt-2 text-sm text-gray-600">
                 Agrega links de archivos de Google Drive (Imagen, Video, PDF)
               </p>
+              {googleDriveResources.length === 0 && (
+                <p className="mt-2 text-sm text-red-600 font-medium">
+                  ⚠️ Se requiere al menos 1 recurso para enviar el artículo
+                </p>
+              )}
             </div>
             
             {/* Mostrar recursos de Google Drive agregados con vista previa */}
@@ -311,9 +367,16 @@ export default function ArticleEditor() {
         </div>
 
         <div className="flex gap-4 pt-4">
-          <Button onClick={handleSubmitForReview}>
+          <Button 
+            onClick={handleSubmitForReview}
+            disabled={googleDriveResources.length === 0}
+            className={googleDriveResources.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}
+          >
             <Send className="mr-2 h-4 w-4" />
             Enviar a Revisión
+            {googleDriveResources.length === 0 && (
+              <span className="ml-2 text-xs"></span>
+            )}
           </Button>
         </div>
       </CardContent>

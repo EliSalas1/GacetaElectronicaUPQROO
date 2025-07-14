@@ -9,7 +9,7 @@ interface ResourcePreviewProps {
     id: string
     nombre: string
     tipo: string
-    link: string
+    ruta: string
   }
   onRemove: (id: string) => void
 }
@@ -34,17 +34,17 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
   }
 
   // Función para generar la URL de vista previa de Google Drive
-  const getPreviewUrl = (link: string, tipo: string) => {
+  const getPreviewUrl = (ruta: string, tipo: string) => {
     // Extraer el ID del archivo de diferentes formatos de URL de Google Drive
     let fileId = null
     
     // Patrón para URLs de archivos de Google Drive
-    const fileIdMatch = link.match(/\/d\/([a-zA-Z0-9_-]+)/)
+    const fileIdMatch = ruta.match(/\/d\/([a-zA-Z0-9_-]+)/)
     if (fileIdMatch) {
       fileId = fileIdMatch[1]
     } else {
       // Patrón para URLs con parámetro id
-      const idMatch = link.match(/[?&]id=([a-zA-Z0-9_-]+)/)
+      const idMatch = ruta.match(/[?&]id=([a-zA-Z0-9_-]+)/)
       if (idMatch) {
         fileId = idMatch[1]
       }
@@ -78,7 +78,7 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
     }
   }
 
-  const previewUrls = getPreviewUrl(resource.link, resource.tipo)
+  const previewUrls = getPreviewUrl(resource.ruta, resource.tipo)
 
   // Función para obtener la URL de imagen de manera segura
   const getImageUrl = () => {
@@ -105,7 +105,7 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            url: resource.link,
+            url: resource.ruta,
             tipo: resource.tipo
           }),
         })
@@ -126,10 +126,10 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
       }
     }
 
-    if (resource.link && resource.tipo) {
+    if (resource.ruta && resource.tipo) {
       getFileInfo()
     }
-  }, [resource.link, resource.tipo])
+  }, [resource.ruta, resource.tipo])
 
   return (
     <div className="relative bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -181,7 +181,7 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(resource.link, '_blank')}
+                  onClick={() => window.open(resource.ruta, '_blank')}
                   className="text-xs"
                 >
                   Ver en Google Drive
@@ -207,7 +207,7 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
                 controls
                 preload="metadata"
                 onError={() => {
-                  setError('No se pudo cargar la vista previa del video')
+                  setError('No se pudo cargar el video')
                 }}
               />
             </div>
@@ -218,7 +218,7 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open(resource.link, '_blank')}
+                onClick={() => window.open(resource.ruta, '_blank')}
                 className="text-xs"
               >
                 Abrir PDF
@@ -238,7 +238,7 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(resource.link, '_blank')}
+                  onClick={() => window.open(resource.ruta, '_blank')}
                   className="text-xs"
                 >
                   Ver en Google Drive
@@ -255,14 +255,14 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
           </div>
         )}
 
-        {/* Link del recurso */}
+        {/* Ruta del recurso */}
         <div className="mt-3">
           <a
-            href={resource.link}
+            href={resource.ruta}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-blue-600 hover:text-blue-800 truncate block"
-            title={resource.link}
+            title={resource.ruta}
           >
             Ver en Google Drive
           </a>

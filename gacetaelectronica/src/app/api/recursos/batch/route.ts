@@ -28,10 +28,10 @@ export async function POST(req: NextRequest) {
     // Procesar cada recurso
     for (const recurso of recursos) {
       try {
-        const { nombre, link, tipo } = recurso
+        const { nombre, ruta } = recurso
 
-        if (!nombre || !link || !tipo) {
-          errors.push(`Recurso inválido: faltan campos requeridos`)
+        if (!nombre || !ruta) {
+          errors.push(`Recurso inválido: faltan campos requeridos (nombre y ruta)`)
           continue
         }
 
@@ -42,17 +42,16 @@ export async function POST(req: NextRequest) {
           continue
         }
 
-        // Inserta el nuevo recurso
+        // Inserta el nuevo recurso (solo Nombre y Ruta)
         const [result] = await pool.query(
-          'INSERT INTO Recursos (Nombre, Ruta, Tipo, Articulos_idArticulo) VALUES (?, ?, ?, ?)',
-          [nombre, link, tipo, articuloId]
+          'INSERT INTO Recursos (Nombre, Ruta, Articulos_idArticulo) VALUES (?, ?, ?)',
+          [nombre, ruta, articuloId]
         )
 
         results.push({
           id: (result as any).insertId,
           nombre,
-          link,
-          tipo
+          ruta
         })
 
       } catch (error) {
