@@ -6,15 +6,15 @@ export default function ResumenTab() {
   const { totalArticulos, articulosPendientes, articulosPublicados, articulosRechazados } = resumenDummyData
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-2xl font-semibold">Resumen de Artículos</h2>
-        <p className="text-gray-600">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="text-center sm:text-left">
+        <h2 className="text-xl sm:text-2xl font-semibold">Resumen de Artículos</h2>
+        <p className="text-gray-600 text-sm sm:text-base mt-1">
           Vista general del estado de los artículos en el sistema.
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <ResumenCard
           title="Total de Artículos"
           value={totalArticulos}

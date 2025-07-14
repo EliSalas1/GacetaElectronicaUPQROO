@@ -46,47 +46,50 @@ export default function FilterControls({
   }
 
   return (
-    <div className="flex gap-2 w-full md:w-auto">
+    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
       {/* Búsqueda */}
-      <div className="relative w-full md:w-64">
+      <div className="relative w-full sm:w-64">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
-          className="pl-10"
+          className="pl-10 text-sm"
           placeholder={searchPlaceholder}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      {/* Filtro por campo */}
-      <Select value={filterBy} onValueChange={setFilterBy}>
-        <SelectTrigger className="w-40">
-          <Filter className="mr-2 h-4 w-4" />
-          <SelectValue placeholder="Filtrar por" />
-        </SelectTrigger>
-        <SelectContent>
-          {Object.entries(filterFields).map(([key, config]) => (
-            <SelectItem key={key} value={key}>
-              {config.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {/* Contenedor de filtros - se apila en móvil */}
+      <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
+        {/* Filtro por campo */}
+        <Select value={filterBy} onValueChange={setFilterBy}>
+          <SelectTrigger className="w-full xs:w-32 sm:w-40">
+            <Filter className="mr-2 h-4 w-4 flex-shrink-0" />
+            <SelectValue placeholder="Filtrar por" />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(filterFields).map(([key, config]) => (
+              <SelectItem key={key} value={key}>
+                {config.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-      {/* Filtro por valor */}
-      <Select value={filterValue} onValueChange={setFilterValue}>
-        <SelectTrigger className="w-40">
-          <SelectValue placeholder="Filtrar valor" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todos</SelectItem>
-          {filterOptions.map((option) => (
-            <SelectItem key={option} value={option}>
-              {formatOptionLabel(option, filterBy)}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        {/* Filtro por valor */}
+        <Select value={filterValue} onValueChange={setFilterValue}>
+          <SelectTrigger className="w-full xs:w-32 sm:w-40">
+            <SelectValue placeholder="Filtrar valor" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            {filterOptions.map((option) => (
+              <SelectItem key={option} value={option}>
+                {formatOptionLabel(option, filterBy)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   )
 }
