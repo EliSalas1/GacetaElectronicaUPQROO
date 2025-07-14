@@ -27,6 +27,7 @@ export interface Home {
   etiqueta?: (Tag | string)[];
   publishedAt: string | null;
   createdAt: string;
+  imageUrl: string;
 }
 
 export enum Category {

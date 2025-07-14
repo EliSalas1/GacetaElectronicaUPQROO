@@ -9,7 +9,9 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { X, Upload, Send } from "lucide-react"
+import { X, Upload, Send, Link } from "lucide-react"
+import GoogleDriveResourceDialog from "./GoogleDriveResourceDialog"
+import ResourcePreview from "./ResourcePreview"
 
 export default function ArticleEditor() {
   const [title, setTitle] = useState("")
@@ -19,6 +21,12 @@ export default function ArticleEditor() {
   const [tags, setTags] = useState<string[]>([])
   const [newTag, setNewTag] = useState("")
   const [files, setFiles] = useState<string[]>([])
+  const [googleDriveResources, setGoogleDriveResources] = useState<Array<{
+    id: string
+    nombre: string
+    tipo: string
+    link: string
+  }>>([])
 
   const categories = [
     "noticias",
@@ -55,10 +63,104 @@ export default function ArticleEditor() {
     setFiles(files.filter((_, i) => i !== index))
   }
 
-  const handleSubmitForReview = () => {
-    toast("Artículo enviado", {
-      description: "Tu artículo ha sido enviado para revisión",
-    })
+  const handleGoogleDriveResourcesAdded = (resources: Array<{
+    id: string
+    nombre: string
+    tipo: string
+    link: string
+  }>) => {
+    setGoogleDriveResources(resources)
+  }
+
+  const removeGoogleDriveResource = (id: string) => {
+    setGoogleDriveResources(googleDriveResources.filter(resource => resource.id !== id))
+  }
+
+  const handleSubmitForReview = async () => {
+    try {
+      // Validar que se hayan completado los campos requeridos
+      if (!title.trim()) {
+        toast.error("El título es requerido")
+        return
+      }
+
+      if (!summary.trim()) {
+        toast.error("El resumen es requerido")
+        return
+      }
+
+      if (!content.trim()) {
+        toast.error("El contenido es requerido")
+        return
+      }
+
+      if (!category) {
+        toast.error("Debes seleccionar una categoría")
+        return
+      }
+
+      // Simular el envío del artículo (aquí se enviaría a la API de artículos)
+      console.log("Datos del artículo a enviar:", {
+        title,
+        summary,
+        content,
+        category,
+        tags
+      })
+
+      // Enviar recursos de Google Drive si existen
+      if (googleDriveResources.length > 0) {
+        try {
+          const response = await fetch('/api/recursos/batch', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              recursos: googleDriveResources.map(resource => ({
+                nombre: resource.nombre,
+                link: resource.link,
+                tipo: resource.tipo
+              })),
+              articuloId: 1 // Esto debería ser el ID del artículo creado
+            }),
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            toast.error(`Error al guardar recursos: ${errorData.message || 'Error desconocido'}`)
+            return
+          }
+
+          const result = await response.json()
+          console.log("Recursos guardados:", result)
+          
+          if (result.errors && result.errors.length > 0) {
+            toast.warning(`Algunos recursos no se pudieron guardar: ${result.errors.join(', ')}`)
+          }
+        } catch (error) {
+          console.error("Error al guardar recursos:", error)
+          toast.error("Error al guardar los recursos de Google Drive")
+          return
+        }
+      }
+
+      toast.success("Artículo enviado", {
+        description: "Tu artículo ha sido enviado para revisión",
+      })
+
+      // Limpiar el formulario
+      setTitle("")
+      setSummary("")
+      setContent("")
+      setCategory("")
+      setTags([])
+      setGoogleDriveResources([])
+
+    } catch (error) {
+      toast.error("Error al enviar el artículo")
+      console.error("Error:", error)
+    }
   }
 
   return (
@@ -140,25 +242,41 @@ export default function ArticleEditor() {
 </div>
 
           <div className="space-y-2">
-            <Label>Archivos Multimedia</Label>
+            <Label>Recursos de Google Drive</Label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <Button type="button" onClick={handleFileUpload} variant="outline">
-                <Upload className="mr-2 h-4 w-4" />
-                Subir Archivos
-              </Button>
-              <p className="mt-2 text-sm text-gray-600">Haz clic para subir imágenes o videos</p>
+              <GoogleDriveResourceDialog 
+                onResourcesAdded={handleGoogleDriveResourcesAdded}
+                trigger={
+                  <Button type="button" variant="outline">
+                    <Link className="mr-2 h-4 w-4" />
+                    Agregar Recursos de Google Drive
+                  </Button>
+                }
+              />
+              <p className="mt-2 text-sm text-gray-600">
+                Agrega links de archivos de Google Drive (Imagen, Video, PDF)
+              </p>
             </div>
-            {files.length > 0 && (
-              <div className="space-y-2">
-                <Label>Archivos seleccionados:</Label>
-                {files.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <span className="text-sm">{file}</span>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => removeFile(index)}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+            
+            {/* Mostrar recursos de Google Drive agregados con vista previa */}
+            {googleDriveResources.length > 0 ? (
+              <div className="space-y-4">
+                <Label>Recursos de Google Drive agregados ({googleDriveResources.length}):</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {googleDriveResources.map((resource) => (
+                    <ResourcePreview
+                      key={resource.id}
+                      resource={resource}
+                      onRemove={removeGoogleDriveResource}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Link className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <p className="text-sm">No hay recursos agregados</p>
+                <p className="text-xs">Haz clic en "Agregar Recursos de Google Drive" para comenzar</p>
               </div>
             )}
           </div>
