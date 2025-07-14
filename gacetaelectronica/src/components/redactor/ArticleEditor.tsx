@@ -22,9 +22,8 @@ export default function ArticleEditor() {
   const [newTag, setNewTag] = useState("")
   const [files, setFiles] = useState<string[]>([])
   const [googleDriveResources, setGoogleDriveResources] = useState<Array<{
-    id: string
+    idRecurso: string
     nombre: string
-    tipo: string
     ruta: string
   }>>([])
 
@@ -75,16 +74,15 @@ export default function ArticleEditor() {
   }
 
   const handleGoogleDriveResourcesAdded = (resources: Array<{
-    id: string
+    idRecurso: string
     nombre: string
-    tipo: string
     ruta: string
   }>) => {
     setGoogleDriveResources(resources)
   }
 
   const removeGoogleDriveResource = (id: string) => {
-    setGoogleDriveResources(googleDriveResources.filter(resource => resource.id !== id))
+    setGoogleDriveResources(googleDriveResources.filter(resource => resource.idRecurso !== id))
   }
 
   const handleSubmitForReview = async () => {
@@ -138,9 +136,9 @@ export default function ArticleEditor() {
       // Preparar recursos de Google Drive si existen
       const recursos = googleDriveResources.length > 0 ? 
         googleDriveResources.map(resource => ({
+          idRecurso: resource.idRecurso,
           nombre: resource.nombre,
           ruta: resource.ruta,
-          tipo: resource.tipo
         })) : undefined
 
       // Preparar etiquetas si existen
@@ -349,7 +347,7 @@ export default function ArticleEditor() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {googleDriveResources.map((resource) => (
                     <ResourcePreview
-                      key={resource.id}
+                      key={resource.idRecurso}
                       resource={resource}
                       onRemove={removeGoogleDriveResource}
                     />

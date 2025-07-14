@@ -1,19 +1,17 @@
 import getConnection from '@/lib/db'
 
-export interface Articulo {
-  id: number
-  titulo: string
-  contenido: string
-  createdAt: string
-  estado: string
-  categoria: {
-    id: number
-    nombre: string
-  }
-  autor: {
-    id: number
-    nombre: string
-  }
+
+export interface ArticuloResultado {
+  id: number;
+  titulo: string;
+  resumen: string;
+  contenido: string;
+  fecha_creacion: string;
+  categoria: string;
+  etiquetas: string[];
+  recursos: string[];
+  autor: string;
+  estado: number;
 }
 
 export async function getArticulos(filters?: {

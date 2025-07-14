@@ -6,9 +6,8 @@ import { X, Play, FileText, Image, Video, File } from "lucide-react"
 
 interface ResourcePreviewProps {
   resource: {
-    id: string
+    idRecurso: string
     nombre: string
-    tipo: string
     ruta: string
   }
   onRemove: (id: string) => void
@@ -78,17 +77,17 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
     }
   }
 
-  const previewUrls = getPreviewUrl(resource.ruta, resource.tipo)
+  const previewUrls = getPreviewUrl(resource.ruta, resource.nombre)
 
   // Función para obtener la URL de imagen de manera segura
   const getImageUrl = () => {
-    if (!previewUrls || resource.tipo !== 'imagen') return ''
+    if (!previewUrls || resource.nombre !== 'imagen') return ''
     return previewUrls.thumbnail || previewUrls.direct || ''
   }
 
   // Función para obtener la URL de video de manera segura
   const getVideoUrl = () => {
-    if (!previewUrls || resource.tipo !== 'video') return ''
+    if (!previewUrls || resource.nombre !== 'video') return ''
     return previewUrls.direct || ''
   }
 
@@ -106,7 +105,7 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
           },
           body: JSON.stringify({
             url: resource.ruta,
-            tipo: resource.tipo
+            nombre: resource.nombre
           }),
         })
 
@@ -126,23 +125,23 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
       }
     }
 
-    if (resource.ruta && resource.tipo) {
+    if (resource.ruta && resource.nombre) {
       getFileInfo()
     }
-  }, [resource.ruta, resource.tipo])
+  }, [resource.ruta, resource.nombre])
 
   return (
     <div className="relative bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
       {/* Header del recurso */}
       <div className="flex items-center justify-between p-3 border-b border-gray-100">
         <div className="flex items-center space-x-2">
-          {getIcon(resource.tipo)}
+          {getIcon(resource.nombre)}
                       <div>
               <h4 className="font-medium text-sm text-gray-900 truncate max-w-[200px]">
                 {fileInfo?.metadata?.name || resource.nombre}
               </h4>
               <p className="text-xs text-gray-500 capitalize">
-                {resource.tipo}
+                {resource.nombre}
                 {fileInfo?.metadata?.size && (
                   <span className="ml-1">• {Math.round(parseInt(fileInfo.metadata.size) / 1024)}KB</span>
                 )}
@@ -152,7 +151,7 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onRemove(resource.id)}
+          onClick={() => onRemove(resource.idRecurso)}
           className="text-gray-400 hover:text-red-500"
         >
           <X className="w-4 h-4" />
@@ -170,9 +169,9 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
           ) : error ? (
             <div className="w-full h-full flex flex-col items-center justify-center space-y-2">
               <div className="text-center">
-                {resource.tipo === 'imagen' ? (
+                {resource.nombre === 'imagen' ? (
                   <Image className="w-12 h-12 text-blue-500 mx-auto mb-2" />
-                ) : resource.tipo === 'video' ? (
+                ) : resource.nombre === 'video' ? (
                   <Video className="w-12 h-12 text-red-500 mx-auto mb-2" />
                 ) : (
                   <FileText className="w-12 h-12 text-orange-500 mx-auto mb-2" />
@@ -188,7 +187,7 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
                 </Button>
               </div>
             </div>
-          ) : fileInfo && resource.tipo === 'imagen' && fileInfo.previewUrls.thumbnail ? (
+          ) : fileInfo && resource.nombre === 'imagen' && fileInfo.previewUrls.thumbnail ? (
             <div className="relative w-full h-full">
               <img
                 src={fileInfo.previewUrls.thumbnail}
@@ -199,7 +198,7 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
                 }}
               />
             </div>
-          ) : fileInfo && resource.tipo === 'video' && fileInfo.previewUrls.direct ? (
+          ) : fileInfo && resource.nombre === 'video' && fileInfo.previewUrls.direct ? (
             <div className="relative w-full h-full">
               <video
                 src={fileInfo.previewUrls.direct}
@@ -211,7 +210,7 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
                 }}
               />
             </div>
-          ) : resource.tipo === 'pdf' ? (
+          ) : resource.nombre === 'pdf' ? (
             <div className="w-full h-full flex flex-col items-center justify-center space-y-2">
               <FileText className="w-12 h-12 text-orange-500" />
               <p className="text-sm text-gray-600 text-center">Vista previa de PDF</p>
@@ -227,9 +226,9 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center space-y-2">
               <div className="text-center">
-                {resource.tipo === 'imagen' ? (
+                {resource.nombre === 'imagen' ? (
                   <Image className="w-12 h-12 text-blue-500 mx-auto mb-2" />
-                ) : resource.tipo === 'video' ? (
+                ) : resource.nombre === 'video' ? (
                   <Video className="w-12 h-12 text-red-500 mx-auto mb-2" />
                 ) : (
                   <FileText className="w-12 h-12 text-orange-500 mx-auto mb-2" />

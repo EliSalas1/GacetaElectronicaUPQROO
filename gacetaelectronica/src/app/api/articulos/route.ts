@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     
     // Verificar si es una creación completa con recursos y etiquetas
     if (body.recursos || body.etiquetas) {
-      return await createArticleWithRelations(req);
+      return await createArticleWithRelations(body);
     }
     
     // Creación simple de artículo
@@ -103,14 +103,15 @@ export async function POST(req: NextRequest) {
 }
 
 // Función para crear artículo con relaciones en transacción
-async function createArticleWithRelations(req: NextRequest) {
+async function createArticleWithRelations(body: any) {
   const pool = await getConnection();
   const connection = await pool.getConnection();
   
   try {
     await connection.beginTransaction();
     
-    const { Titulo, Resumen, Contenido, IdCategoria, recursos, etiquetas } = await req.json();
+    // Usa directamente el body recibido
+    const { Titulo, Resumen, Contenido, IdCategoria, recursos, etiquetas } = body;
 
     if (!Titulo || !Resumen || !Contenido || !IdCategoria) {
       return new Response('Todos los campos son requeridos', { status: 400 });
@@ -134,32 +135,31 @@ async function createArticleWithRelations(req: NextRequest) {
     );
 
     const articuloId = (result as any).insertId;
+    const recursosCreados = [];
 
     // Guardar recursos si existen
     if (recursos && Array.isArray(recursos) && recursos.length > 0) {
       for (const recurso of recursos) {
-        const { nombre, ruta } = recurso;
+        const { nombre, ruta} = recurso;
         
         if (!nombre || !ruta) {
           await connection.rollback();
           return new Response('Datos de recurso incompletos (nombre y ruta son requeridos)', { status: 400 });
         }
 
-        // Verifica si el recurso con el mismo nombre ya existe
-        const [exists] = await connection.query(
-          'SELECT * FROM Recursos WHERE Nombre = ?', [nombre]
-        ) as [any[], any];
-        
-        if (exists.length > 0) {
-          await connection.rollback();
-          return new Response(`Ya existe un recurso con el nombre: ${nombre}`, { status: 409 });
-        }
-
         // Inserta el recurso (solo Nombre y Ruta)
-        await connection.query(
+        const [recursoResult] = await connection.query(
           'INSERT INTO Recursos (Nombre, Ruta, Articulos_idArticulo) VALUES (?, ?, ?)',
           [nombre, ruta, articuloId]
         );
+        
+        // Obtener el IdRecurso insertado y agregarlo al array de recursos creados
+        const IdRecurso = (recursoResult as any).insertId;
+        recursosCreados.push({
+          IdRecurso,
+          nombre,
+          ruta
+        });
       }
     }
 
@@ -198,6 +198,7 @@ async function createArticleWithRelations(req: NextRequest) {
       message: 'Artículo creado con relaciones',
       id: articuloId,
       recursosGuardados: recursos ? recursos.length : 0,
+      recursos: recursosCreados,
       etiquetasGuardadas: etiquetas ? etiquetas.length : 0
     }, { status: 201 });
 
