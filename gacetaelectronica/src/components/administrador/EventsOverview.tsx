@@ -1,148 +1,171 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { Eye, Edit, Trash2 } from 'lucide-react'
-
-import { Card } from '@/components/ui/card'
-import { CardHeader } from '@/components/ui/card'
-import { CardTitle } from '@/components/ui/card'
-import { CardDescription } from '@/components/ui/card'
-import { CardContent } from '@/components/ui/card'
-
-import { Table } from '@/components/ui/table'
-import { TableHeader } from '@/components/ui/table'
-import { TableRow } from '@/components/ui/table'
-import { TableHead } from '@/components/ui/table'
-import { TableBody } from '@/components/ui/table'
-import { TableCell } from '@/components/ui/table'
-
-import { Button } from '@/components/ui/button'
-
-import { EventInterface } from '@/entities/event'
-import { EditEventDialog } from './EditEventDialog'
-import { DeleteEventDialog } from './DeleteEventDialog'
+import { useState, useEffect } from "react"
+import { Eye, Edit, Trash2, Search, Filter } from "lucide-react"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { EventInterface } from "@/entities/event"
+import { EditEventDialog } from "./EditEventDialog"
+import { DeleteEventDialog } from "./DeleteEventDialog"
 import { ViewEventDialog } from "./ViewEventDialog"
-import FilterSearchBar from '../FilterSearchBar'
-
-const allEvents: EventInterface[] = [
-  {
-    id: 1,
-    title: 'Conferencia IA 2025',
-    date: '2025-07-10',
-    time: '18:00',
-    location: 'Auditorio Central',
-    shortDescription: 'Evento sobre inteligencia artificial',
-    longDescription: 'Detalles extensos de la conferencia...',
-    status: 'published',
-  },
-  {
-    id: 2,
-    title: 'Feria de Ciencias',
-    date: '2025-08-20',
-    time: '10:00',
-    location: 'Plaza principal',
-    shortDescription: 'Feria estudiantil anual',
-    status: 'pending',
-  },
-  {
-    id: 3,
-    title: 'Festival Cultural',
-    date: '2025-09-01',
-    time: '15:00',
-    location: 'Teatro universitario',
-    shortDescription: 'Música, danza y teatro',
-    status: 'draft',
-  },
-]
 
 export default function EventOverview() {
+  const [events, setEvents] = useState<EventInterface[]>([])
   const [selectedEvent, setSelectedEvent] = useState<EventInterface | null>(null)
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [viewOpen, setViewOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  // Estados del filtro
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterBy, setFilterBy] = useState("")
+  const [filterValue, setFilterValue] = useState("")
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setLoading(true)
+      try {
+        const res = await fetch('/api/eventos')
+        const data = await res.json()
+        // Mapear los campos del API a tu interfaz
+        const mapped = data.map((e: any) => ({
+          id: e.IdEvento,
+          title: e.Nombre,
+          date: e.Fecha,
+          time: e.Hora,
+          location: e.Lugar,
+          shortDescription: e.DesCorta,
+          longDescription: e.DesLarga
+        }))
+        setEvents(mapped)
+      } catch (err) {
+        console.error("Error al cargar eventos:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchEvents()
+  }, [])
+
+  // Filtrado local
+  const filteredEvents = events.filter(event => {
+    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase())
+    let matchesFilter = true
+    if (filterBy && filterValue && filterValue !== "all") {
+      if (filterBy === "status") matchesFilter = (event.status === filterValue)
+      if (filterBy === "location") matchesFilter = (event.location === filterValue)
+    }
+    return matchesSearch && matchesFilter
+  })
+
+  const formatDate = (isoDate: string) => {
+    const date = new Date(isoDate)
+    return date.toLocaleDateString('es-MX', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+  }
 
   return (
     <>
       <Card>
-        <CardHeader className='flex justify-between'>
+        <CardHeader className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
           <div>
             <CardTitle>Todos los Eventos</CardTitle>
             <CardDescription>Vista general de los eventos registrados</CardDescription>
           </div>
-          <FilterSearchBar 
-            searchValue={""}
-            onSearchChange={() => {}}
-            filterBy={""}
-            onFilterByChange={() => {}}
-            filterValue={""}
-            onFilterValueChange={() => {}}
-            availableFields={[
-              { label: "Categoría", value: "category" },
-              { label: "Estado", value: "status" },
-              { label: "Fecha", value: "createdAt" }
-            ]}
-            getFilterValues={(field) => []}
-          />
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Título</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Hora</TableHead>
-                <TableHead>Lugar</TableHead>
-                <TableHead>Descripción corta</TableHead>
-                <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allEvents.map((event) => (
-                <TableRow key={event.id}>
-                  <TableCell className="font-medium">{event.title}</TableCell>
-                  <TableCell>{event.date}</TableCell>
-                  <TableCell>{event.time}</TableCell>
-                  <TableCell>{event.location}</TableCell>
-                  <TableCell>{event.shortDescription}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedEvent(event)
-                          setViewOpen(true)
-                        }}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedEvent(event)
-                          setEditOpen(true)
-                        }}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedEvent(event)
-                          setDeleteOpen(true)
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+          {/* Filtros inline */}
+          <div className="flex gap-2 w-full md:w-auto">
+            {/* Input búsqueda */}
+            <div className="relative w-full md:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                className="pl-10"
+                placeholder="Buscar..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            {/* Filtro por campo */}
+            <Select value={filterBy} onValueChange={(value) => {
+              setFilterBy(value)
+              setFilterValue("")
+            }}>
+              <SelectTrigger className="w-40">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filtrar por" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="status">Estado</SelectItem>
+                <SelectItem value="location">Lugar</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Filtro por valor */}
+            <Select value={filterValue} onValueChange={setFilterValue}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Filtrar valor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                {(filterBy === "status" ? ["published", "pending", "draft"] : 
+                  filterBy === "location" ? Array.from(new Set(events.map(e => e.location))) : [])
+                  .map(option => (
+                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          {loading ? (
+            <p className="text-center">Cargando eventos...</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Título</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Hora</TableHead>
+                  <TableHead>Lugar</TableHead>
+                  <TableHead>Descripción corta</TableHead>
+                  <TableHead>Acciones</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredEvents.map(event => (
+                  <TableRow key={event.id}>
+                    <TableCell className="font-medium">{event.title}</TableCell>
+                    <TableCell>{formatDate(event.date)}</TableCell>
+                    <TableCell>{event.time}</TableCell>
+                    <TableCell>{event.location}</TableCell>
+                    <TableCell>{event.shortDescription}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => { setSelectedEvent(event); setViewOpen(true) }}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => { setSelectedEvent(event); setEditOpen(true) }}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => { setSelectedEvent(event); setDeleteOpen(true) }}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
@@ -153,9 +176,6 @@ export default function EventOverview() {
           if (!value) setSelectedEvent(null)
         }}
         event={selectedEvent}
-        onSave={(updatedEvent) => {
-          console.log('Guardar evento', updatedEvent)
-        }}
       />
 
       <DeleteEventDialog
@@ -166,10 +186,11 @@ export default function EventOverview() {
         }}
         event={selectedEvent}
         onConfirm={() => {
-          console.log('Eliminar evento:', selectedEvent?.id)
+          console.log("Eliminar evento:", selectedEvent?.id)
           setDeleteOpen(false)
         }}
       />
+
       <ViewEventDialog
         open={viewOpen}
         onOpenChange={(value) => {
@@ -178,7 +199,6 @@ export default function EventOverview() {
         }}
         event={selectedEvent}
       />
-
     </>
   )
 }
