@@ -10,6 +10,7 @@ export interface ArticuloResultado {
   fecha_creacion: string;
   categoria: string;
   etiquetas: string[];
+  recursos: string[];
   autor: string;
   estado: number;
 }

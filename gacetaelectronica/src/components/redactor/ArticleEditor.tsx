@@ -136,6 +136,7 @@ export default function ArticleEditor() {
       // Preparar recursos de Google Drive si existen
       const recursos = googleDriveResources.length > 0 ? 
         googleDriveResources.map(resource => ({
+          idRecurso: resource.idRecurso,
           nombre: resource.nombre,
           ruta: resource.ruta,
         })) : undefined
