@@ -1,10 +1,12 @@
 export interface UserInterface {
-  id: number,
-  name: string,
-  email: string,
-  role: string,
-  status: string,
-  createdAt: string,
+  idUsuarios: number,
+  Nombre: string,
+  Apellido: string,
+  Correo: string,
+  Rol: string,
+  Estado: string,
+  FechaCreacion: string,
+  Contraseña: string,
 }
 
 export interface UserEditDTO {

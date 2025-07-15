@@ -31,8 +31,8 @@ export const HEADER_OPTIONS_BY_ROLE: Record<string, Record<string, string>[]> = 
   }],
 }
 
-export const ROLE_NAME: Record<string, string> = {
-  "Administrador": "Administrador",
-  "Redactor": "Redactor",
-  "Supervisor": "Supervisor"
+export enum ROLE_NAME {
+  "admin" = "Administrador",
+  "editor" = "Editor",
+  "redactor" = "Redactor"
 }
