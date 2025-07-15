@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { format } from "date-fns"; 
+import { es } from "date-fns/locale"; 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -24,6 +26,11 @@ import DeleteUserDialog from "./DeleteUserDialog"
 import FilterSearchBar from "../FilterSearchBar"
 import { useFetch } from "@/hooks/useFetch"
 import { Spinner } from "../Spinner"
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString); // Convertimos la cadena a un objeto Date
+  return format(date, "hh:mm a dd/MM/yyyy", { locale: es }); // Formato como en la imagen
+};
 
 export default function UserManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -199,7 +206,7 @@ export default function UserManagement() {
                     <TableCell>{user.Correo}</TableCell>
                     <TableCell>{getRoleBadge(user.Rol)}</TableCell>
                     <TableCell>{getStatusBadge(Number(user.Estado))}</TableCell>
-                    <TableCell>{user.FechaCreacion}</TableCell>
+                    <TableCell>{formatDate(user.FechaCreacion)}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button variant="ghost" size="sm" onClick={() => handleEditClick(user)}>

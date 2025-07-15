@@ -21,42 +21,51 @@ interface Articulo {
   Recursos?: any[];
 }
 
-// ✅ GET: Obtener artículos
+// ✅ GET: Obtener artículos con un solo autor (sin duplicados)
 export async function GET(req: NextRequest) {
   try {
-    const pool = await getConnection()
+    const pool = await getConnection();
 
-    const limit = parseInt(req.nextUrl.searchParams.get('limit') || '10')
-    const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0')
+    const limit = parseInt(req.nextUrl.searchParams.get('limit') || '10');
+    const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0');
 
     if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
-      return new Response('Parámetros de paginación inválidos', { status: 400 })
+      return new Response('Parámetros de paginación inválidos', { status: 400 });
     }
 
     const [rows] = await pool.query(
-  `SELECT 
-     a.IdArticulo AS id,
-     a.Titulo AS title,
-     DATE_FORMAT(a.FechaCreacion, '%Y-%m-%d') AS createdAt,
-     CASE a.Estatus
-       WHEN 1 THEN 'published'
-       WHEN 2 THEN 'pending'
-       ELSE 'unknown'
-     END AS status,
-     COALESCE(c.Nombre, 'Sin Categoría') AS category,
-     'Sin autor' AS author
-   FROM Articulos a
-   LEFT JOIN Categorias c ON a.IdCategoria = c.IdCategoria
-   ORDER BY a.FechaCreacion DESC
-   LIMIT ? OFFSET ?`,
-  [limit, offset]
-) as [any[], any]
-    return Response.json(rows)
+      `SELECT 
+         a.IdArticulo AS id,
+         a.Titulo AS title,
+         DATE_FORMAT(a.FechaCreacion, '%Y-%m-%d') AS createdAt,
+         CASE a.Estatus
+           WHEN 1 THEN 'published'
+           WHEN 2 THEN 'pending'
+           ELSE 'unknown'
+         END AS status,
+         COALESCE(c.Nombre, 'Sin Categoría') AS category,
+         COALESCE(u.Nombre, 'Sin autor') AS author
+       FROM Articulos a
+       LEFT JOIN Categorias c ON a.IdCategoria = c.IdCategoria
+       LEFT JOIN (
+         SELECT DISTINCT Articulos_idArticulo, Usuarios_idUsuarios
+         FROM ArticuloUsuario
+         LIMIT 1
+       ) au ON a.IdArticulo = au.Articulos_idArticulo
+       LEFT JOIN Usuarios u ON au.Usuarios_idUsuarios = u.idUsuarios
+       ORDER BY a.FechaCreacion DESC
+       LIMIT ? OFFSET ?`,
+      [limit, offset]
+    );
+
+    return Response.json(rows);
   } catch (err) {
-    console.error('Error en GET articulos:', err)
-    return new Response('Error al obtener artículos', { status: 500 })
+    console.error('Error en GET articulos:', err);
+    return new Response('Error al obtener artículos', { status: 500 });
   }
 }
+
+
 // ✅ POST: Crear nuevo artículo
 export async function POST(req: NextRequest) {
   try {

@@ -31,6 +31,8 @@ import { EditArticleDialog } from "./EditArticleDialog";
 import { DeleteArticleDialog } from "./DeleteArticleDialog";
 import { ViewArticleDialog } from "./ViewArticleDialog";
 import EventOverview from "./EventsOverview";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface Article {
   id: number;
@@ -46,7 +48,9 @@ const getStatusBadge = (status: string) => {
     case "published":
       return <Badge className="bg-green-100 text-green-800">Publicado</Badge>;
     case "pending":
-      return <Badge className="bg-yellow-100 text-yellow-800">En Revisión</Badge>;
+      return (
+        <Badge className="bg-yellow-100 text-yellow-800">En Revisión</Badge>
+      );
     case "rejected":
       return <Badge className="bg-red-100 text-red-800">Rechazado</Badge>;
     case "draft":
@@ -85,7 +89,7 @@ export default function ArticleOverview() {
 
         const res = await fetch(url);
         const data = await res.json();
-        setArticles(data);
+        setArticles(data); // Aquí se asignan los datos
       } catch (err) {
         console.error("Error fetching articles:", err);
       } finally {
@@ -125,10 +129,13 @@ export default function ArticleOverview() {
             </div>
 
             {/* Filtro por campo */}
-            <Select value={filterBy} onValueChange={(value) => {
-              setFilterBy(value);
-              setFilterValue(""); // reset valor
-            }}>
+            <Select
+              value={filterBy}
+              onValueChange={(value) => {
+                setFilterBy(value);
+                setFilterValue(""); // reset valor
+              }}
+            >
               <SelectTrigger className="w-40">
                 <Filter className="mr-2 h-4 w-4" />
                 <SelectValue placeholder="Filtrar por" />
@@ -146,12 +153,16 @@ export default function ArticleOverview() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                {(filterBy === "category" ? ["1", "2"] : filterBy === "status" ? ["1", "2"] : [])
-                  .map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
+                {(filterBy === "category"
+                  ? ["1", "2"]
+                  : filterBy === "status"
+                  ? ["1", "2"]
+                  : []
+                ).map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -175,11 +186,17 @@ export default function ArticleOverview() {
               <TableBody>
                 {filteredArticles.map((article) => (
                   <TableRow key={article.id}>
-                    <TableCell className="font-medium">{article.title}</TableCell>
+                    <TableCell className="font-medium">
+                      {article.title}
+                    </TableCell>
                     <TableCell>{article.author}</TableCell>
                     <TableCell>{article.category}</TableCell>
                     <TableCell>{getStatusBadge(article.status)}</TableCell>
-                    <TableCell>{article.createdAt}</TableCell>
+                    <TableCell>
+                      {format(new Date(article.createdAt), "dd/MM/yyyy", {
+                        locale: es,
+                      })}
+                    </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button
@@ -229,8 +246,27 @@ export default function ArticleOverview() {
           if (!value) setSelectedArticle(null);
         }}
         article={selectedArticle}
-        onSave={(updatedArticle) => {
-          console.log("Save article", updatedArticle);
+        onSave={async (updatedArticle) => {
+          try {
+            const res = await fetch(`/api/articulos?id=${updatedArticle.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                Titulo: updatedArticle.title,
+                IdCategoria: 1,
+                Estatus: updatedArticle.status === "Publicado" ? 1 : 2,
+              }),
+            });
+            if (!res.ok) throw new Error("Error al actualizar");
+            setArticles((prev) =>
+              prev.map((a) =>
+                a.id === updatedArticle.id ? { ...a, ...updatedArticle } : a
+              )
+            );
+          } catch (err) {
+            console.error(err);
+            alert("Error al guardar cambios");
+          }
         }}
       />
 
@@ -241,9 +277,24 @@ export default function ArticleOverview() {
           if (!value) setSelectedArticle(null);
         }}
         article={selectedArticle}
-        onConfirm={() => {
-          console.log("Deleted article:", selectedArticle?.id);
-          setDeleteOpen(false);
+        onConfirm={async () => {
+          try {
+            const res = await fetch(
+              `/api/articulos?id=${selectedArticle?.id}`,
+              {
+                method: "DELETE",
+              }
+            );
+            if (!res.ok) throw new Error("Error al eliminar");
+            setArticles((prev) =>
+              prev.filter((a) => a.id !== selectedArticle?.id)
+            );
+          } catch (err) {
+            console.error(err);
+            alert("Error al eliminar artículo");
+          } finally {
+            setDeleteOpen(false);
+          }
         }}
       />
 

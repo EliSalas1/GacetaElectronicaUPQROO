@@ -1,36 +1,57 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Eye, Edit, Trash2, Search, Filter } from "lucide-react"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { EventInterface } from "@/entities/event"
-import { EditEventDialog } from "./EditEventDialog"
-import { DeleteEventDialog } from "./DeleteEventDialog"
-import { ViewEventDialog } from "./ViewEventDialog"
+import { useState, useEffect } from "react";
+import { Eye, Edit, Trash2, Search, Filter } from "lucide-react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { EventInterface } from "@/entities/event";
+import { EditEventDialog } from "./EditEventDialog";
+import { DeleteEventDialog } from "./DeleteEventDialog";
+import { ViewEventDialog } from "./ViewEventDialog";
 
 export default function EventOverview() {
-  const [events, setEvents] = useState<EventInterface[]>([])
-  const [selectedEvent, setSelectedEvent] = useState<EventInterface | null>(null)
-  const [editOpen, setEditOpen] = useState(false)
-  const [deleteOpen, setDeleteOpen] = useState(false)
-  const [viewOpen, setViewOpen] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [events, setEvents] = useState<EventInterface[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<EventInterface | null>(
+    null
+  );
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Estados del filtro
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filterBy, setFilterBy] = useState("")
-  const [filterValue, setFilterValue] = useState("")
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterBy, setFilterBy] = useState("");
+  const [filterValue, setFilterValue] = useState("");
 
   useEffect(() => {
     const fetchEvents = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
-        const res = await fetch('/api/eventos')
-        const data = await res.json()
+        const res = await fetch("/api/eventos");
+        const data = await res.json();
         // Mapear los campos del API a tu interfaz
         const mapped = data.map((e: any) => ({
           id: e.IdEvento,
@@ -39,37 +60,40 @@ export default function EventOverview() {
           time: e.Hora,
           location: e.Lugar,
           shortDescription: e.DesCorta,
-          longDescription: e.DesLarga
-        }))
-        setEvents(mapped)
+          longDescription: e.DesLarga,
+        }));
+        setEvents(mapped);
       } catch (err) {
-        console.error("Error al cargar eventos:", err)
+        console.error("Error al cargar eventos:", err);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchEvents()
-  }, [])
+    };
+    fetchEvents();
+  }, []);
 
   // Filtrado local
-  const filteredEvents = events.filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase())
-    let matchesFilter = true
+  const filteredEvents = events.filter((event) => {
+    const matchesSearch = event.title
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    let matchesFilter = true;
     if (filterBy && filterValue && filterValue !== "all") {
-      if (filterBy === "status") matchesFilter = (event.status === filterValue)
-      if (filterBy === "location") matchesFilter = (event.location === filterValue)
+      if (filterBy === "status") matchesFilter = event.status === filterValue;
+      if (filterBy === "location")
+        matchesFilter = event.location === filterValue;
     }
-    return matchesSearch && matchesFilter
-  })
+    return matchesSearch && matchesFilter;
+  });
 
   const formatDate = (isoDate: string) => {
-    const date = new Date(isoDate)
-    return date.toLocaleDateString('es-MX', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })
-  }
+    const date = new Date(isoDate);
+    return date.toLocaleDateString("es-MX", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
 
   return (
     <>
@@ -77,7 +101,9 @@ export default function EventOverview() {
         <CardHeader className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
           <div>
             <CardTitle>Todos los Eventos</CardTitle>
-            <CardDescription>Vista general de los eventos registrados</CardDescription>
+            <CardDescription>
+              Vista general de los eventos registrados
+            </CardDescription>
           </div>
 
           {/* Filtros inline */}
@@ -94,10 +120,13 @@ export default function EventOverview() {
             </div>
 
             {/* Filtro por campo */}
-            <Select value={filterBy} onValueChange={(value) => {
-              setFilterBy(value)
-              setFilterValue("")
-            }}>
+            <Select
+              value={filterBy}
+              onValueChange={(value) => {
+                setFilterBy(value);
+                setFilterValue("");
+              }}
+            >
               <SelectTrigger className="w-40">
                 <Filter className="mr-2 h-4 w-4" />
                 <SelectValue placeholder="Filtrar por" />
@@ -115,11 +144,16 @@ export default function EventOverview() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                {(filterBy === "status" ? ["published", "pending", "draft"] : 
-                  filterBy === "location" ? Array.from(new Set(events.map(e => e.location))) : [])
-                  .map(option => (
-                    <SelectItem key={option} value={option}>{option}</SelectItem>
-                  ))}
+                {(filterBy === "status"
+                  ? ["published", "pending", "draft"]
+                  : filterBy === "location"
+                  ? Array.from(new Set(events.map((e) => e.location)))
+                  : []
+                ).map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -141,7 +175,7 @@ export default function EventOverview() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredEvents.map(event => (
+                {filteredEvents.map((event) => (
                   <TableRow key={event.id}>
                     <TableCell className="font-medium">{event.title}</TableCell>
                     <TableCell>{formatDate(event.date)}</TableCell>
@@ -150,13 +184,34 @@ export default function EventOverview() {
                     <TableCell>{event.shortDescription}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => { setSelectedEvent(event); setViewOpen(true) }}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedEvent(event);
+                            setViewOpen(true);
+                          }}
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => { setSelectedEvent(event); setEditOpen(true) }}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedEvent(event);
+                            setEditOpen(true);
+                          }}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => { setSelectedEvent(event); setDeleteOpen(true) }}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedEvent(event);
+                            setDeleteOpen(true);
+                          }}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -172,33 +227,68 @@ export default function EventOverview() {
       <EditEventDialog
         open={editOpen}
         onOpenChange={(value) => {
-          setEditOpen(value)
-          if (!value) setSelectedEvent(null)
+          setEditOpen(value);
+          if (!value) setSelectedEvent(null);
         }}
         event={selectedEvent}
+        onSave={async (updatedEvent) => {
+          try {
+            const res = await fetch(`/api/eventos?id=${updatedEvent.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                Nombre: updatedEvent.title,
+                Fecha: updatedEvent.date,
+                Hora: updatedEvent.time,
+                Lugar: updatedEvent.location,
+                DesCorta: updatedEvent.shortDescription,
+                DesLarga: updatedEvent.longDescription,
+              }),
+            });
+            if (!res.ok) throw new Error("Error al actualizar evento");
+            setEvents((prev) =>
+              prev.map((e) =>
+                e.id === updatedEvent.id ? { ...e, ...updatedEvent } : e
+              )
+            );
+          } catch (err) {
+            console.error(err);
+            alert("Error al guardar cambios del evento");
+          }
+        }}
       />
 
       <DeleteEventDialog
         open={deleteOpen}
         onOpenChange={(value) => {
-          setDeleteOpen(value)
-          if (!value) setSelectedEvent(null)
+          setDeleteOpen(value);
+          if (!value) setSelectedEvent(null);
         }}
         event={selectedEvent}
-        onConfirm={() => {
-          console.log("Eliminar evento:", selectedEvent?.id)
-          setDeleteOpen(false)
+        onConfirm={async () => {
+          try {
+            const res = await fetch(`/api/eventos?id=${selectedEvent?.id}`, {
+              method: "DELETE",
+            });
+            if (!res.ok) throw new Error("Error al eliminar evento");
+            setEvents((prev) => prev.filter((e) => e.id !== selectedEvent?.id));
+          } catch (err) {
+            console.error(err);
+            alert("Error al eliminar evento");
+          } finally {
+            setDeleteOpen(false);
+          }
         }}
       />
 
       <ViewEventDialog
         open={viewOpen}
         onOpenChange={(value) => {
-          setViewOpen(value)
-          if (!value) setSelectedEvent(null)
+          setViewOpen(value);
+          if (!value) setSelectedEvent(null);
         }}
         event={selectedEvent}
       />
     </>
-  )
+  );
 }
