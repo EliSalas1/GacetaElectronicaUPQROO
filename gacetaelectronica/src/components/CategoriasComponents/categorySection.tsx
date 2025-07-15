@@ -8,6 +8,7 @@ const categoryTitles = {
   humanidades: "Humanidades",
   social: "Social y Política",
   logros: "Logros",
+  culturales: "Cultura y Deporte",
 }
 
 // Componente que muestra una sección de artículos agrupados por categoría
