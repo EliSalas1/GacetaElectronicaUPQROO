@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Eye, Edit, Trash2 } from 'lucide-react'
 
 import { Card } from '@/components/ui/card'
@@ -22,50 +21,42 @@ import { Button } from '@/components/ui/button'
 import { EventInterface } from '@/entities/event'
 import { EditEventDialog } from './EditEventDialog'
 import { DeleteEventDialog } from './DeleteEventDialog'
-
-const allEvents: EventInterface[] = [
-  {
-    id: 1,
-    title: 'Conferencia IA 2025',
-    date: '2025-07-10',
-    time: '18:00',
-    location: 'Auditorio Central',
-    shortDescription: 'Evento sobre inteligencia artificial',
-    longDescription: 'Detalles extensos de la conferencia...',
-    status: 'published',
-  },
-  {
-    id: 2,
-    title: 'Feria de Ciencias',
-    date: '2025-08-20',
-    time: '10:00',
-    location: 'Plaza principal',
-    shortDescription: 'Feria estudiantil anual',
-    status: 'pending',
-  },
-  {
-    id: 3,
-    title: 'Festival Cultural',
-    date: '2025-09-01',
-    time: '15:00',
-    location: 'Teatro universitario',
-    shortDescription: 'Música, danza y teatro',
-    status: 'draft',
-  },
-]
+import { ViewEventDialog } from "./ViewEventDialog"
+import FilterSearchBar from '../FilterSearchBar'
+import { useFetch } from '@/hooks/useFetch'
+import { Spinner } from '../Spinner'
 
 export default function EventOverview() {
-  const router = useRouter()
   const [selectedEvent, setSelectedEvent] = useState<EventInterface | null>(null)
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [viewOpen, setViewOpen] = useState(false)
+
+  const { data, loading } = useFetch<EventInterface>('/api/eventos')
+  // const { data: dataEventos } = useFetch('/api/eventos')
 
   return (
     <>
       <Card>
-        <CardHeader>
-          <CardTitle>Todos los Eventos</CardTitle>
-          <CardDescription>Vista general de los eventos registrados</CardDescription>
+        <CardHeader className='flex justify-between'>
+          <div>
+            <CardTitle>Todos los Eventos</CardTitle>
+            <CardDescription>Vista general de los eventos registrados</CardDescription>
+          </div>
+          <FilterSearchBar 
+            searchValue={""}
+            onSearchChange={() => {}}
+            filterBy={""}
+            onFilterByChange={() => {}}
+            filterValue={""}
+            onFilterValueChange={() => {}}
+            availableFields={[
+              { label: "Categoría", value: "category" },
+              { label: "Estado", value: "status" },
+              { label: "Fecha", value: "createdAt" }
+            ]}
+            getFilterValues={(field) => []}
+          />
         </CardHeader>
         <CardContent>
           <Table>
@@ -80,18 +71,27 @@ export default function EventOverview() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {allEvents.map((event) => (
-                <TableRow key={event.id}>
-                  <TableCell className="font-medium">{event.title}</TableCell>
-                  <TableCell>{event.date}</TableCell>
-                  <TableCell>{event.time}</TableCell>
-                  <TableCell>{event.location}</TableCell>
-                  <TableCell>{event.shortDescription}</TableCell>
+              {loading ? <TableRow><TableCell colSpan={6} className="text-center flex justify-center"><Spinner/></TableCell></TableRow> : ""}
+              {Array.isArray(data) && data.map((event) => (
+                <TableRow key={event.IdEvento}>
+                  <TableCell className="font-medium">{event.Nombre}</TableCell>
+                  <TableCell>{event.Fecha}</TableCell>
+                  <TableCell>{event.Hora}</TableCell>
+                  <TableCell>{event.Lugar}</TableCell>
+                  <TableCell>{event.DesCorta}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => router.push(`/administrador/evento/${event.id}`)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedEvent(event)
+                          setViewOpen(true)
+                        }}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
+
                       <Button
                         variant="ghost"
                         size="sm"
@@ -141,10 +141,19 @@ export default function EventOverview() {
         }}
         event={selectedEvent}
         onConfirm={() => {
-          console.log('Eliminar evento:', selectedEvent?.id)
+          console.log('Eliminar evento:', selectedEvent?.IdEvento)
           setDeleteOpen(false)
         }}
       />
+      <ViewEventDialog
+        open={viewOpen}
+        onOpenChange={(value) => {
+          setViewOpen(value)
+          if (!value) setSelectedEvent(null)
+        }}
+        event={selectedEvent}
+      />
+
     </>
   )
 }

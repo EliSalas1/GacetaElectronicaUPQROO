@@ -72,6 +72,16 @@ export default function Events() {
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold">Próximos Eventos</h2>
+
+        {/* <Button
+          asChild
+          variant="outline"
+          className="ml-4 bg-white text-[#4C0000] border border-[#4C0000] hover:bg-[#4C0000] hover:text-white text-sm px-3 py-1 h-auto"
+        >
+          <a href="/publica/alleventpage" className="flex items-center gap-2">
+            Ver todos →
+          </a>
+        </Button> */}
       </div>
 
       {/* Loading / Error */}

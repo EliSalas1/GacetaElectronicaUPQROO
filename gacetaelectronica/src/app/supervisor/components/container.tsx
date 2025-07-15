@@ -66,21 +66,39 @@ export const SupervisorContainer: FC<SupervisorContainerProps> = () => {
   return (
     <>
       <PrivateHeader />
-      <div className="container mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-6">Panel de Supervisor</h1>
+      <div className="container mx-auto p-3 sm:p-4 lg:p-6">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold">Panel de Supervisor</h1>
+        </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="resumen">Resumen</TabsTrigger>
-            <TabsTrigger value="pendientes">Pendientes de revisión</TabsTrigger>
-            <TabsTrigger value="historial">Historial</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-10">
+            <TabsTrigger 
+              value="resumen" 
+              className="text-xs sm:text-sm py-2 sm:py-1.5"
+            >
+              Resumen
+            </TabsTrigger>
+            <TabsTrigger 
+              value="pendientes" 
+              className="text-xs sm:text-sm py-2 sm:py-1.5"
+            >
+              <span className="hidden sm:inline">Pendientes de revisión</span>
+              <span className="sm:hidden">Pendientes</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="historial" 
+              className="text-xs sm:text-sm py-2 sm:py-1.5"
+            >
+              Historial
+            </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="resumen" className="mt-6">
+          <TabsContent value="resumen" className="mt-4 sm:mt-6">
             <ResumenTab />
           </TabsContent>
           
-          <TabsContent value="pendientes" className="mt-6">
+          <TabsContent value="pendientes" className="mt-4 sm:mt-6">
             <PendientesTab 
               onViewArticle={handleViewArticle}
               filterState={pendientesFilter}
@@ -88,7 +106,7 @@ export const SupervisorContainer: FC<SupervisorContainerProps> = () => {
             />
           </TabsContent>
           
-          <TabsContent value="historial" className="mt-6">
+          <TabsContent value="historial" className="mt-4 sm:mt-6">
             <HistorialTab 
               filterState={historialFilter}
               filterConfig={historialFilterConfig}

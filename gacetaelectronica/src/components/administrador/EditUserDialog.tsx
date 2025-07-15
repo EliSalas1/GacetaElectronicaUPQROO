@@ -11,17 +11,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { UserInterface } from '@/entities/user'
+import { Spinner } from '../Spinner'
 
 interface EditarUsuarioDialogProps {
   isOpen: boolean
   setIsOpen: (open: boolean) => void
   usuario: UserInterface
-  onSave: (updatedUser: {
-    nombre: string
-    rol: string
-    estado: string
-    email: string
-  }) => void
+  onSave: (updatedUser: Partial<UserInterface>) => void
 }
 
 export default function EditUserDialog({
@@ -30,15 +26,29 @@ export default function EditUserDialog({
   usuario,
   onSave,
 }: EditarUsuarioDialogProps) {
-    const [nombre, setNombre] = useState(usuario.name)
-    const [rol, setRol] = useState(usuario.role)
-    const [estado, setEstado] = useState(usuario.status)
+    const [nombre, setNombre] = useState(usuario.Nombre)
+    const [rol, setRol] = useState(usuario.Rol)
+    const [estado, setEstado] = useState(usuario.Estado.toString())
+    const [isLoading, setIsLoading] = useState(false)
 
-    const handleGuardarCambios = () => {
-      onSave({ nombre, rol, estado, email: usuario.email })
-      setIsOpen(false)
+    const handleGuardarCambios = async () => {
+      setIsLoading(true)
+      try {
+        await onSave({
+          idUsuarios: usuario.idUsuarios,
+          Nombre: nombre, 
+          Apellido: usuario.Apellido,
+          Rol: rol, 
+          Estado: estado, 
+          Correo: usuario.Correo, 
+          Contraseña: usuario.Contraseña
+        })
+        setIsOpen(false)
+      } catch {
+
+        setIsLoading(false)
+      }
     }
-
 
   return (
     <CustomDialog
@@ -47,8 +57,8 @@ export default function EditUserDialog({
       title="Editar Usuario"
       description="Modifica la información del usuario"
       footer={
-        <Button onClick={handleGuardarCambios} className="w-full">
-          Guardar Cambios
+        <Button disabled={isLoading} onClick={handleGuardarCambios} className="w-full">
+          {isLoading ? <Spinner/> : "Guardar Cambios" }
         </Button>
       }
     >
@@ -69,9 +79,10 @@ export default function EditUserDialog({
             <SelectValue placeholder="Selecciona un rol" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="redactor">Redactor</SelectItem>
-            <SelectItem value="supervisor">Supervisor</SelectItem>
-            <SelectItem value="admin">Administrador</SelectItem>
+            <SelectItem value="Admin">Administrador</SelectItem>
+            <SelectItem value="Autor">Autor</SelectItem>
+            <SelectItem value="Revisor">Revisor</SelectItem>
+            <SelectItem value="Usuario">Usuario</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -83,8 +94,8 @@ export default function EditUserDialog({
             <SelectValue placeholder="Selecciona un estado" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="activo">Activo</SelectItem>
-            <SelectItem value="inactivo">Inactivo</SelectItem>
+            <SelectItem value="1">Activo</SelectItem>
+            <SelectItem value="0">Inactivo</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -93,7 +104,7 @@ export default function EditUserDialog({
         <Label htmlFor="email">Correo Electrónico</Label>
         <Input
           id="email"
-          value={usuario.email}
+          value={usuario.Correo}
           disabled
           className="opacity-70"
         />

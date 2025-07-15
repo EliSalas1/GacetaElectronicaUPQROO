@@ -10,14 +10,11 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from "@/components/ui/select"
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle
 } from "@/components/ui/dialog"
-import { Eye, Edit, Trash2, Search, Filter } from "lucide-react"
+import { Eye, Edit, Trash2 } from "lucide-react"
+import FilterSearchBar from "@/components/FilterSearchBar"
 
 const mockArticles = [
   {
@@ -108,12 +105,10 @@ export default function MyArticles() {
     return matchSearch && matchFilter
   })
 
-  const getFilterOptions = () => {
-    const options = new Set<string>()
-    mockArticles.forEach((a) => {
-      options.add(a[filterBy as keyof typeof a] as string)
-    })
-    return Array.from(options)
+  const getFilterOptions = (field: string) => {
+    const values = new Set<string>()
+    mockArticles.forEach((a) => values.add(a[field as keyof typeof a] as string))
+    return Array.from(values)
   }
 
   return (
@@ -124,49 +119,20 @@ export default function MyArticles() {
             <CardTitle>Mis Artículos</CardTitle>
             <CardDescription>Gestiona todos tus artículos creados</CardDescription>
           </div>
-          <div className="flex gap-2 w-full md:w-auto">
-            {/* Búsqueda */}
-            <div className="relative w-full md:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                className="pl-10"
-                placeholder="Buscar título..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
-            {/* Filtro por campo */}
-            <Select value={filterBy} onValueChange={(value) => {
-              setFilterBy(value)
-              setFilterValue("all")
-            }}>
-              <SelectTrigger className="w-40">
-                <Filter className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Filtrar por" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="category">Categoría</SelectItem>
-                <SelectItem value="status">Estado</SelectItem>
-                <SelectItem value="createdAt">Fecha</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Filtro por valor */}
-            <Select value={filterValue} onValueChange={setFilterValue}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Filtrar valor" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {getFilterOptions().map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {filterBy === "createdAt" ? option : option.charAt(0).toUpperCase() + option.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <FilterSearchBar
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            filterBy={filterBy}
+            onFilterByChange={setFilterBy}
+            filterValue={filterValue}
+            onFilterValueChange={setFilterValue}
+            availableFields={[
+              { label: "Categoría", value: "category" },
+              { label: "Estado", value: "status" },
+              { label: "Fecha", value: "createdAt" }
+            ]}
+            getFilterValues={getFilterOptions}
+          />
         </div>
       </CardHeader>
 
@@ -219,25 +185,24 @@ export default function MyArticles() {
         </Table>
       </CardContent>
 
-      {/* Modal de vista del artículo */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{selectedArticle?.title}</DialogTitle>
             <DialogDescription>Publicado el {selectedArticle?.createdAt}</DialogDescription>
           </DialogHeader>
-           <div className="max-h-96 overflow-y-auto pr-2 space-y-4">
-      {selectedArticle?.image && (
-        <img
-          src={selectedArticle.image}
-          alt="Imagen del artículo"
-          className="rounded-md w-full h-auto object-cover"
-        />
-      )}
-      <p className="text-sm text-muted-foreground whitespace-pre-line">
-        {selectedArticle?.content || "Este artículo no tiene contenido aún."}
-      </p>
-    </div>
+          <div className="max-h-96 overflow-y-auto pr-2 space-y-4">
+            {selectedArticle?.image && (
+              <img
+                src={selectedArticle.image}
+                alt="Imagen del artículo"
+                className="rounded-md w-full h-auto object-cover"
+              />
+            )}
+            <p className="text-sm text-muted-foreground whitespace-pre-line">
+              {selectedArticle?.content || "Este artículo no tiene contenido aún."}
+            </p>
+          </div>
         </DialogContent>
       </Dialog>
     </Card>
