@@ -1,5 +1,5 @@
 export const HEADER_OPTIONS_BY_ROLE: Record<string, Record<string, string>[]> = {
-  admin: [{
+  Administrador: [{
     label: "Inicio",
     href: "/",
   },{
@@ -9,7 +9,26 @@ export const HEADER_OPTIONS_BY_ROLE: Record<string, Record<string, string>[]> = 
     label: "Panel de Administración",
     href: "/administrador",
   }],
-  editor: [],
+  Redactor: [{
+    label: "Inicio",
+    href: "/",
+  },{
+    label: "Categorías",
+    href: "/categorias",
+  }, {
+    label: "Panel de Redactor",
+    href: "/redactor",
+  }],
+  Supervisor: [{
+    label: "Inicio",
+    href: "/",
+  },{
+    label: "Categorías",
+    href: "/categorias",
+  }, {
+    label: "Panel de Supervisor",
+    href: "/supervisor",
+  }],
 }
 
 export enum ROLE_NAME {
