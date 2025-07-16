@@ -3,10 +3,9 @@
 import { X, CalendarDays, Clock, MapPin } from "lucide-react";
 import { Event } from "@/entities/user";
 
-// Definimos las props esperadas del componente
 interface EventModalProps {
-  event: Event;         // Información del evento que se mostrará
-  onClose: () => void;  // Función para cerrar el modal
+  event: Event;
+  onClose: () => void;
 }
 
 export default function EventModal({ event, onClose }: EventModalProps) {

@@ -1,53 +1,52 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Header from "@/components/Header"
-import Footer from "@/components/Footer"
-import CategorySection from "@/components/CategoriasComponents/categorySection"
-import { articlesData } from "@/components/CategoriasComponents/articlesMock"
-import ButtomUp from "@/components/CategoriasComponents/ButtomUp"
-import SearchBar from "@/components/HomeComponents/SearchBar"
+import { useState } from "react";
+import CategorySection from "@/components/CategoriasComponents/categorySection";
+import SearchBar from "@/components/HomeComponents/SearchBar";
+import LayoutCategorias from "@/components/CategoriasComponents/LayoutCategorias";
+import useArticulosPorCategoria from "@/hooks/useArticulosPorCategoria";
+import ArticleCardSkeleton from "@/components/CategoriasComponents/ArticleCardSkeleton";
 
 export default function CategoriasPage() {
-  // Estado para llevar el control de qué categorías están expandidas
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const { articlesByCategory, loading } = useArticulosPorCategoria();
 
-  // Función que alterna el estado expandido/colapsado de una categoría específica
   const toggleCategory = (category: string) => {
     setExpandedCategories((prev) => ({
       ...prev,
       [category]: !prev[category],
-    }))
-  }
+    }));
+  };
 
   return (
-    // Contenedor principal
-    <div className="min-h-screen bg-neutral-50">
-      <Header />
-      {/* Título principal de la página */}
-      <div className="max-w-[1280px] mx-auto py-8">
+    <LayoutCategorias>
         <h1 className="text-4xl font-bold text-center mb-12 text-accent-900">Categorías</h1>
 
         <div className="mb-4">
-        <SearchBar />
+          <SearchBar />
         </div>
 
-        {/* Renderiza un botón para cada categoría */}
-        
-        {/* Renderiza una sección por cada categoría con sus artículos */}
-        {Object.entries(articlesData).map(([categoryKey, articles]) => (
-          <CategorySection
-            key={categoryKey}
-            categoryKey={categoryKey}
-            articles={articles}
-            isExpanded={!!expandedCategories[categoryKey]}
-            onToggle={toggleCategory}
-          />
-        ))}
-      </div>
-      
-      <ButtomUp />
-      <Footer />
-    </div>
-  )
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <ArticleCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : Object.keys(articlesByCategory).length === 0 ? (
+          <div className="text-center text-gray-600 mt-8">
+            Artículos no encontrados.
+          </div>  
+        ) : (
+          Object.entries(articlesByCategory).map(([categoryKey, articles]) => (
+            <CategorySection
+              key={categoryKey}
+              categoryKey={categoryKey}
+              articles={articles}
+              isExpanded={!!expandedCategories[categoryKey]}
+              onToggle={toggleCategory}
+            />
+          ))
+        )}
+    </LayoutCategorias>
+  );
 }

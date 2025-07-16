@@ -13,24 +13,24 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { LogOut, User } from "lucide-react"
 import { HEADER_OPTIONS_BY_ROLE, ROLE_NAME } from "@/constants/header"
+import { useUser } from "@/contexts/UserContext"
 
 export default function PrivateHeader() {
-  const router = useRouter()
+  const { user, role, logout } = useUser()
 
-  const user = {
-    name: "Administrador",
-    email: "test@test.com",
-    image: "https://via.placeholder.com/150",
+  // Si no hay usuario o rol, no mostrar el header o mostrar un estado de carga
+  if (!user || !role) {
+    return null // o un componente de loading
   }
-
-  const role = "admin"
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <h2 className="text-xl font-semibold text-gray-900">Gaceta Electrónica</h2>
-          <span className="px-2 py-1 text-xs font-bold bg-[#711919] text-[#ffffff] rounded-full">{ROLE_NAME[role]}</span>
+          <span className="px-2 py-1 text-xs font-bold bg-[#711919] text-[#ffffff] rounded-full">
+            {ROLE_NAME[role] || role}
+          </span>
         </div>
 
         <div className="flex items-center gap-4">
@@ -40,7 +40,7 @@ export default function PrivateHeader() {
                 key={index}
                 variant="ghost"
                 className="text-gray-700 hover:bg-gray-100 cursor-pointer"
-                onClick={() => router.push(option.href)}
+                onClick={() => window.location.assign(option.href)}
               >
                 {option.label}
               </Button>
@@ -69,7 +69,7 @@ export default function PrivateHeader() {
                 <span>Perfil</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={logout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Salir</span>
               </DropdownMenuItem>

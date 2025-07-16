@@ -3,22 +3,9 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { format } from "date-fns"; 
-import { es } from "date-fns/locale"; 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Plus, Edit, Trash2 } from "lucide-react"
+import { Edit, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import EditUserDialog from "./EditUserDialog"
 import { UserInterface } from "@/entities/user"
@@ -26,11 +13,12 @@ import DeleteUserDialog from "./DeleteUserDialog"
 import FilterSearchBar from "../FilterSearchBar"
 import { useFetch } from "@/hooks/useFetch"
 import { Spinner } from "../Spinner"
+import NuevoUsuariosDialog from "./NuevoUsuarioDialog"
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString); // Convertimos la cadena a un objeto Date
-  return format(date, "hh:mm a dd/MM/yyyy", { locale: es }); // Formato como en la imagen
-};
+const usuarios = [
+  { id: 1, nombre: "Juan Pérez", email: "juan@universidad.edu", rol: "redactor" },
+  { id: 2, nombre: "María Gómez", email: "maria@universidad.edu", rol: "supervisor" },
+];
 
 export default function UserManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -181,48 +169,7 @@ export default function UserManagement() {
                 ]}
                 getFilterValues={(field) => []}
               />
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Nuevo Usuario
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Crear Nuevo Usuario</DialogTitle>
-                    <DialogDescription>Agrega un nuevo usuario al sistema</DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="usuario@universidad.edu"
-                        value={newUserEmail}
-                        onChange={(e) => setNewUserEmail(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="w-full" htmlFor="role">Rol</Label>
-                      <Select value={newUserRole} onValueChange={setNewUserRole}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Selecciona un rol" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="redactor">Redactor</SelectItem>
-                          <SelectItem value="supervisor">Supervisor</SelectItem>
-                          <SelectItem value="admin">Administrador</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button onClick={handleCreateUser} disabled={!newUserEmail || !newUserRole} className="w-full">
-                      Crear Usuario
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <NuevoUsuariosDialog initialUsuarios={usuarios}/>
             </div>
           </div>
         </CardHeader>
