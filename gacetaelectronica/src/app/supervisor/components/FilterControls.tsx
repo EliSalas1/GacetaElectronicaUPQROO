@@ -1,28 +1,28 @@
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Search, Filter } from "lucide-react"
+} from "@/components/ui/select";
+import { Filter } from "lucide-react";
 
 interface FilterControlsProps {
-  searchTerm: string
-  setSearchTerm: (value: string) => void
-  filterBy: string
-  setFilterBy: (value: string) => void
-  filterValue: string
-  setFilterValue: (value: string) => void
-  filterOptions: string[]
+  searchTerm: string;
+  setSearchTerm: (value: string) => void;
+  filterBy: string;
+  setFilterBy: (value: string) => void;
+  filterValue: string;
+  setFilterValue: (value: string) => void;
+  filterOptions: string[];
   filterFields: {
     [key: string]: {
-      label: string
-      key: string
-    }
-  }
-  searchPlaceholder?: string
+      label: string;
+      key: string;
+    };
+  };
+  searchPlaceholder?: string;
 }
 
 export default function FilterControls({
@@ -34,27 +34,29 @@ export default function FilterControls({
   setFilterValue,
   filterOptions,
   filterFields,
-  searchPlaceholder = "Buscar..."
+  searchPlaceholder = "Buscar...",
 }: FilterControlsProps) {
   const formatOptionLabel = (option: string, fieldKey: string) => {
     // Si es una fecha, mantenerla como está
-    if (fieldKey.includes('fecha') || fieldKey.includes('date')) {
-      return option
+    if (fieldKey.includes("fecha") || fieldKey.includes("date")) {
+      return option;
     }
     // Para otros campos, capitalizar
-    return option.charAt(0).toUpperCase() + option.slice(1).replace(/[_-]/g, ' ')
-  }
+    return (
+      option.charAt(0).toUpperCase() + option.slice(1).replace(/[_-]/g, " ")
+    );
+  };
 
   return (
     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
       {/* Búsqueda */}
       <div className="relative w-full sm:w-64">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
-          className="pl-10 text-sm"
+          className="text-sm"
           placeholder={searchPlaceholder}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          showSearchIcon={true}
         />
       </div>
 
@@ -91,5 +93,5 @@ export default function FilterControls({
         </Select>
       </div>
     </div>
-  )
+  );
 }

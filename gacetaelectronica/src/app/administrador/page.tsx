@@ -11,6 +11,7 @@ import AgregarEvento from "@/components/administrador/AgregarEvento";
 import { useFetch } from "@/hooks/useFetch";
 import { Spinner } from "@/components/Spinner";
 import { UserInterface } from "@/entities/user";
+import { useInitializeUser } from "@/hooks/useInitializeUser";
 
 type ItemConFecha = {
   FechaCreacion: string;
@@ -29,6 +30,9 @@ function filtrarPorUltimoMes<T extends ItemConFecha>(items: T[]): T[] {
 }
 
 export default function Page() {
+  // TODO: Este hook es solo para hacer dinámico el componente durante desarrollo.
+  // El rol se debe obtener desde el backend mediante autenticación real.
+  useInitializeUser("Administrador");
   const [activeTab, setActiveTab] = useState("overview");
   const { data, loading } = useFetch<UserInterface>("api/usuarios");
   const { data: dataArticulos, loading: loadingArticulos } =
