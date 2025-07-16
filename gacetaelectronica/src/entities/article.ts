@@ -1,14 +1,13 @@
 export interface ArticleInterface {
-  id: number,
-  title: string,
-  author: string,
-  category: Categoria | string,
-  content: string,
-  status: string,
-  etiqueta?: Etiqueta | string
-  publishedAt?: string | null
-  createdAt: string,
-  imageurl: string,
+  idArticulo: number;
+  Titulo: string;
+  Resumen: string;
+  Contenido: string;
+  Comentario: string;
+  Estatus: number;
+  FechaCreacion: string;   // ISO string
+  FechaRevision: string;   // ISO string
+  IdCategoria: number;
 }
 
 export enum Categoria {

@@ -31,15 +31,15 @@ export function ViewEventDialog({ open, onOpenChange, event }: Props) {
         </DialogHeader>
 
         <div className="space-y-2">
-          <p><strong>Título:</strong> {event.title}</p>
-          <p><strong>Fecha:</strong> {event.date}</p>
-          <p><strong>Hora:</strong> {event.time}</p>
-          <p><strong>Lugar:</strong> {event.location}</p>
-          <p><strong>Descripción Corta:</strong> {event.shortDescription}</p>
-          {event.longDescription && (
-            <p><strong>Descripción Larga:</strong> {event.longDescription}</p>
+          <p><strong>Título:</strong> {event.Nombre}</p>
+          <p><strong>Fecha:</strong> {event.Fecha}</p>
+          <p><strong>Hora:</strong> {event.Hora}</p>
+          <p><strong>Lugar:</strong> {event.Lugar}</p>
+          <p><strong>Descripción Corta:</strong> {event.DesCorta}</p>
+          {event.DesLarga && (
+            <p><strong>Descripción Larga:</strong> {event.DesLarga}</p>
           )}
-          <p><strong>Estado:</strong> {event.status}</p>
+          {/* <p><strong>Estado:</strong> {event.status}</p> */}
         </div>
 
         <DialogFooter>

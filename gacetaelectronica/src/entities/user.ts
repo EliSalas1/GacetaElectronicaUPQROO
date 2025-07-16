@@ -6,6 +6,7 @@ export interface UserInterface {
   Rol: string,
   Estado: string,
   FechaCreacion: string,
+  Contraseña: string,
 }
 
 export interface UserEditDTO {

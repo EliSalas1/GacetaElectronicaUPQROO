@@ -1,108 +1,42 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Eye, Edit, Trash2, Search, Filter } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { EditArticleDialog } from "./EditArticleDialog";
-import { DeleteArticleDialog } from "./DeleteArticleDialog";
-import { ViewArticleDialog } from "./ViewArticleDialog";
-import EventOverview from "./EventsOverview";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Eye, Edit, Trash2 } from "lucide-react"
+import { useState } from "react"
+import { ArticleInterface } from "@/entities/article"
+import { EditArticleDialog } from "./EditArticleDialog"
+import { DeleteArticleDialog } from "./DeleteArticleDialog"
+import EventOverview from "./EventsOverview"
+import { ViewArticleDialog } from "./ViewArticleDialog"
+import FilterSearchBar from "../FilterSearchBar"
+import { useFetch } from "@/hooks/useFetch"
+import { Spinner } from "../Spinner"
 
-interface Article {
-  id: number;
-  title: string;
-  createdAt: string;
-  status: string;
-  category: string;
-  author: string;
-}
-
-const getStatusBadge = (status: string) => {
+const getStatusBadge = (status: number) => {
   switch (status) {
-    case "published":
-      return <Badge className="bg-green-100 text-green-800">Publicado</Badge>;
-    case "pending":
-      return (
-        <Badge className="bg-yellow-100 text-yellow-800">En Revisión</Badge>
-      );
-    case "rejected":
-      return <Badge className="bg-red-100 text-red-800">Rechazado</Badge>;
-    case "draft":
-      return <Badge variant="secondary">Borrador</Badge>;
+    case 1:
+      return <Badge className="bg-green-100 text-green-800">Publicado</Badge>
+    case 2:
+      return <Badge className="bg-yellow-100 text-yellow-800">En Revisión</Badge>
+    case 3:
+      return <Badge className="bg-red-100 text-red-800">Rechazado</Badge>
+    case 4:
+      return <Badge variant="secondary">Borrado</Badge>
     default:
       return <Badge variant="outline">Desconocido</Badge>;
   }
 };
 
 export default function ArticleOverview() {
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-  const [editOpen, setEditOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [viewOpen, setViewOpen] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState<Partial<ArticleInterface> | null>(null)
+  const [editOpen, setEditOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [viewOpen, setViewOpen] = useState(false)
 
-  // Estados del filtro
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterBy, setFilterBy] = useState("");
-  const [filterValue, setFilterValue] = useState("");
-
-  useEffect(() => {
-    const fetchArticles = async () => {
-      setLoading(true);
-      try {
-        let url = "/api/articulos";
-        const params = new URLSearchParams();
-        if (filterBy && filterValue && filterValue !== "all") {
-          if (filterBy === "category") params.append("categoria", filterValue);
-          if (filterBy === "status") params.append("status", filterValue);
-        }
-        params.append("limit", "50");
-        params.append("offset", "0");
-        url += `?${params.toString()}`;
-
-        const res = await fetch(url);
-        const data = await res.json();
-        setArticles(data); // Aquí se asignan los datos
-      } catch (err) {
-        console.error("Error fetching articles:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchArticles();
-  }, [filterBy, filterValue]);
-
-  // Para filtrar local por búsqueda de texto
-  const filteredArticles = articles.filter((article) =>
-    article.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const { data, loading } = useFetch<ArticleInterface>('/api/articulos')
 
   return (
     <main className="flex flex-col gap-6">
@@ -169,73 +103,56 @@ export default function ArticleOverview() {
         </CardHeader>
 
         <CardContent>
-          {loading ? (
-            <p className="text-center">Cargando artículos...</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Título</TableHead>
-                  <TableHead>Autor</TableHead>
-                  <TableHead>Categoría</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Fecha de Creación</TableHead>
-                  <TableHead>Acciones</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Título</TableHead>
+                <TableHead>Resumen</TableHead>
+                <TableHead>Categoría</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Fecha de Creación</TableHead>
+                <TableHead>Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? <TableRow><TableCell colSpan={6} className="text-center flex justify-center"><Spinner/></TableCell></TableRow> : ""}
+              {Array.isArray(data) && data.map((article) => (
+                <TableRow key={article.idArticulo}>
+                  <TableCell className="font-medium">{article.Titulo}</TableCell>
+                  <TableCell>{article.Resumen}</TableCell>
+                  <TableCell className="capitalize">{article.IdCategoria}</TableCell>
+                  <TableCell>{getStatusBadge(article.Estatus)}</TableCell>
+                  <TableCell>{article.FechaCreacion}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedArticle(article)
+                          setViewOpen(true)
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => {
+                        setSelectedArticle(article)
+                        setEditOpen(true)
+                      }}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => {
+                        setSelectedArticle(article)
+                        setDeleteOpen(true)
+                      }}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredArticles.map((article) => (
-                  <TableRow key={article.id}>
-                    <TableCell className="font-medium">
-                      {article.title}
-                    </TableCell>
-                    <TableCell>{article.author}</TableCell>
-                    <TableCell>{article.category}</TableCell>
-                    <TableCell>{getStatusBadge(article.status)}</TableCell>
-                    <TableCell>
-                      {format(new Date(article.createdAt), "dd/MM/yyyy", {
-                        locale: es,
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedArticle(article);
-                            setViewOpen(true);
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedArticle(article);
-                            setEditOpen(true);
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedArticle(article);
-                            setDeleteOpen(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
@@ -277,24 +194,10 @@ export default function ArticleOverview() {
           if (!value) setSelectedArticle(null);
         }}
         article={selectedArticle}
-        onConfirm={async () => {
-          try {
-            const res = await fetch(
-              `/api/articulos?id=${selectedArticle?.id}`,
-              {
-                method: "DELETE",
-              }
-            );
-            if (!res.ok) throw new Error("Error al eliminar");
-            setArticles((prev) =>
-              prev.filter((a) => a.id !== selectedArticle?.id)
-            );
-          } catch (err) {
-            console.error(err);
-            alert("Error al eliminar artículo");
-          } finally {
-            setDeleteOpen(false);
-          }
+        onConfirm={() => {
+          // handle delete logic here
+          console.log("Deleted article:", selectedArticle?.IdCategoria)
+          setDeleteOpen(false)
         }}
       />
 

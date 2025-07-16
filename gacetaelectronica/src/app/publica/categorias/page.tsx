@@ -6,6 +6,7 @@ import Footer from "@/components/Footer"
 import CategorySection from "@/components/CategoriasComponents/categorySection"
 import { articlesData } from "@/components/CategoriasComponents/articlesMock"
 import ButtomUp from "@/components/CategoriasComponents/ButtomUp"
+import SearchBar from "@/components/HomeComponents/SearchBar"
 
 export default function CategoriasPage() {
   // Estado para llevar el control de qué categorías están expandidas
@@ -23,9 +24,16 @@ export default function CategoriasPage() {
     // Contenedor principal
     <div className="min-h-screen bg-neutral-50">
       <Header />
+      {/* Título principal de la página */}
       <div className="max-w-[1280px] mx-auto py-8">
         <h1 className="text-4xl font-bold text-center mb-12 text-accent-900">Categorías</h1>
 
+        <div className="mb-4">
+        <SearchBar />
+        </div>
+
+        {/* Renderiza un botón para cada categoría */}
+        
         {/* Renderiza una sección por cada categoría con sus artículos */}
         {Object.entries(articlesData).map(([categoryKey, articles]) => (
           <CategorySection

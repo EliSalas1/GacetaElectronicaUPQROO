@@ -74,7 +74,7 @@ export default function Header() {
                   {categories.map((cat) => (
                     <Link
                       key={cat}
-                      href="/categorias"
+                      href="./publica/categorias"
                       className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-[#FF6400] hover:pl-6 transition-all duration-200"
                     >
                       {cat}
