@@ -53,13 +53,13 @@ export default function NuevoUsuariosDialog({ initialUsuarios = [] }: Props) {
           Nuevo Usuario
         </Button>
       </DialogTrigger>
-      <DialogContent className="!w-full">
+      <DialogContent className="!max-w-none !w-2xl">
         <DialogHeader>
           <DialogTitle>Usuarios</DialogTitle>
           <DialogDescription>Lista de usuarios registrados en el sistema</DialogDescription>
         </DialogHeader>
 
-        <div className="overflow-x-auto w-[800px]">
+        <div className="overflow-x-auto w-full flex justify-center">
           <table className="w-[600px] text-sm text-left border border-gray-200">
             <thead className="bg-gray-100">
               <tr>
