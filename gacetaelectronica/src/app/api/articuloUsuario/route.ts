@@ -85,10 +85,9 @@ POST http://localhost:3000/api/articuloUsuario
 
 📦 Body JSON de ejemplo:
 {
-  "articulos": [1],           // Puede ser [1, 2, 3]
-  "usuarios": [2, 3, 4]       // Puede ser solo [2]
+  "articuloId": [25],           
+  "usuarioId": [5]       
 }
-✔️ Este JSON insertará 3 relaciones: artículo 1 con usuarios 2, 3 y 4
 */
 
 // ✅ Actualizar relación entre artículo y usuario (PUT)
