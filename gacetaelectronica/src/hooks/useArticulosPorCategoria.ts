@@ -6,13 +6,13 @@ import { useEffect, useState } from "react";
  * Tipo base que representa un artículo tal como lo devuelve la API.
  */
 export type ArticuloAPI = {
-  idArticulo: number;
-  Titulo: string;
-  Resumen: string;
-  FechaCreacion: string;
-  Estatus: number;
-  Comentario: string;
-  IdCategoria: number;
+  id: number;
+  title: string;
+  createdAt: string;
+  summary: string;
+  status: string;
+  category: string;
+  author: string;
 };
 
 /**
@@ -64,17 +64,18 @@ export default function useArticulosPorCategoria() {
         const grouped: Record<string, ArticleCardProps[]> = {};
 
         data.forEach((articulo) => {
-          const key = CATEGORY_MAP[articulo.IdCategoria];
-          if (!key) return; // Si no existe mapeo, ignorar el artículo
+          // Usar el nombre de la categoría en minúsculas como clave
+          const key = articulo.category.toLowerCase();
+          if (!key) return;
 
           const article: ArticleCardProps = {
-            id: articulo.idArticulo,
-            title: articulo.Titulo,
-            summary: articulo.Resumen,
-            author: "Redacción J-UP", // Por ahora es fijo
-            date: new Date(articulo.FechaCreacion).toISOString().split("T")[0],
-            tag: articulo.Estatus === 1 ? "Publicado" : "Borrador",
-            image: "/placeholder.svg?height=200&width=300", // Imagen de ejemplo
+            id: articulo.id,
+            title: articulo.title,
+            summary: articulo.summary || "No hay resumen disponible",
+            author: articulo.author || "Redacción J-UP",
+            date: articulo.createdAt,
+            tag: articulo.status === "published" ? "Publicado" : "Borrador",
+            image: "/placeholder.svg?height=200&width=300" ,
           };
 
           if (!grouped[key]) grouped[key] = [];

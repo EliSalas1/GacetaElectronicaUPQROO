@@ -19,7 +19,7 @@ const tagColors = {
 // Componente que representa una tarjeta visual para mostrar información resumida de un artículo
 export default function ArticleCard({ article }: { article: any }) {
   return (
-    <Link href={`/articulo/${article.id}`} passHref>
+    <Link href={`/publica/articulo/${article.id}`} passHref>
     <Card className="h-full flex flex-col justify-between hover:shadow-lg transition-shadow bg-neutral-50 border-neutral-200 hover:border-orange-500 cursor-pointer">
         <div className="relative">
             <Image
