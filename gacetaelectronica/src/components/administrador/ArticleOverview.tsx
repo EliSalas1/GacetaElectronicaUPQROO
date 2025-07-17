@@ -1,42 +1,60 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Eye, Edit, Trash2 } from "lucide-react"
-import { useState } from "react"
-import { ArticleInterface } from "@/entities/article"
-import { EditArticleDialog } from "./EditArticleDialog"
-import { DeleteArticleDialog } from "./DeleteArticleDialog"
-import EventOverview from "./EventsOverview"
-import { ViewArticleDialog } from "./ViewArticleDialog"
-import FilterSearchBar from "../FilterSearchBar"
-import { useFetch } from "@/hooks/useFetch"
-import { Spinner } from "../Spinner"
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Eye, Edit, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input"; // Asegúrate de importar Input
+import { ArticleInterface } from "@/entities/article";
+import { EditArticleDialog } from "./EditArticleDialog";
+import { DeleteArticleDialog } from "./DeleteArticleDialog";
+import { ViewArticleDialog } from "./ViewArticleDialog";
+import { useFetch } from "@/hooks/useFetch";
+import { Spinner } from "../Spinner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Filter } from "lucide-react";
 
 const getStatusBadge = (status: number) => {
   switch (status) {
     case 1:
-      return <Badge className="bg-green-100 text-green-800">Publicado</Badge>
+      return <Badge className="bg-green-100 text-green-800">Publicado</Badge>;
     case 2:
-      return <Badge className="bg-yellow-100 text-yellow-800">En Revisión</Badge>
+      return <Badge className="bg-yellow-100 text-yellow-800">En Revisión</Badge>;
     case 3:
-      return <Badge className="bg-red-100 text-red-800">Rechazado</Badge>
+      return <Badge className="bg-red-100 text-red-800">Rechazado</Badge>;
     case 4:
-      return <Badge variant="secondary">Borrado</Badge>
+      return <Badge variant="secondary">Borrado</Badge>;
     default:
       return <Badge variant="outline">Desconocido</Badge>;
   }
 };
 
 export default function ArticleOverview() {
-  const [selectedArticle, setSelectedArticle] = useState<Partial<ArticleInterface> | null>(null)
-  const [editOpen, setEditOpen] = useState(false)
-  const [deleteOpen, setDeleteOpen] = useState(false)
-  const [viewOpen, setViewOpen] = useState(false)
+  const [selectedArticle, setSelectedArticle] = useState<Partial<ArticleInterface> | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(""); // Estado para la búsqueda
+  const [filterBy, setFilterBy] = useState(""); // Filtro por categoría o estado
+  const [filterValue, setFilterValue] = useState(""); // Valor del filtro
 
-  const { data, loading } = useFetch<ArticleInterface>('/api/articulos')
+  const { data, loading } = useFetch<ArticleInterface>('/api/articulos');
+
+  const filteredData = data?.filter((article) => {
+    // Comprobación de que article.Titulo no sea undefined o null
+    const matchesSearch = article.Titulo
+      ? article.Titulo.toLowerCase().includes(searchTerm.toLowerCase())
+      : false;
+    
+    const matchesFilter =
+      (filterBy === "category" && filterValue === "all") ||
+      (filterBy === "status" && filterValue === "all") ||
+      (filterBy && article[filterBy] === filterValue);
+
+    return matchesSearch && matchesFilter;
+  });
 
   return (
     <main className="flex flex-col gap-6">
@@ -53,7 +71,6 @@ export default function ArticleOverview() {
           <div className="flex gap-2 w-full md:w-auto">
             {/* Input búsqueda */}
             <div className="relative w-full md:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 className="pl-10"
                 placeholder="Buscar..."
@@ -67,7 +84,7 @@ export default function ArticleOverview() {
               value={filterBy}
               onValueChange={(value) => {
                 setFilterBy(value);
-                setFilterValue(""); // reset valor
+                setFilterValue(""); // Reset valor cuando cambias el filtro
               }}
             >
               <SelectTrigger className="w-40">
@@ -88,9 +105,9 @@ export default function ArticleOverview() {
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 {(filterBy === "category"
-                  ? ["1", "2"]
+                  ? ["1", "2"] // Pone los valores según tus categorías
                   : filterBy === "status"
-                  ? ["1", "2"]
+                  ? ["1", "2"] // Pone los valores según tus estados
                   : []
                 ).map((option) => (
                   <SelectItem key={option} value={option}>
@@ -115,42 +132,57 @@ export default function ArticleOverview() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? <TableRow><TableCell colSpan={6} className="text-center flex justify-center"><Spinner/></TableCell></TableRow> : ""}
-              {Array.isArray(data) && data.map((article) => (
-                <TableRow key={article.idArticulo}>
-                  <TableCell className="font-medium">{article.Titulo}</TableCell>
-                  <TableCell>{article.Resumen}</TableCell>
-                  <TableCell className="capitalize">{article.IdCategoria}</TableCell>
-                  <TableCell>{getStatusBadge(article.Estatus)}</TableCell>
-                  <TableCell>{article.FechaCreacion}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedArticle(article)
-                          setViewOpen(true)
-                        }}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => {
-                        setSelectedArticle(article)
-                        setEditOpen(true)
-                      }}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => {
-                        setSelectedArticle(article)
-                        setDeleteOpen(true)
-                      }}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center flex justify-center">
+                    <Spinner />
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredData?.map((article) => (
+                  <TableRow key={article.idArticulo}>
+                    <TableCell className="font-medium">{article.Titulo}</TableCell>
+                    <TableCell>{article.Resumen}</TableCell>
+                    <TableCell className="capitalize">{article.IdCategoria}</TableCell>
+                    <TableCell>{getStatusBadge(article.Estatus)}</TableCell>
+                    <TableCell>{article.FechaCreacion}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedArticle(article);
+                            setViewOpen(true);
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedArticle(article);
+                            setEditOpen(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedArticle(article);
+                            setDeleteOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -176,9 +208,7 @@ export default function ArticleOverview() {
             });
             if (!res.ok) throw new Error("Error al actualizar");
             setArticles((prev) =>
-              prev.map((a) =>
-                a.id === updatedArticle.id ? { ...a, ...updatedArticle } : a
-              )
+              prev.map((a) => (a.id === updatedArticle.id ? { ...a, ...updatedArticle } : a))
             );
           } catch (err) {
             console.error(err);
@@ -196,8 +226,8 @@ export default function ArticleOverview() {
         article={selectedArticle}
         onConfirm={() => {
           // handle delete logic here
-          console.log("Deleted article:", selectedArticle?.IdCategoria)
-          setDeleteOpen(false)
+          console.log("Deleted article:", selectedArticle?.IdCategoria);
+          setDeleteOpen(false);
         }}
       />
 
@@ -209,8 +239,6 @@ export default function ArticleOverview() {
         }}
         article={selectedArticle}
       />
-
-      <EventOverview />
     </main>
   );
 }

@@ -1,76 +1,26 @@
 "use client";
 
-import { useState } from 'react'
-import { Eye, Edit, Trash2 } from 'lucide-react'
-
-import { Card } from '@/components/ui/card'
-import { CardHeader } from '@/components/ui/card'
-import { CardTitle } from '@/components/ui/card'
-import { CardDescription } from '@/components/ui/card'
-import { CardContent } from '@/components/ui/card'
-
-import { Table } from '@/components/ui/table'
-import { TableHeader } from '@/components/ui/table'
-import { TableRow } from '@/components/ui/table'
-import { TableHead } from '@/components/ui/table'
-import { TableBody } from '@/components/ui/table'
-import { TableCell } from '@/components/ui/table'
-
-import { Button } from '@/components/ui/button'
-
-import { EventInterface } from '@/entities/event'
-import { EditEventDialog } from './EditEventDialog'
-import { DeleteEventDialog } from './DeleteEventDialog'
-import { ViewEventDialog } from "./ViewEventDialog"
-import FilterSearchBar from '../FilterSearchBar'
-import { useFetch } from '@/hooks/useFetch'
-import { Spinner } from '../Spinner'
 import { useState, useEffect } from "react";
 import { Eye, Edit, Trash2, Search, Filter } from "lucide-react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/table";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EventInterface } from "@/entities/event";
 import { EditEventDialog } from "./EditEventDialog";
 import { DeleteEventDialog } from "./DeleteEventDialog";
 import { ViewEventDialog } from "./ViewEventDialog";
+import { useFetch } from "@/hooks/useFetch";
+import { Spinner } from "../Spinner";
+import FilterSearchBar from "../FilterSearchBar";
 
 export default function EventOverview() {
-  const [selectedEvent, setSelectedEvent] = useState<EventInterface | null>(null)
-  const [editOpen, setEditOpen] = useState(false)
-  const [deleteOpen, setDeleteOpen] = useState(false)
-  const [viewOpen, setViewOpen] = useState(false)
-
-  const { data, loading } = useFetch<EventInterface>('/api/eventos')
-  // const { data: dataEventos } = useFetch('/api/eventos')
-  const [events, setEvents] = useState<EventInterface[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<EventInterface | null>(
-    null
-  );
+  const [selectedEvent, setSelectedEvent] = useState<EventInterface | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
+  const [events, setEvents] = useState<EventInterface[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Estados del filtro
@@ -106,14 +56,11 @@ export default function EventOverview() {
 
   // Filtrado local
   const filteredEvents = events.filter((event) => {
-    const matchesSearch = event.title
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
+    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase());
     let matchesFilter = true;
     if (filterBy && filterValue && filterValue !== "all") {
       if (filterBy === "status") matchesFilter = event.status === filterValue;
-      if (filterBy === "location")
-        matchesFilter = event.location === filterValue;
+      if (filterBy === "location") matchesFilter = event.location === filterValue;
     }
     return matchesSearch && matchesFilter;
   });
@@ -133,9 +80,7 @@ export default function EventOverview() {
         <CardHeader className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
           <div>
             <CardTitle>Todos los Eventos</CardTitle>
-            <CardDescription>
-              Vista general de los eventos registrados
-            </CardDescription>
+            <CardDescription>Vista general de los eventos registrados</CardDescription>
           </div>
 
           {/* Filtros inline */}
@@ -192,67 +137,12 @@ export default function EventOverview() {
         </CardHeader>
 
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Título</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Hora</TableHead>
-                <TableHead>Lugar</TableHead>
-                <TableHead>Descripción corta</TableHead>
-                <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? <TableRow><TableCell colSpan={6} className="text-center flex justify-center"><Spinner/></TableCell></TableRow> : ""}
-              {Array.isArray(data) && data.map((event) => (
-                <TableRow key={event.IdEvento}>
-                  <TableCell className="font-medium">{event.Nombre}</TableCell>
-                  <TableCell>{event.Fecha}</TableCell>
-                  <TableCell>{event.Hora}</TableCell>
-                  <TableCell>{event.Lugar}</TableCell>
-                  <TableCell>{event.DesCorta}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedEvent(event)
-                          setViewOpen(true)
-                        }}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedEvent(event)
-                          setEditOpen(true)
-                        }}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedEvent(event)
-                          setDeleteOpen(true)
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
           {loading ? (
-            <p className="text-center">Cargando eventos...</p>
+            <TableRow>
+              <TableCell colSpan={6} className="text-center flex justify-center">
+                <Spinner />
+              </TableCell>
+            </TableRow>
           ) : (
             <Table>
               <TableHeader>
@@ -356,9 +246,6 @@ export default function EventOverview() {
           if (!value) setSelectedEvent(null);
         }}
         event={selectedEvent}
-        onConfirm={() => {
-          console.log('Eliminar evento:', selectedEvent?.IdEvento)
-          setDeleteOpen(false)
         onConfirm={async () => {
           try {
             const res = await fetch(`/api/eventos?id=${selectedEvent?.id}`, {
