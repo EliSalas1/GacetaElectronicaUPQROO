@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Edit, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import EditUserDialog from "./EditUserDialog"
@@ -14,6 +14,7 @@ import FilterSearchBar from "../FilterSearchBar"
 import { useFetch } from "@/hooks/useFetch"
 import { Spinner } from "../Spinner"
 import NuevoUsuariosDialog from "./NuevoUsuarioDialog"
+import { Pagination } from "../Pagination"
 
 const usuarios = [
   { id: 1, nombre: "Juan Pérez", email: "juan@universidad.edu", rol: "redactor" },
@@ -207,6 +208,17 @@ export default function UserManagement() {
                   </TableRow>
                 ))}
             </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={6}>
+                  <Pagination
+                    page={1}
+                    onPageChange={() => {}}
+                    totalItems={100}
+                  />
+                </TableCell>
+              </TableRow>
+            </TableFooter>
           </Table>
         </CardContent>
       </Card>

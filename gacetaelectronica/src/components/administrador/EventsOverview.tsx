@@ -9,7 +9,7 @@ import { CardTitle } from '@/components/ui/card'
 import { CardDescription } from '@/components/ui/card'
 import { CardContent } from '@/components/ui/card'
 
-import { Table } from '@/components/ui/table'
+import { Table, TableFooter } from '@/components/ui/table'
 import { TableHeader } from '@/components/ui/table'
 import { TableRow } from '@/components/ui/table'
 import { TableHead } from '@/components/ui/table'
@@ -25,6 +25,7 @@ import { ViewEventDialog } from "./ViewEventDialog"
 import FilterSearchBar from '../FilterSearchBar'
 import { useFetch } from '@/hooks/useFetch'
 import { Spinner } from '../Spinner'
+import { Pagination } from '../Pagination'
 
 export default function EventOverview() {
   const [selectedEvent, setSelectedEvent] = useState<EventInterface | null>(null)
@@ -117,6 +118,17 @@ export default function EventOverview() {
                 </TableRow>
               ))}
             </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={6}>
+                  <Pagination
+                    page={1}
+                    onPageChange={() => {}}
+                    totalItems={100}
+                  />
+                </TableCell>
+              </TableRow>
+            </TableFooter>
           </Table>
         </CardContent>
       </Card>

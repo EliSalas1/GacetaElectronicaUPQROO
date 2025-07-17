@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Eye, Edit, Trash2 } from "lucide-react"
 import { useState } from "react"
@@ -14,6 +14,7 @@ import { ViewArticleDialog } from "./ViewArticleDialog"
 import FilterSearchBar from "../FilterSearchBar"
 import { useFetch } from "@/hooks/useFetch"
 import { Spinner } from "../Spinner"
+import { Pagination } from "../Pagination"
 
 const getStatusBadge = (status: number) => {
   switch (status) {
@@ -113,6 +114,17 @@ export default function ArticleOverview() {
                 </TableRow>
               ))}
             </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={6}>
+                  <Pagination
+                    page={1}
+                    onPageChange={() => {}}
+                    totalItems={100}
+                  />
+                </TableCell>
+              </TableRow>
+            </TableFooter>
           </Table>
         </CardContent>
       </Card>
