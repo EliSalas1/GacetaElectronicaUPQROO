@@ -14,6 +14,18 @@ interface ArticleStats {
   pending: number
 }
 
+interface ArticleData {
+  IdArticulo: number
+  Titulo: string
+  Resumen: string
+  Contenido: string
+  IdCategoria: number
+  Categoria?: {
+    IdCategoria: number
+    Nombre: string
+  }
+}
+
 export default function Page() {
   useInitializeUser("Redactor")
   const [activeTab, setActiveTab] = useState("overview")
@@ -22,6 +34,8 @@ export default function Page() {
     pending: 0
   })
   const [loading, setLoading] = useState(true)
+  const [editMode, setEditMode] = useState(false)
+  const [articleData, setArticleData] = useState<ArticleData | null>(null)
 
   // Función para obtener estadísticas de artículos del usuario
   const loadArticleStats = async () => {
@@ -29,7 +43,7 @@ export default function Page() {
       setLoading(true)
       
       // Usar ID fijo del usuario (Carmen Ríos)
-      const userId = 5
+      const userId = 10
       
       // Obtener artículos del usuario
       const response = await fetch(`/api/articuloUsuario?usuarioId=${userId}`)
@@ -72,8 +86,39 @@ export default function Page() {
     }
   }
 
+  // Función para manejar la edición de artículos
+  const handleEditArticle = (article: ArticleData) => {
+    setArticleData(article)
+    setEditMode(true)
+    setActiveTab("new-article")
+  }
+
+  // Función para limpiar el modo de edición
+  const handleClearEditMode = () => {
+    setEditMode(false)
+    setArticleData(null)
+    // Limpiar datos del localStorage
+    localStorage.removeItem('editArticleData')
+  }
+
   useEffect(() => {
     loadArticleStats()
+    
+    // Verificar si hay datos de edición en localStorage
+    const storedArticleData = localStorage.getItem('editArticleData')
+    if (storedArticleData) {
+      try {
+        const parsedData = JSON.parse(storedArticleData)
+        setArticleData(parsedData)
+        setEditMode(true)
+        setActiveTab("new-article")
+        // Limpiar localStorage después de cargar
+        localStorage.removeItem('editArticleData')
+      } catch (error) {
+        console.error('Error al parsear datos de edición:', error)
+        localStorage.removeItem('editArticleData')
+      }
+    }
   }, [])
 
   return (
@@ -88,7 +133,9 @@ export default function Page() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Resumen</TabsTrigger>
-            <TabsTrigger value="new-article">Nuevo Artículo</TabsTrigger>
+            <TabsTrigger value="new-article">
+              {editMode ? 'Editar Artículo' : 'Nuevo Artículo'}
+            </TabsTrigger>
             <TabsTrigger value="my-articles">Mis Artículos</TabsTrigger>
           </TabsList>
 
@@ -125,11 +172,14 @@ export default function Page() {
           </TabsContent>
 
           <TabsContent value="new-article">
-            <ArticleEditor />
+            <ArticleEditor 
+              editMode={editMode} 
+              articleData={articleData || undefined}
+            />
           </TabsContent>
 
           <TabsContent value="my-articles">
-            <MyArticles />
+            <MyArticles onEditArticle={handleEditArticle} />
           </TabsContent>
         </Tabs>
       </div>

@@ -35,6 +35,10 @@ interface Articulo {
   };
 }
 
+interface MyArticlesProps {
+  onEditArticle?: (article: Articulo) => void;
+}
+
 const getStatusBadge = (status: number) => {
   switch (status) {
     case 1:
@@ -61,7 +65,7 @@ const getStatusText = (status: number) => {
   }
 }
 
-export default function MyArticles() {
+export default function MyArticles({ onEditArticle }: MyArticlesProps) {
   const { user } = useUser()
   const [articles, setArticles] = useState<Articulo[]>([])
   const [loading, setLoading] = useState(true)
@@ -121,10 +125,16 @@ export default function MyArticles() {
       const articlesWithDetails = await Promise.all(
         userArticles.map(async (article: any) => {
           try {
+            console.log('Artículo original:', article)
             // Obtener información completa del artículo
             const articleResponse = await fetch(`/api/articulos?id=${article.idArticulo}&include=categoria`)
             if (articleResponse.ok) {
               const articleData = await articleResponse.json()
+              console.log('Artículo con detalles:', articleData)
+              // Asegurar que el campo IdArticulo existe
+              if (articleData && !articleData.IdArticulo && articleData.idArticulo) {
+                articleData.IdArticulo = articleData.idArticulo
+              }
               return articleData
             }
             return article
@@ -148,10 +158,15 @@ export default function MyArticles() {
     loadUserArticles()
   }, [user])
 
-  const handleAction = (action: string, title: string) => {
-    toast(`${action} artículo`, {
-      description: `Acción "${action}" realizada en "${title}"`,
-    })
+  const handleAction = (action: string, title: string, article?: Articulo) => {
+    if (action === "Editar" && article && onEditArticle) {
+      console.log('Editando artículo:', article)
+      onEditArticle(article)
+    } else {
+      toast(`${action} artículo`, {
+        description: `Acción "${action}" realizada en "${title}"`,
+      })
+    }
   }
 
   const handleViewArticle = (article: Articulo) => {
@@ -304,7 +319,7 @@ export default function MyArticles() {
                       </Button>
                       {article.Estatus === 2 && (
                         <>
-                          <Button variant="ghost" size="sm" onClick={() => handleAction("Editar", article.Titulo)}>
+                          <Button variant="ghost" size="sm" onClick={() => handleAction("Editar", article.Titulo, article)}>
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button 

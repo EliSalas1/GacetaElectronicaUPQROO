@@ -274,7 +274,15 @@ async function createArticleWithRelations(body: any) {
 export async function PUT(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get('id');
-    const { Titulo, Resumen, Contenido, IdCategoria, Estatus } = await req.json();
+    const body = await req.json();
+    
+    // Verificar si es una actualización completa con recursos y etiquetas
+    if (body.recursos || body.etiquetas) {
+      return await updateArticleWithRelations(id, body);
+    }
+    
+    // Actualización simple de artículo
+    const { Titulo, Resumen, Contenido, IdCategoria, Estatus } = body;
 
     if (!id || isNaN(Number(id))) {
       return new Response('ID válido requerido', { status: 400 });
@@ -321,6 +329,135 @@ export async function PUT(req: NextRequest) {
   } catch (err) {
     console.error('Error en PUT articulos:', err);
     return new Response('Error al actualizar artículo', { status: 500 });
+  }
+}
+
+// Función para actualizar artículo con relaciones en transacción
+async function updateArticleWithRelations(id: string, body: any) {
+  const pool = await getConnection();
+  const connection = await pool.getConnection();
+  
+  try {
+    await connection.beginTransaction();
+    
+    const { Titulo, Resumen, Contenido, IdCategoria, recursos, etiquetas } = body;
+
+    if (!id || isNaN(Number(id))) {
+      return new Response('ID válido requerido', { status: 400 });
+    }
+
+    // Verificar que el artículo existe
+    const [articuloExist] = await connection.query(
+      'SELECT * FROM Articulos WHERE IdArticulo = ?', [id]
+    ) as [any[], any];
+    if (articuloExist.length === 0) {
+      await connection.rollback();
+      return new Response('Artículo no encontrado', { status: 404 });
+    }
+
+    // Verificar que la categoría existe si se está actualizando
+    if (IdCategoria) {
+      const [categoriaExist] = await connection.query(
+        'SELECT * FROM Categorias WHERE IdCategoria = ?', [IdCategoria]
+      ) as [any[], any];
+      if (categoriaExist.length === 0) {
+        await connection.rollback();
+        return new Response('Categoría no encontrada', { status: 404 });
+      }
+    }
+
+    // Actualizar campos básicos del artículo
+    let query = 'UPDATE Articulos SET ';
+    const params = [];
+    const updates = [];
+
+    if (Titulo) { updates.push('Titulo = ?'); params.push(Titulo.trim()); }
+    if (Resumen) { updates.push('Resumen = ?'); params.push(Resumen.trim()); }
+    if (Contenido) { updates.push('Contenido = ?'); params.push(Contenido.trim()); }
+    if (IdCategoria) { updates.push('IdCategoria = ?'); params.push(IdCategoria); }
+
+    if (updates.length > 0) {
+      query += updates.join(', ') + ' WHERE IdArticulo = ?';
+      params.push(id);
+      await connection.query(query, params);
+    }
+
+    const articuloId = Number(id);
+    const recursosActualizados = [];
+
+    // Actualizar recursos si existen
+    if (recursos && Array.isArray(recursos)) {
+      // Eliminar recursos existentes
+      await connection.query('DELETE FROM Recursos WHERE Articulos_idArticulo = ?', [articuloId]);
+      
+      // Insertar nuevos recursos
+      if (recursos.length > 0) {
+        for (const recurso of recursos) {
+          const { nombre, ruta } = recurso;
+          
+          if (!nombre || !ruta) {
+            await connection.rollback();
+            return new Response('Datos de recurso incompletos (nombre y ruta son requeridos)', { status: 400 });
+          }
+
+          const [recursoResult] = await connection.query(
+            'INSERT INTO Recursos (Nombre, Ruta, Articulos_idArticulo) VALUES (?, ?, ?)',
+            [nombre, ruta, articuloId]
+          );
+          
+          const IdRecurso = (recursoResult as any).insertId;
+          recursosActualizados.push({
+            IdRecurso,
+            nombre,
+            ruta
+          });
+        }
+      }
+    }
+
+    // Actualizar etiquetas si existen
+    if (etiquetas && Array.isArray(etiquetas)) {
+      // Eliminar etiquetas existentes
+      await connection.query('DELETE FROM ArticuloEtiqueta WHERE Articulos_idArticulo = ?', [articuloId]);
+      
+      // Insertar nuevas etiquetas
+      if (etiquetas.length > 0) {
+        for (const etiquetaId of etiquetas) {
+          // Verificar que la etiqueta existe
+          const [etiquetaExist] = await connection.query(
+            'SELECT * FROM Etiquetas WHERE IdEtiqueta = ?', [etiquetaId]
+          ) as [any[], any];
+          
+          if (etiquetaExist.length === 0) {
+            await connection.rollback();
+            return new Response(`Etiqueta con ID ${etiquetaId} no encontrada`, { status: 404 });
+          }
+
+          // Insertar la relación
+          await connection.query(
+            'INSERT INTO ArticuloEtiqueta (Articulos_idArticulo, Etiquetas_IdEtiqueta) VALUES (?, ?)',
+            [articuloId, etiquetaId]
+          );
+        }
+      }
+    }
+
+    await connection.commit();
+
+    return Response.json({
+      message: 'Artículo actualizado con relaciones',
+      id: articuloId,
+      recursosGuardados: recursos ? recursos.length : 0,
+      recursos: recursosActualizados,
+      etiquetasGuardadas: etiquetas ? etiquetas.length : 0
+    });
+
+  } catch (err) {
+    await connection.rollback();
+    console.error('Error en updateArticleWithRelations:', err);
+    return new Response('Error al actualizar artículo con relaciones', { status: 500 });
+  } finally {
+    connection.release();
   }
 }
 
