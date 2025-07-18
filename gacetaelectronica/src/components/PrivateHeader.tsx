@@ -20,7 +20,7 @@ export default function PrivateHeader() {
   const user = {
     name: "Administrador",
     email: "test@test.com",
-    image: "https://via.placeholder.com/150",
+    image: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png",
   }
 
   const role = "admin" // Este valor debería venir del contexto global o de la sesión del usuario

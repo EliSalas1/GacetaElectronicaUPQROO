@@ -6,17 +6,17 @@ const DUMMY_USERS: Record<UserRole, User> = {
   Administrador: {
     name: "María Administradora",
     email: "admin@upqroo.edu.mx",
-    image: "https://via.placeholder.com/150"
+    image: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"
   },
   Redactor: {
     name: "Carlos Redactor",
     email: "redactor@upqroo.edu.mx",
-    image: "https://via.placeholder.com/150"
+    image: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"
   },
   Supervisor: {
     name: "Juan Supervisor",
     email: "supervisor@upqroo.edu.mx",
-    image: "https://via.placeholder.com/150"
+    image: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"
   }
 }
 
