@@ -1,9 +1,36 @@
 import { FileText, Clock, CheckCircle, XCircle } from "lucide-react"
 import ResumenCard from "./ResumenCard"
-import { resumenDummyData } from "./data/dummyData"
+import { useEffect, useState } from "react"
 
 export default function ResumenTab() {
-  const { totalArticulos, articulosPendientes, articulosPublicados, articulosRechazados } = resumenDummyData
+  const [resumen, setResumen] = useState({
+    totalArticulos: 0,
+    articulosPendientes: 0,
+    articulosPublicados: 0,
+    articulosRechazados: 0
+  })
+
+  useEffect(() => {
+    const fetchResumen = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/filtros/calculos")
+        if (!res.ok) throw new Error("Error al obtener resumen")
+        const data = await res.json()
+        setResumen(data)
+      } catch (error) {
+        console.error("Error cargando datos del resumen:", error)
+      }
+    }
+
+    fetchResumen()
+  }, [])
+
+  const {
+    totalArticulos,
+    articulosPendientes,
+    articulosPublicados,
+    articulosRechazados
+  } = resumen
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -13,7 +40,7 @@ export default function ResumenTab() {
           Vista general del estado de los artículos en el sistema.
         </p>
       </div>
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <ResumenCard
           title="Total de Artículos"
@@ -22,7 +49,7 @@ export default function ResumenTab() {
           icon={FileText}
           iconColor="text-blue-600"
         />
-        
+
         <ResumenCard
           title="Pendientes de Revisión"
           value={articulosPendientes}
@@ -30,7 +57,7 @@ export default function ResumenTab() {
           icon={Clock}
           iconColor="text-yellow-600"
         />
-        
+
         <ResumenCard
           title="Artículos Publicados"
           value={articulosPublicados}
@@ -38,7 +65,7 @@ export default function ResumenTab() {
           icon={CheckCircle}
           iconColor="text-green-600"
         />
-        
+
         <ResumenCard
           title="Artículos Rechazados"
           value={articulosRechazados}

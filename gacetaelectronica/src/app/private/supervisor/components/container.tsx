@@ -101,15 +101,15 @@ export const SupervisorContainer: FC<SupervisorContainerProps> = () => {
           <TabsContent value="pendientes" className="mt-4 sm:mt-6">
             <PendientesTab 
               onViewArticle={handleViewArticle}
-              filterState={pendientesFilter}
-              filterConfig={pendientesFilterConfig}
+              // filterState={pendientesFilter}
+              // filterConfig={pendientesFilterConfig}
             />
           </TabsContent>
           
           <TabsContent value="historial" className="mt-4 sm:mt-6">
             <HistorialTab 
-              filterState={historialFilter}
-              filterConfig={historialFilterConfig}
+              // filterState={historialFilter}
+              // filterConfig={historialFilterConfig}
             />
           </TabsContent>
         </Tabs>
