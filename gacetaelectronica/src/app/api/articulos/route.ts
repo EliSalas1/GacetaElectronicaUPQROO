@@ -20,12 +20,59 @@ interface Articulo {
   Etiquetas?: any[];
   Recursos?: any[];
 }
-
-// ✅ GET: Obtener artículos con un solo autor (sin duplicados)
 export async function GET(req: NextRequest) {
   try {
     const pool = await getConnection();
 
+    const idParam = req.nextUrl.searchParams.get('id');
+    const id = idParam ? parseInt(idParam) : null;
+
+    // Si viene un ID, buscar solo ese artículo
+    if (id && !isNaN(id) && id > 0) {
+      const [rows] = await pool.query(
+        `SELECT 
+  a.Titulo AS Titulo,
+  a.Resumen AS Resumen,
+  a.Contenido AS Contenido,
+  DATE_FORMAT(a.FechaCreacion, '%Y-%m-%d') AS createdAt,
+  DATE_FORMAT(a.FechaRevision, '%Y-%m-%d') AS reviewedAt,
+  a.Comentario AS comment,
+  CASE a.Estatus
+    WHEN 1 THEN 'published'
+    WHEN 2 THEN 'pending'
+    ELSE 'unknown'
+  END AS status,
+  COALESCE(c.Nombre, 'Sin Categoría') AS Categoria,
+  COALESCE(u.Nombre, 'Sin autor') AS Autor,
+  GROUP_CONCAT(DISTINCT e.Nombre) AS Etiqueta,
+  GROUP_CONCAT(DISTINCT r.Ruta) AS Recursos
+
+FROM Articulos a
+
+LEFT JOIN Categorias c ON a.IdCategoria = c.IdCategoria
+
+LEFT JOIN ArticuloUsuario au ON a.idArticulo = au.Articulos_idArticulo
+LEFT JOIN Usuarios u ON au.Usuarios_idUsuarios = u.idUsuarios
+
+LEFT JOIN ArticuloEtiqueta ae ON a.idArticulo = ae.Articulos_idArticulo
+LEFT JOIN Etiquetas e ON ae.Etiquetas_IdEtiqueta = e.IdEtiqueta
+
+LEFT JOIN Recursos r ON a.idArticulo = r.Articulos_idArticulo
+
+WHERE a.idArticulo = ?
+GROUP BY a.idArticulo
+`,
+        [id]
+      );
+
+      if (!rows || !Array.isArray(rows) || rows.length === 0) {
+        return new Response('Artículo no encontrado', { status: 404 });
+      }
+
+      return Response.json(rows[0]);
+    }
+
+    // Si no hay ID, hacer consulta paginada
     const limit = parseInt(req.nextUrl.searchParams.get('limit') || '10');
     const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0');
 
@@ -61,7 +108,7 @@ export async function GET(req: NextRequest) {
     return Response.json(rows);
   } catch (err) {
     console.error('Error en GET articulos:', err);
-    return new Response('Error al obtener artículos', { status: 500 });
+    return new Response('Error en el servidor', { status: 500 });
   }
 }
 
