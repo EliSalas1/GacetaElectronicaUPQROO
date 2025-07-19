@@ -35,14 +35,14 @@ import { Home, Category, Tag, LogroUs, Event } from "./user";
 export const featuredNotices: Home[] = [
   {
     id: 1,
-    title: "Proyecto Campus Verde: Energía Solar y Sostenibilidad",
+    title: "¡Súmate a la Gaceta Universitaria UPQROO!",
     author: "Comité Verde Estudiantil",
     category: Category.SocialPolitica,
-    content: "Iniciativa universitaria para implementar sistemas sostenibles y programas de reciclaje integral en todo el campus.",
+    content: "Convocatoria abierta para que estudiantes y docentes participen en la Gaceta Universitaria UPQROO.",
     status: "publicado",
-    etiqueta: [Tag.Logro, Tag.ArticuloAcademico],
-    publishedAt: "2024-01-05",
-    createdAt: "2024-01-03",
+    etiqueta: [Tag.ArticuloDifusion, Tag.NotaSocial],
+    publishedAt: "2025-07-19",
+    createdAt: "2025-07-19",
     imageUrl: "/images/campus-verde.jpg",
   },
   {

@@ -1,47 +1,54 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, CheckCircle, Loader2 } from "lucide-react";
-import ArticleEditor from "@/components/redactor/ArticleEditor";
-import MyArticles from "@/components/redactor/MyArticles";
-import PrivateHeader from "@/components/PrivateHeader";
-import { useInitializeUser } from "@/hooks/useInitializeUser";
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Clock, CheckCircle, Loader2 } from "lucide-react"
+import ArticleEditor from "@/components/redactor/ArticleEditor"
+import MyArticles from "@/components/redactor/MyArticles"
+import PrivateHeader from "@/components/PrivateHeader"
+import { useSessionUser } from "@/hooks/useSessionUser"
 
 interface ArticleStats {
-  published: number;
-  pending: number;
+  published: number
+  pending: number
+}
+
+interface ArticleData {
+  IdArticulo: number
+  Titulo: string
+  Resumen: string
+  Contenido: string
+  IdCategoria: number
+  Categoria?: {
+    IdCategoria: number
+    Nombre: string
+  }
 }
 
 export default function Page() {
-  // TODO: Este hook es solo para hacer dinámico el componente durante desarrollo.
-  // El rol se debe obtener desde el backend mediante autenticación real.
-  useInitializeUser("Redactor");
+  const { userInfo, loading: userLoading } = useSessionUser();
   const [activeTab, setActiveTab] = useState("overview");
   const [stats, setStats] = useState<ArticleStats>({
     published: 0,
-    pending: 0,
-  });
-  const [loading, setLoading] = useState(true);
+    pending: 0
+  })
+  const [loading, setLoading] = useState(true)
+  const [editMode, setEditMode] = useState(false)
+  const [articleData, setArticleData] = useState<ArticleData | null>(null)
 
   // Función para obtener estadísticas de artículos del usuario
   const loadArticleStats = async () => {
+    if (!userInfo?.id) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-
-      // Usar ID fijo del usuario (Carmen Ríos)
-      const userId = 5;
-
-      // Obtener artículos del usuario
-      const response = await fetch(`/api/articuloUsuario?usuarioId=${userId}`);
+      
+      // Obtener artículos del usuario usando su ID real
+      const response = await fetch(`/api/articuloUsuario?usuarioId=${userInfo.id}`);
       if (!response.ok) {
         throw new Error("Error al cargar estadísticas");
       }
@@ -87,11 +94,53 @@ export default function Page() {
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  // Función para manejar la edición de artículos
+  const handleEditArticle = (article: ArticleData) => {
+    setArticleData(article)
+    setEditMode(true)
+    setActiveTab("new-article")
+  }
+
+  // Función para limpiar el modo de edición
+  const handleClearEditMode = () => {
+    setEditMode(false)
+    setArticleData(null)
+    // Limpiar datos del localStorage
+    localStorage.removeItem('editArticleData')
+  }
+
+  // Función para manejar cuando se actualiza un artículo
+  const handleArticleUpdated = () => {
+    setEditMode(false)
+    setArticleData(null)
+    setActiveTab("my-articles")
+    // Recargar estadísticas
+    loadArticleStats()
+  }
 
   useEffect(() => {
-    loadArticleStats();
-  }, []);
+    if (!userLoading && userInfo?.id) {
+      loadArticleStats()
+    }
+    
+    // Verificar si hay datos de edición en localStorage
+    const storedArticleData = localStorage.getItem('editArticleData')
+    if (storedArticleData) {
+      try {
+        const parsedData = JSON.parse(storedArticleData)
+        setArticleData(parsedData)
+        setEditMode(true)
+        setActiveTab("new-article")
+        // Limpiar localStorage después de cargar
+        localStorage.removeItem('editArticleData')
+      } catch (error) {
+        console.error('Error al parsear datos de edición:', error)
+        localStorage.removeItem('editArticleData')
+      }
+    }
+  }, [userInfo?.id, userLoading])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -111,12 +160,14 @@ export default function Page() {
         >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Resumen</TabsTrigger>
-            <TabsTrigger value="new-article">Nuevo Artículo</TabsTrigger>
+            <TabsTrigger value="new-article">
+              {editMode ? 'Editar Artículo' : 'Nuevo Artículo'}
+            </TabsTrigger>
             <TabsTrigger value="my-articles">Mis Artículos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            {loading ? (
+            {loading || userLoading ? (
               <div className="flex justify-center items-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin" />
               </div>
@@ -154,11 +205,15 @@ export default function Page() {
           </TabsContent>
 
           <TabsContent value="new-article">
-            <ArticleEditor />
+            <ArticleEditor 
+              editMode={editMode} 
+              articleData={articleData || undefined}
+              onArticleUpdated={handleArticleUpdated}
+            />
           </TabsContent>
 
           <TabsContent value="my-articles">
-            <MyArticles />
+            <MyArticles onEditArticle={handleEditArticle} />
           </TabsContent>
         </Tabs>
       </div>

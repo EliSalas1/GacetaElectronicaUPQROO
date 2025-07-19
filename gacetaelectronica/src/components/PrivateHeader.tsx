@@ -14,14 +14,19 @@ import {
 import { LogOut, User } from "lucide-react"
 import { HEADER_OPTIONS_BY_ROLE, ROLE_NAME } from "@/constants/header"
 import { useUser } from "@/contexts/UserContext"
+import { signOut } from "next-auth/react"
 
 export default function PrivateHeader() {
-  const { user, role, logout } = useUser()
-
-  // Si no hay usuario o rol, no mostrar el header o mostrar un estado de carga
-  if (!user || !role) {
-    return null // o un componente de loading
+  // La información de ambas constantes deberán venir del usuario logeado
+  // TODO: Hay que hacer un contexto globalr useContext() que obtendrá la sesión del usuario y la mantendrá.
+  // El contexto se utilizará aquí para obtener la información del usuario.
+  const user = {
+    name: "Administrador",
+    email: "test@test.com",
+    image: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png",
   }
+
+  const role = "admin" // Este valor debería venir del contexto global o de la sesión del usuario
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
@@ -29,7 +34,7 @@ export default function PrivateHeader() {
         <div className="flex items-center space-x-4">
           <h2 className="text-xl font-semibold text-gray-900">Gaceta Electrónica</h2>
           <span className="px-2 py-1 text-xs font-bold bg-[#711919] text-[#ffffff] rounded-full">
-            {ROLE_NAME[role] || role}
+            {ROLE_NAME[role as keyof typeof ROLE_NAME] || role}
           </span>
         </div>
 
@@ -69,7 +74,7 @@ export default function PrivateHeader() {
                 <span>Perfil</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout}>
+              <DropdownMenuItem onClick={() => signOut()}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Salir</span>
               </DropdownMenuItem>

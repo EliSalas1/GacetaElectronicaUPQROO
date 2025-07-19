@@ -21,7 +21,7 @@ export default function Header() {
   const user = {
     name: "Steph",
     email: "steph@test.com",
-    image: "https://via.placeholder.com/150",
+    image: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png",
     role: "Administrador",
   };
 

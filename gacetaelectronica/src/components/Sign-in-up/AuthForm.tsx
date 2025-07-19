@@ -53,6 +53,22 @@ export default function AuthForm({ type = "login" }: Props) {
     signIn("google"); // Usamos la autenticación de Google con NextAuth
   };
 
+  const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const res = await signIn("credentials", {
+    redirect: false,
+    email,
+    password,
+  });
+
+  if (res?.ok) {
+    window.location.href = "/"; // o la ruta que quieras
+  } else {
+    alert("Error al iniciar sesión. Verifica tus credenciales.");
+  }
+};
+
   return (
     <div className="flex flex-col items-center">
       {type === "signup" && (
@@ -112,8 +128,8 @@ export default function AuthForm({ type = "login" }: Props) {
           Registrarse
         </button>
       ) : (
-        <button onClick={handleGoogleSignIn} className="btn-signin mb-4">
-          Iniciar sesión con Google
+        <button onClick={handleLogin} className="btn-signin mb-4">
+          Iniciar sesión
         </button>
       )}
 
