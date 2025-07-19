@@ -1,11 +1,21 @@
 import React from "react";
 import { FiUser, FiCalendar, FiTag } from "react-icons/fi";
+import Image from "next/image";
 
 interface ArticleCardProps {
   article: any;
 }
+function getDriveImageUrl(driveUrl: string): string | null {
+  const regex = /\/d\/([a-zA-Z0-9_-]+)/;
+  const match = driveUrl.match(regex);
+  if (match && match[1]) {
+    return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+  }
+  return null;
+}
 
 const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
+  const urlDirecta = article.Recursos ? getDriveImageUrl(article.Recursos) ?? article.Recursos : null;
   return (
     <div className="bg-white rounded-2xl shadow-md p-8 max-w-4xl w-full mx-auto">
       {/* Categoría */}
@@ -84,30 +94,66 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
         ))}
       </div>
 
-      {/* Imagen o placeholder */}
-     <div
-  className="rounded-lg mb-8 flex items-center justify-center bg-gray-200 overflow-hidden"
-  style={{
-    width: "100%",
-    minHeight: 200,
-    maxHeight: 276,
-    aspectRatio: "800/276",
-  }}
->
-  {article.Recursos ? (
-    <img
-      src={article.Recursos}
-      alt="Imagen del artículo"
-      className="object-cover w-full h-full"
-    />
-  ) : (
-    <img
-      src="https://dummyimage.com/800x276/f97316/ffffff.png&text=Imagen+no+disponible"
-      alt="Imagen no disponible"
-      className="object-cover w-full h-full"
-    />
-  )}
-</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      <div
+      className="rounded-lg mb-8 flex items-center justify-center bg-gray-200 overflow-hidden"
+      style={{
+        width: "100%",
+        minHeight: 200,
+        maxHeight: 276,
+        aspectRatio: "800/276",
+      }}
+    >
+        {urlDirecta ? (
+  <Image
+  src={urlDirecta}
+  alt="Imagen del artículo"
+  width={800}
+  height={276}
+  style={{ objectFit: "cover", maxWidth: "100%", height: "auto" }}
+/>
+
+) : (
+  <Image
+    src="https://dummyimage.com/800x276/f97316/ffffff.png&text=Imagen+no+disponible"
+    alt="Imagen no disponible"
+    fill
+    style={{ objectFit: "cover" }}
+    sizes="100vw"
+  />
+        )}
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       {/* Contenido principal */}
       <div
         className="text-gray-700 leading-relaxed space-y-4"
