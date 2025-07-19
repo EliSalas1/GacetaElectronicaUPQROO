@@ -16,12 +16,16 @@ import { HEADER_OPTIONS_BY_ROLE, ROLE_NAME } from "@/constants/header"
 import { useUser } from "@/contexts/UserContext"
 
 export default function PrivateHeader() {
-  const { user, role, logout } = useUser()
-
-  // Si no hay usuario o rol, no mostrar el header o mostrar un estado de carga
-  if (!user || !role) {
-    return null // o un componente de loading
+  // La información de ambas constantes deberán venir del usuario logeado
+  // TODO: Hay que hacer un contexto globalr useContext() que obtendrá la sesión del usuario y la mantendrá.
+  // El contexto se utilizará aquí para obtener la información del usuario.
+  const user = {
+    name: "Administrador",
+    email: "test@test.com",
+    image: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png",
   }
+
+  const role = "admin" // Este valor debería venir del contexto global o de la sesión del usuario
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">

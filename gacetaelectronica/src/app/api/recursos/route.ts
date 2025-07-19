@@ -6,6 +6,7 @@ export async function GET(req: NextRequest) {
   try {
     const pool = await getConnection();
     const id = req.nextUrl.searchParams.get('id');
+    const articuloId = req.nextUrl.searchParams.get('articuloId');
 
     if (id) {
       if (isNaN(Number(id))) {
@@ -17,6 +18,13 @@ export async function GET(req: NextRequest) {
         return new Response('Recurso no encontrado', { status: 404 });
       }
       return new Response(JSON.stringify(rows[0]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    } else if (articuloId) {
+      if (isNaN(Number(articuloId))) {
+        return new Response('ID de artículo inválido', { status: 400 });
+      }
+
+      const [rows] = await pool.query('SELECT * FROM Recursos WHERE Articulos_idArticulo = ?', [articuloId]) as [any[], any];
+      return new Response(JSON.stringify(rows), { status: 200, headers: { 'Content-Type': 'application/json' } });
     } else {
       const [rows] = await pool.query('SELECT * FROM Recursos') as [any[], any];
       return new Response(JSON.stringify(rows), { status: 200, headers: { 'Content-Type': 'application/json' } });
