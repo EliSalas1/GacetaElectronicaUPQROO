@@ -3,14 +3,21 @@ import getConnection from '@/lib/db';
 import bcrypt from "bcryptjs"; // Asegúrate de importar esto arriba
 
 
-// ✅ GET - Obtener todos los usuarios o uno por ID
+// ✅ GET - Obtener todos los usuarios, uno por ID o por email
 export async function GET(req: NextRequest) {
   try {
     const pool = await getConnection();
     const id = req.nextUrl.searchParams.get('id');
+    const email = req.nextUrl.searchParams.get('email');
 
     if (id) {
       const [rows] = await pool.query('SELECT * FROM Usuarios WHERE idUsuarios = ?', [id]) as [any[], any];
+      if (rows.length === 0) {
+        return new Response('Usuario no encontrado', { status: 404 });
+      }
+      return Response.json(rows[0]);
+    } else if (email) {
+      const [rows] = await pool.query('SELECT * FROM Usuarios WHERE Correo = ?', [email]) as [any[], any];
       if (rows.length === 0) {
         return new Response('Usuario no encontrado', { status: 404 });
       }

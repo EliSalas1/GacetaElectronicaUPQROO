@@ -77,8 +77,9 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
     }
   }
 
-  const previewUrls = getPreviewUrl(resource.ruta, resource.nombre)
+  //const previewUrls = getPreviewUrl(resource.ruta, resource.nombre)
 
+  /*
   // Función para obtener la URL de imagen de manera segura
   const getImageUrl = () => {
     if (!previewUrls || resource.nombre !== 'imagen') return ''
@@ -89,7 +90,7 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
   const getVideoUrl = () => {
     if (!previewUrls || resource.nombre !== 'video') return ''
     return previewUrls.direct || ''
-  }
+  }*/
 
   // Efecto para obtener información del archivo
   useEffect(() => {
@@ -187,6 +188,7 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
                 </Button>
               </div>
             </div>
+            // Se debe mostrar el recurso en el preview
           ) : fileInfo && resource.nombre === 'imagen' && fileInfo.previewUrls.thumbnail ? (
             <div className="relative w-full h-full">
               <img

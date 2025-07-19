@@ -35,7 +35,7 @@ export default function FilterSearchBar({
 }: FilterSearchBarProps) {
   const formatOptionLabel = (option: string, fieldKey: string) => {
     if (!option) return ""
-    if (fieldKey.toLowerCase().includes("fecha") || fieldKey.toLowerCase().includes("date")) {
+    if (fieldKey?.toLowerCase().includes("fecha") || fieldKey?.toLowerCase().includes("date")) {
       return option
     }
     return option.charAt(0).toUpperCase() + option.slice(1).replace(/[_-]/g, " ")
