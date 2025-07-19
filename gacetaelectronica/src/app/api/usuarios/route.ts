@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server';
 import getConnection from '@/lib/db';
+import bcrypt from "bcryptjs"; // Asegúrate de importar esto arriba
+
 
 // ✅ GET - Obtener todos los usuarios o uno por ID
 export async function GET(req: NextRequest) {
@@ -34,15 +36,21 @@ export async function POST(req: NextRequest) {
 
     const pool = await getConnection();
 
-    const [exists] = await pool.query('SELECT * FROM Usuarios WHERE Correo = ?', [Correo.trim()]) as [any[], any];
+    const [exists] = await pool.query(
+      'SELECT * FROM Usuarios WHERE Correo = ?',
+      [Correo.trim()]
+    ) as [any[], any];
+
     if (exists.length > 0) {
       return new Response('Ya existe un usuario con ese correo', { status: 409 });
     }
 
+    const hashedPassword = await bcrypt.hash(Contraseña.trim(), 10); // ✅ Hashear la contraseña
+
     const [result] = await pool.query(
       `INSERT INTO Usuarios (Nombre, Apellido, Correo, Rol, Estado, Contraseña, FechaCreacion)
        VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-      [Nombre.trim(), Apellido.trim(), Correo.trim(), Rol.trim(), Estado, Contraseña.trim()]
+      [Nombre.trim(), Apellido.trim(), Correo.trim(), Rol.trim(), Estado, hashedPassword]
     );
 
     return Response.json({
@@ -54,6 +62,7 @@ export async function POST(req: NextRequest) {
     return new Response('Error al crear usuario', { status: 500 });
   }
 }
+
 
 // ✅ PUT - Actualizar un usuario
 export async function PUT(req: NextRequest) {
