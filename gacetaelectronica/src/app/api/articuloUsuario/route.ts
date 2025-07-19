@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     if (articuloId) {
       // ✅ Usuarios asociados a un artículo
       const [rows] = await conn.query(
-        `SELECT u.idUsuarios, u.Nombre, u.Correo
+        `SELECT u.idUsuarios, u.Nombre, u.Apellido, u.Correo
          FROM Usuarios u
          JOIN ArticuloUsuario au ON u.idUsuarios = au.Usuarios_idUsuarios
          WHERE au.Articulos_idArticulo = ?`,

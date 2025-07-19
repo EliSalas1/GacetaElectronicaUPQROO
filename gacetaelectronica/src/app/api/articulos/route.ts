@@ -35,26 +35,27 @@ export async function GET(req: NextRequest) {
 
     const [rows] = await pool.query(
       `SELECT 
-         a.IdArticulo AS id,
-         a.Titulo AS title,
-         DATE_FORMAT(a.FechaCreacion, '%Y-%m-%d') AS createdAt,
-         CASE a.Estatus
-           WHEN 1 THEN 'published'
-           WHEN 2 THEN 'pending'
-           ELSE 'unknown'
-         END AS status,
-         COALESCE(c.Nombre, 'Sin Categoría') AS category,
-         COALESCE(u.Nombre, 'Sin autor') AS author
-       FROM Articulos a
-       LEFT JOIN Categorias c ON a.IdCategoria = c.IdCategoria
-       LEFT JOIN (
-         SELECT DISTINCT Articulos_idArticulo, Usuarios_idUsuarios
-         FROM ArticuloUsuario
-         LIMIT 1
-       ) au ON a.IdArticulo = au.Articulos_idArticulo
-       LEFT JOIN Usuarios u ON au.Usuarios_idUsuarios = u.idUsuarios
-       ORDER BY a.FechaCreacion DESC
-       LIMIT ? OFFSET ?`,
+     a.IdArticulo AS id,
+     a.Titulo AS title,
+     a.Resumen AS resumen,  -- ✅ NUEVO CAMPO
+     DATE_FORMAT(a.FechaCreacion, '%Y-%m-%d') AS createdAt,
+     CASE a.Estatus
+       WHEN 1 THEN 'published'
+       WHEN 2 THEN 'pending'
+       ELSE 'unknown'
+     END AS status,
+     COALESCE(c.Nombre, 'Sin Categoría') AS category,
+     COALESCE(u.Nombre, 'Sin autor') AS author
+   FROM Articulos a
+   LEFT JOIN Categorias c ON a.IdCategoria = c.IdCategoria
+   LEFT JOIN (
+     SELECT DISTINCT Articulos_idArticulo, Usuarios_idUsuarios
+     FROM ArticuloUsuario
+     LIMIT 1
+   ) au ON a.IdArticulo = au.Articulos_idArticulo
+   LEFT JOIN Usuarios u ON au.Usuarios_idUsuarios = u.idUsuarios
+   ORDER BY a.FechaCreacion DESC
+   LIMIT ? OFFSET ?`,
       [limit, offset]
     );
 
@@ -70,12 +71,12 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    
+
     // Verificar si es una creación completa con recursos y etiquetas
     if (body.recursos || body.etiquetas) {
       return await createArticleWithRelations(body);
     }
-    
+
     // Creación simple de artículo
     const { Titulo, Resumen, Contenido, IdCategoria } = body;
 
@@ -115,10 +116,10 @@ export async function POST(req: NextRequest) {
 async function createArticleWithRelations(body: any) {
   const pool = await getConnection();
   const connection = await pool.getConnection();
-  
+
   try {
     await connection.beginTransaction();
-    
+
     // Usa directamente el body recibido
     const { Titulo, Resumen, Contenido, IdCategoria, recursos, etiquetas } = body;
 
@@ -149,8 +150,8 @@ async function createArticleWithRelations(body: any) {
     // Guardar recursos si existen
     if (recursos && Array.isArray(recursos) && recursos.length > 0) {
       for (const recurso of recursos) {
-        const { nombre, ruta} = recurso;
-        
+        const { nombre, ruta } = recurso;
+
         if (!nombre || !ruta) {
           await connection.rollback();
           return new Response('Datos de recurso incompletos (nombre y ruta son requeridos)', { status: 400 });
@@ -161,7 +162,7 @@ async function createArticleWithRelations(body: any) {
           'INSERT INTO Recursos (Nombre, Ruta, Articulos_idArticulo) VALUES (?, ?, ?)',
           [nombre, ruta, articuloId]
         );
-        
+
         // Obtener el IdRecurso insertado y agregarlo al array de recursos creados
         const IdRecurso = (recursoResult as any).insertId;
         recursosCreados.push({
@@ -179,7 +180,7 @@ async function createArticleWithRelations(body: any) {
         const [etiquetaExist] = await connection.query(
           'SELECT * FROM Etiquetas WHERE IdEtiqueta = ?', [etiquetaId]
         ) as [any[], any];
-        
+
         if (etiquetaExist.length === 0) {
           await connection.rollback();
           return new Response(`Etiqueta con ID ${etiquetaId} no encontrada`, { status: 404 });
@@ -190,7 +191,7 @@ async function createArticleWithRelations(body: any) {
           'SELECT * FROM ArticuloEtiqueta WHERE Articulos_idArticulo = ? AND Etiquetas_IdEtiqueta = ?',
           [articuloId, etiquetaId]
         ) as [any[], any];
-        
+
         if (relationExist.length === 0) {
           // Inserta la relación
           await connection.query(
