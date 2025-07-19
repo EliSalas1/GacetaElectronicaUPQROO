@@ -25,7 +25,47 @@ interface Articulo {
 export async function GET(req: NextRequest) {
   try {
     const pool = await getConnection();
+    const id = req.nextUrl.searchParams.get('id');
+    const include = req.nextUrl.searchParams.get('include');
 
+    // Si se proporciona un ID específico, obtener ese artículo
+    if (id) {
+      const [rows] = await pool.query(
+        `SELECT 
+           a.IdArticulo,
+           a.Titulo,
+           a.Resumen,
+           a.Contenido,
+           a.Estatus,
+           DATE_FORMAT(a.FechaCreacion, '%Y-%m-%d') AS FechaCreacion,
+           DATE_FORMAT(a.FechaRevision, '%Y-%m-%d') AS FechaRevision,
+           a.Comentario,
+           a.IdCategoria,
+           c.Nombre AS CategoriaNombre
+         FROM Articulos a
+         LEFT JOIN Categorias c ON a.IdCategoria = c.IdCategoria
+         WHERE a.IdArticulo = ?`,
+        [id]
+      ) as [any[], any];
+
+      if (rows.length === 0) {
+        return new Response('Artículo no encontrado', { status: 404 });
+      }
+
+      const article = rows[0];
+      
+      // Si se solicita incluir categoría, agregar la información
+      if (include === 'categoria' && article.CategoriaNombre) {
+        article.Categoria = {
+          IdCategoria: article.IdCategoria,
+          Nombre: article.CategoriaNombre
+        };
+      }
+
+      return Response.json(article);
+    }
+
+    // Obtener lista de artículos con paginación
     const limit = parseInt(req.nextUrl.searchParams.get('limit') || '10');
     const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0');
 
@@ -70,14 +110,16 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    console.log('POST /api/articulos - Body recibido:', body);
     
     // Verificar si es una creación completa con recursos y etiquetas
     if (body.recursos || body.etiquetas) {
+      console.log('Creando artículo con relaciones (recursos o etiquetas)');
       return await createArticleWithRelations(body);
     }
     
     // Creación simple de artículo
-    const { Titulo, Resumen, Contenido, IdCategoria } = body;
+    const { Titulo, Resumen, Contenido, IdCategoria, usuarioId } = body;
 
     if (!Titulo || !Resumen || !Contenido || !IdCategoria) {
       return new Response('Todos los campos son requeridos', { status: 400 });
@@ -101,9 +143,20 @@ export async function POST(req: NextRequest) {
       [Titulo.trim(), Resumen.trim(), Contenido.trim(), IdCategoria]
     );
 
+    const articuloId = (result as any).insertId;
+
+    // Crear relación ArticuloUsuario si se proporciona usuarioId
+    if (usuarioId) {
+      await pool.query(
+        `INSERT INTO ArticuloUsuario (Articulos_idArticulo, Usuarios_idUsuarios) 
+         VALUES (?, ?)`,
+        [articuloId, usuarioId]
+      );
+    }
+
     return Response.json({
       message: 'Artículo creado',
-      id: (result as any).insertId
+      id: articuloId
     }, { status: 201 });
   } catch (err) {
     console.error('Error en POST articulos:', err);
@@ -120,7 +173,7 @@ async function createArticleWithRelations(body: any) {
     await connection.beginTransaction();
     
     // Usa directamente el body recibido
-    const { Titulo, Resumen, Contenido, IdCategoria, recursos, etiquetas } = body;
+    const { Titulo, Resumen, Contenido, IdCategoria, recursos, etiquetas, usuarioId } = body;
 
     if (!Titulo || !Resumen || !Contenido || !IdCategoria) {
       return new Response('Todos los campos son requeridos', { status: 400 });
@@ -145,6 +198,15 @@ async function createArticleWithRelations(body: any) {
 
     const articuloId = (result as any).insertId;
     const recursosCreados = [];
+
+    // Crear relación ArticuloUsuario si se proporciona usuarioId
+    if (usuarioId) {
+      await connection.query(
+        `INSERT INTO ArticuloUsuario (Articulos_idArticulo, Usuarios_idUsuarios) 
+         VALUES (?, ?)`,
+        [articuloId, usuarioId]
+      );
+    }
 
     // Guardar recursos si existen
     if (recursos && Array.isArray(recursos) && recursos.length > 0) {
@@ -173,14 +235,18 @@ async function createArticleWithRelations(body: any) {
     }
 
     // Guardar etiquetas si existen
+    console.log('Procesando etiquetas:', etiquetas);
     if (etiquetas && Array.isArray(etiquetas) && etiquetas.length > 0) {
+      console.log(`Guardando ${etiquetas.length} etiquetas para artículo ${articuloId}`);
       for (const etiquetaId of etiquetas) {
+        console.log(`Procesando etiqueta ID: ${etiquetaId}`);
         // Verifica si la etiqueta existe
         const [etiquetaExist] = await connection.query(
           'SELECT * FROM Etiquetas WHERE IdEtiqueta = ?', [etiquetaId]
         ) as [any[], any];
         
         if (etiquetaExist.length === 0) {
+          console.log(`Etiqueta con ID ${etiquetaId} no encontrada`);
           await connection.rollback();
           return new Response(`Etiqueta con ID ${etiquetaId} no encontrada`, { status: 404 });
         }
@@ -197,8 +263,13 @@ async function createArticleWithRelations(body: any) {
             'INSERT INTO ArticuloEtiqueta (Articulos_idArticulo, Etiquetas_IdEtiqueta) VALUES (?, ?)',
             [articuloId, etiquetaId]
           );
+          console.log(`Relación ArticuloEtiqueta creada: Artículo ${articuloId} - Etiqueta ${etiquetaId}`);
+        } else {
+          console.log(`Relación ArticuloEtiqueta ya existe: Artículo ${articuloId} - Etiqueta ${etiquetaId}`);
         }
       }
+    } else {
+      console.log('No hay etiquetas para guardar');
     }
 
     await connection.commit();
@@ -228,7 +299,7 @@ export async function PUT(req: NextRequest) {
     
     // Verificar si es una actualización completa con recursos y etiquetas
     if (body.recursos || body.etiquetas) {
-      return await updateArticleWithRelations(id, body);
+      return await updateArticleWithRelations(id || '', body);
     }
     
     // Actualización simple de artículo
@@ -415,6 +486,8 @@ async function updateArticleWithRelations(id: string, body: any) {
 export async function DELETE(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get('id');
+    console.log('DELETE /api/articulos - Eliminando artículo ID:', id);
+    
     if (!id || isNaN(Number(id))) {
       return new Response('ID válido requerido', { status: 400 });
     }
@@ -425,17 +498,22 @@ export async function DELETE(req: NextRequest) {
       'SELECT * FROM Articulos WHERE IdArticulo = ?', [id]
     ) as [any[], any];
     if (exist.length === 0) {
+      console.log('Artículo no encontrado:', id);
       return new Response('Artículo no encontrado', { status: 404 });
     }
 
-    await pool.query('DELETE FROM ArticuloEtiqueta WHERE articulos_idArticulo = ?', [id]);
-    await pool.query('DELETE FROM Recursos WHERE articulos_idArticulo = ?', [id]);
+    console.log('Eliminando relaciones del artículo:', id);
+    
+    // Eliminar en orden correcto para evitar problemas de foreign key
+    await pool.query('DELETE FROM ArticuloEtiqueta WHERE Articulos_idArticulo = ?', [id]);
+    await pool.query('DELETE FROM Recursos WHERE Articulos_idArticulo = ?', [id]);
+    await pool.query('DELETE FROM ArticuloUsuario WHERE Articulos_idArticulo = ?', [id]);
     await pool.query('DELETE FROM Articulos WHERE IdArticulo = ?', [id]);
 
+    console.log('Artículo eliminado correctamente:', id);
     return Response.json({ message: 'Artículo eliminado correctamente' });
   } catch (err) {
     console.error('Error en DELETE articulos:', err);
     return new Response('Error al eliminar artículo', { status: 500 });
   }
-
 }

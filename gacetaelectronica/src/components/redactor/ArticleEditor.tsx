@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { X, Upload, Send, Link } from "lucide-react"
 import GoogleDriveResourceDialog from "./GoogleDriveResourceDialog"
 import ResourcePreview from "./ResourcePreview"
+import { useSessionUser } from "@/hooks/useSessionUser"
 
 interface ArticleEditorProps {
   editMode?: boolean
@@ -27,9 +28,11 @@ interface ArticleEditorProps {
       Nombre: string
     }
   }
+  onArticleUpdated?: () => void
 }
 
-export default function ArticleEditor({ editMode = false, articleData }: ArticleEditorProps) {
+export default function ArticleEditor({ editMode = false, articleData, onArticleUpdated }: ArticleEditorProps) {
+  const { userInfo } = useSessionUser()
   const [title, setTitle] = useState("")
   const [summary, setSummary] = useState("")
   const [content, setContent] = useState("")
@@ -42,49 +45,57 @@ export default function ArticleEditor({ editMode = false, articleData }: Article
     nombre: string
     ruta: string
   }>>([])
+  const [categories, setCategories] = useState<Array<{
+    IdCategoria: number
+    Nombre: string
+  }>>([])
+  const [loadingCategories, setLoadingCategories] = useState(true)
 
-  const categories = [
-    "noticias",
-    "proyectos",
-    "eventos",
-    "actividades-culturales",
-    "actividades-deportivas",
-    "convocatorias",
-    "investigaciones",
-  ]
+  const [availableTags, setAvailableTags] = useState<string[]>([])
+  const [loadingTags, setLoadingTags] = useState(true)
 
-  // Mapeo de categorías a IDs (basado en la estructura de la BD)
-  const categoryMapping: { [key: string]: number } = {
-    "noticias": 1,
-    "proyectos": 2,
-    "eventos": 3,
-    "actividades-culturales": 4,
-    "actividades-deportivas": 5,
-    "convocatorias": 6,
-    "investigaciones": 7,
+  // Función para cargar categorías desde la base de datos
+  const loadCategories = async () => {
+    try {
+      setLoadingCategories(true)
+      const response = await fetch('/api/categorias')
+      if (response.ok) {
+        const categoriesData = await response.json()
+        setCategories(categoriesData)
+      } else {
+        console.error('Error al cargar categorías')
+      }
+    } catch (error) {
+      console.error('Error al cargar categorías:', error)
+    } finally {
+      setLoadingCategories(false)
+    }
   }
 
-  // Mapeo inverso de IDs a categorías
-  const reverseCategoryMapping: { [key: number]: string } = {
-    1: "noticias",
-    2: "proyectos",
-    3: "eventos",
-    4: "actividades-culturales",
-    5: "actividades-deportivas",
-    6: "convocatorias",
-    7: "investigaciones",
+  // Función para cargar etiquetas desde la base de datos
+  const loadTags = async () => {
+    try {
+      setLoadingTags(true)
+      const response = await fetch('/api/etiquetas')
+      if (response.ok) {
+        const tagsData = await response.json()
+        const tagNames = tagsData.map((tag: any) => tag.Nombre)
+        setAvailableTags(tagNames)
+      } else {
+        console.error('Error al cargar etiquetas')
+      }
+    } catch (error) {
+      console.error('Error al cargar etiquetas:', error)
+    } finally {
+      setLoadingTags(false)
+    }
   }
 
-  const availableTags = [
-    "educación",
-    "tecnología",
-    "cultura",
-    "deportes",
-    "ciencia",
-    "actualidad",
-    "salud",
-    "arte",
-  ]
+  // Cargar categorías y etiquetas al montar el componente
+  useEffect(() => {
+    loadCategories()
+    loadTags()
+  }, [])
 
   // Cargar datos del artículo si estamos en modo edición
   useEffect(() => {
@@ -100,11 +111,8 @@ export default function ArticleEditor({ editMode = false, articleData }: Article
         setSummary(articleData.Resumen || "")
         setContent(articleData.Contenido || "")
         
-        // Mapear el ID de categoría a la categoría correspondiente
-        const categoryKey = reverseCategoryMapping[articleData.IdCategoria]
-        if (categoryKey) {
-          setCategory(categoryKey)
-        }
+        // Establecer la categoría directamente por ID
+        setCategory(articleData.IdCategoria?.toString() || "")
 
         // Cargar etiquetas del artículo si existen
         loadArticleTags(articleId)
@@ -183,14 +191,14 @@ export default function ArticleEditor({ editMode = false, articleData }: Article
   }
 
 
-  const handleFileUpload = () => {
+  /*const handleFileUpload = () => {
     const mockFiles = ["imagen1.jpg", "video1.mp4", "documento.pdf"]
     const randomFile = mockFiles[Math.floor(Math.random() * mockFiles.length)]
     setFiles([...files, randomFile])
     toast("Archivo subido", {
       description: `${randomFile} se ha subido correctamente`,
     })
-  }
+  }*/
 
   const removeFile = (index: number) => {
     setFiles(files.filter((_, i) => i !== index))
@@ -231,8 +239,9 @@ export default function ArticleEditor({ editMode = false, articleData }: Article
         return
       }
 
-      // Validar que la categoría existe en el mapeo
-      if (!categoryMapping[category]) {
+      // Validar que la categoría existe
+      const selectedCategory = categories.find(cat => cat.IdCategoria.toString() === category)
+      if (!selectedCategory) {
         toast.error("Categoría inválida seleccionada")
         return
       }
@@ -253,7 +262,8 @@ export default function ArticleEditor({ editMode = false, articleData }: Article
         Titulo: title.trim(),
         Resumen: summary.trim(),
         Contenido: content.trim(),
-        IdCategoria: categoryMapping[category]
+        IdCategoria: parseInt(category),
+        usuarioId: userInfo?.id
       }
 
       // Preparar recursos de Google Drive si existen
@@ -268,19 +278,23 @@ export default function ArticleEditor({ editMode = false, articleData }: Article
       let etiquetas = undefined
       if (tags.length > 0) {
         try {
+          console.log('Etiquetas seleccionadas:', tags)
           // Obtener IDs de etiquetas por nombre
           const etiquetasResponse = await fetch('/api/etiquetas')
           if (etiquetasResponse.ok) {
             const etiquetasDisponibles = await etiquetasResponse.json()
+            console.log('Etiquetas disponibles en BD:', etiquetasDisponibles)
             
             // Mapear nombres de etiquetas a IDs
             const etiquetaIds = tags.map(tagName => {
               const etiqueta = etiquetasDisponibles.find((e: any) => 
                 e.Nombre.toLowerCase() === tagName.toLowerCase()
               )
+              console.log(`Buscando etiqueta "${tagName}":`, etiqueta)
               return etiqueta ? etiqueta.IdEtiqueta : null
             }).filter(id => id !== null)
 
+            console.log('IDs de etiquetas encontrados:', etiquetaIds)
             if (etiquetaIds.length > 0) {
               etiquetas = etiquetaIds
             }
@@ -291,6 +305,13 @@ export default function ArticleEditor({ editMode = false, articleData }: Article
         }
       }
 
+      const requestBody = {
+        ...articuloData,
+        recursos,
+        etiquetas
+      }
+      console.log('Enviando datos al servidor:', requestBody)
+
       let response
       if (editMode && articleData) {
         // Actualizar artículo existente
@@ -299,11 +320,7 @@ export default function ArticleEditor({ editMode = false, articleData }: Article
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            ...articuloData,
-            recursos,
-            etiquetas
-          }),
+          body: JSON.stringify(requestBody),
         })
       } else {
         // Crear nuevo artículo
@@ -312,11 +329,7 @@ export default function ArticleEditor({ editMode = false, articleData }: Article
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            ...articuloData,
-            recursos,
-            etiquetas
-          }),
+          body: JSON.stringify(requestBody),
         })
       }
 
@@ -335,8 +348,11 @@ export default function ArticleEditor({ editMode = false, articleData }: Article
           : `Tu artículo ha sido enviado para revisión${result.recursosGuardados ? ` con ${result.recursosGuardados} recursos` : ''}${result.etiquetasGuardadas ? ` y ${result.etiquetasGuardadas} etiquetas` : ''}`,
       })
 
-      // Limpiar el formulario solo si no estamos en modo edición
-      if (!editMode) {
+      // Si estamos en modo edición, llamar al callback para regresar a "Mis artículos"
+      if (editMode && onArticleUpdated) {
+        onArticleUpdated()
+      } else {
+        // Limpiar el formulario solo si no estamos en modo edición
         setTitle("")
         setSummary("")
         setContent("")
@@ -390,12 +406,12 @@ export default function ArticleEditor({ editMode = false, articleData }: Article
             <Label htmlFor="category">Categoría</Label>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecciona una categoría" />
+                <SelectValue placeholder={loadingCategories ? "Cargando categorías..." : "Selecciona una categoría"} />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat.charAt(0).toUpperCase() + cat.slice(1).replace("-", " ")}
+                  <SelectItem key={cat.IdCategoria} value={cat.IdCategoria.toString()}>
+                    {cat.Nombre}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -431,34 +447,40 @@ export default function ArticleEditor({ editMode = false, articleData }: Article
 
           <div className="space-y-2">
             <Label>Etiquetas</Label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {availableTags.map((tag) => (
-                <div key={tag} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={tag}
-                    checked={tags.includes(tag)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        if (tags.length < 3) {
-                          setTags((prev) => [...prev, tag])
-                        } else {
-                          toast.error("Solo puedes seleccionar hasta 3 etiquetas.")
-                        }
-                      } else {
-                        setTags((prev) => prev.filter((t) => t !== tag))
-                      }
-                    }}
-
-                  />
-                  <Label htmlFor={tag} className="capitalize">{tag}</Label>
+            {loadingTags ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="text-sm text-gray-500">Cargando etiquetas...</div>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {availableTags.map((tag) => (
+                    <div key={tag} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={tag}
+                        checked={tags.includes(tag)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            if (tags.length < 3) {
+                              setTags((prev) => [...prev, tag])
+                            } else {
+                              toast.error("Solo puedes seleccionar hasta 3 etiquetas.")
+                            }
+                          } else {
+                            setTags((prev) => prev.filter((t) => t !== tag))
+                          }
+                        }}
+                      />
+                      <Label htmlFor={tag} className="capitalize">{tag}</Label>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            <p className="text-sm text-gray-500">
-              {tags.length} / 3 etiquetas seleccionadas
-            </p>
-            
+                <p className="text-sm text-gray-500">
+                  {tags.length} / 3 etiquetas seleccionadas
+                </p>
+              </>
+            )}
           </div>
 
 

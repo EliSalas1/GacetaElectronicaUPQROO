@@ -14,6 +14,7 @@ import {
 import { LogOut, User } from "lucide-react"
 import { HEADER_OPTIONS_BY_ROLE, ROLE_NAME } from "@/constants/header"
 import { useUser } from "@/contexts/UserContext"
+import { signOut } from "next-auth/react"
 
 export default function PrivateHeader() {
   // La información de ambas constantes deberán venir del usuario logeado
@@ -33,7 +34,7 @@ export default function PrivateHeader() {
         <div className="flex items-center space-x-4">
           <h2 className="text-xl font-semibold text-gray-900">Gaceta Electrónica</h2>
           <span className="px-2 py-1 text-xs font-bold bg-[#711919] text-[#ffffff] rounded-full">
-            {ROLE_NAME[role] || role}
+            {ROLE_NAME[role as keyof typeof ROLE_NAME] || role}
           </span>
         </div>
 
@@ -73,7 +74,7 @@ export default function PrivateHeader() {
                 <span>Perfil</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout}>
+              <DropdownMenuItem onClick={() => signOut()}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Salir</span>
               </DropdownMenuItem>

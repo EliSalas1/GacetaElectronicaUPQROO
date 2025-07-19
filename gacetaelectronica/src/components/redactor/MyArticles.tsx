@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Eye, Edit, Trash2, Loader2 } from "lucide-react"
 import FilterSearchBar from "@/components/FilterSearchBar"
-import { useUser } from "@/contexts/UserContext"
+import { useSessionUser } from "@/hooks/useSessionUser"
 
 interface Articulo {
   IdArticulo: number;
@@ -66,7 +66,7 @@ const getStatusText = (status: number) => {
 }
 
 export default function MyArticles({ onEditArticle }: MyArticlesProps) {
-  const { user } = useUser()
+  const { userInfo, loading: userLoading } = useSessionUser()
   const [articles, setArticles] = useState<Articulo[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -93,20 +93,18 @@ export default function MyArticles({ onEditArticle }: MyArticlesProps) {
 
   // Función para cargar artículos del usuario
   const loadUserArticles = async () => {
-    if (!user?.email) {
+    if (!userInfo?.id) {
       setError('No se pudo identificar al usuario')
       setLoading(false)
       return
     }
-  
-
 
     try {
       setLoading(true)
       setError(null)
 
-      // Usar ID fijo del usuario (Carmen Ríos)
-      const userId = 10;
+      // Usar el ID del usuario desde la sesión
+      const userId = userInfo.id;
       if (!userId) {
         setError('No se pudo obtener el ID del usuario')
         setLoading(false)
@@ -126,8 +124,16 @@ export default function MyArticles({ onEditArticle }: MyArticlesProps) {
         userArticles.map(async (article: any) => {
           try {
             console.log('Artículo original:', article)
+            
+            // Verificar que el artículo tenga un ID válido
+            const articleId = article.IdArticulo || article.idArticulo
+            if (!articleId) {
+              console.warn('Artículo sin ID válido:', article)
+              return null
+            }
+            
             // Obtener información completa del artículo
-            const articleResponse = await fetch(`/api/articulos?id=${article.idArticulo}&include=categoria`)
+            const articleResponse = await fetch(`/api/articulos?id=${articleId}&include=categoria`)
             if (articleResponse.ok) {
               const articleData = await articleResponse.json()
               console.log('Artículo con detalles:', articleData)
@@ -145,7 +151,9 @@ export default function MyArticles({ onEditArticle }: MyArticlesProps) {
         })
       )
 
-      setArticles(articlesWithDetails)
+      // Filtrar artículos nulos
+      const validArticles = articlesWithDetails.filter(article => article !== null)
+      setArticles(validArticles)
     } catch (error) {
       console.error('Error al cargar artículos:', error)
       setError('Error al cargar los artículos')
@@ -155,8 +163,10 @@ export default function MyArticles({ onEditArticle }: MyArticlesProps) {
   }
 
   useEffect(() => {
-    loadUserArticles()
-  }, [user])
+    if (!userLoading && userInfo?.id) {
+      loadUserArticles()
+    }
+  }, [userInfo?.id, userLoading])
 
   const handleAction = (action: string, title: string, article?: Articulo) => {
     if (action === "Editar" && article && onEditArticle) {
@@ -169,20 +179,52 @@ export default function MyArticles({ onEditArticle }: MyArticlesProps) {
     }
   }
 
-  const handleViewArticle = (article: Articulo) => {
+  const [selectedArticleResources, setSelectedArticleResources] = useState<any[]>([])
+  const [loadingResources, setLoadingResources] = useState(false)
+
+  const handleViewArticle = async (article: Articulo) => {
+    console.log('Artículo seleccionado para ver:', article)
+    console.log('Comentario del artículo:', article.Comentario)
     setSelectedArticle(article)
     setIsDialogOpen(true)
+    setLoadingResources(true)
+    
+    try {
+      // Cargar recursos del artículo
+      const response = await fetch(`/api/recursos?articuloId=${article.IdArticulo}`)
+      if (response.ok) {
+        const resources = await response.json()
+        setSelectedArticleResources(resources)
+      } else {
+        console.error('Error al cargar recursos del artículo')
+        setSelectedArticleResources([])
+      }
+    } catch (error) {
+      console.error('Error al cargar recursos:', error)
+      setSelectedArticleResources([])
+    } finally {
+      setLoadingResources(false)
+    }
   }
 
   const handleDeleteArticle = async (articleId: number) => {
     try {
+      console.log('Intentando eliminar artículo ID:', articleId)
+      
       const response = await fetch(`/api/articulos?id=${articleId}`, {
         method: 'DELETE',
       })
 
+      console.log('Respuesta del servidor:', response.status, response.statusText)
+
       if (!response.ok) {
-        throw new Error('Error al eliminar el artículo')
+        const errorText = await response.text()
+        console.error('Error del servidor:', errorText)
+        throw new Error(`Error al eliminar el artículo: ${errorText}`)
       }
+
+      const result = await response.json()
+      console.log('Resultado de eliminación:', result)
 
       toast('Artículo eliminado', {
         description: 'El artículo ha sido eliminado correctamente',
@@ -199,6 +241,11 @@ export default function MyArticles({ onEditArticle }: MyArticlesProps) {
   }
 
   const filteredArticles = articles.filter((article) => {
+    // Verificar que el artículo tenga las propiedades necesarias
+    if (!article || !article.Titulo) {
+      return false
+    }
+    
     const matchSearch = article.Titulo.toLowerCase().includes(searchTerm.toLowerCase())
     let matchFilter = true
 
@@ -239,7 +286,7 @@ export default function MyArticles({ onEditArticle }: MyArticlesProps) {
     return Array.from(values)
   }
 
-  if (loading) {
+  if (loading || userLoading) {
     return (
       <Card>
         <CardHeader>
@@ -306,7 +353,14 @@ export default function MyArticles({ onEditArticle }: MyArticlesProps) {
           </TableHeader>
           <TableBody>
             {filteredArticles.length > 0 ? (
-              filteredArticles.map((article,index) => (
+              filteredArticles.map((article,index) => {
+                console.log(`Artículo ${index}:`, {
+                  id: article.IdArticulo,
+                  titulo: article.Titulo,
+                  estatus: article.Estatus,
+                  estatusText: getStatusText(article.Estatus)
+                })
+                return (
                 <TableRow key={index}>
                   <TableCell className="font-medium">{article.Titulo}</TableCell>
                   <TableCell className="capitalize">{article.Categoria?.Nombre || 'Sin categoría'}</TableCell>
@@ -317,7 +371,8 @@ export default function MyArticles({ onEditArticle }: MyArticlesProps) {
                       <Button variant="ghost" size="sm" onClick={() => handleViewArticle(article)}>
                         <Eye className="h-4 w-4" />
                       </Button>
-                      {article.Estatus === 2 && (
+                      {/* Mostrar botones de editar y eliminar para artículos en revisión (estado 1) o rechazados (estado 2) */}
+                      {(article.Estatus === 1 || article.Estatus === 2) && (
                         <>
                           <Button variant="ghost" size="sm" onClick={() => handleAction("Editar", article.Titulo, article)}>
                             <Edit className="h-4 w-4" />
@@ -334,7 +389,8 @@ export default function MyArticles({ onEditArticle }: MyArticlesProps) {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
+                )
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={5} className="text-center text-muted-foreground">
@@ -346,35 +402,101 @@ export default function MyArticles({ onEditArticle }: MyArticlesProps) {
         </Table>
       </CardContent>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-xl">
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        setIsDialogOpen(open)
+        if (!open) {
+          setSelectedArticleResources([])
+          setLoadingResources(false)
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedArticle?.Titulo}</DialogTitle>
             <DialogDescription>
               Publicado el {selectedArticle?.FechaCreacion ? new Date(selectedArticle.FechaCreacion).toLocaleDateString('es-ES') : 'Fecha no disponible'}
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-96 overflow-y-auto pr-2 space-y-4">
+          <div className="space-y-6">
             <div className="space-y-2">
               <h4 className="font-semibold">Resumen:</h4>
               <p className="text-sm text-muted-foreground">
                 {selectedArticle?.Resumen || "Este artículo no tiene resumen."}
               </p>
             </div>
+            
             <div className="space-y-2">
               <h4 className="font-semibold">Contenido:</h4>
               <p className="text-sm text-muted-foreground whitespace-pre-line">
                 {selectedArticle?.Contenido || "Este artículo no tiene contenido aún."}
               </p>
             </div>
+
+            {/* Comentario del revisor */}
             {selectedArticle?.Comentario && (
               <div className="space-y-2">
                 <h4 className="font-semibold">Comentario del revisor:</h4>
-                <p className="text-sm text-muted-foreground">
-                  {selectedArticle.Comentario}
-                </p>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <p className="text-sm text-yellow-800">
+                    {selectedArticle.Comentario}
+                  </p>
+                </div>
               </div>
             )}
+
+            {/* Recursos del artículo */}
+            <div className="space-y-2">
+              <h4 className="font-semibold">Recursos:</h4>
+              {loadingResources ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="text-sm text-gray-500">Cargando recursos...</div>
+                </div>
+              ) : selectedArticleResources.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {selectedArticleResources.map((resource, index) => (
+                    <div key={index} className="border rounded-lg p-3 bg-gray-50">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm mb-1">{resource.Nombre}</p>
+                          <div className="relative group">
+                            <p 
+                              className="text-xs text-gray-500 truncate pr-8 cursor-help"
+                              title={resource.Ruta}
+                            >
+                              {resource.Ruta}
+                            </p>
+                            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none"></div>
+                          </div>
+                        </div>
+                        <a 
+                          href={resource.Ruta} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium whitespace-nowrap flex-shrink-0"
+                        >
+                          Ver
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Este artículo no tiene recursos asociados.
+                </p>
+              )}
+            </div>
+
+            
+            {/* Debug: Mostrar información del artículo para debugging }
+            {process.env.NODE_ENV === 'development' && (
+              <div className="space-y-2">
+                <h4 className="font-semibold text-xs text-gray-500">Debug Info:</h4>
+                <pre className="text-xs text-gray-400 bg-gray-100 p-2 rounded">
+                  {JSON.stringify(selectedArticle, null, 2)}
+                </pre>
+              </div>
+            )*/}
+            
           </div>
         </DialogContent>
       </Dialog>
