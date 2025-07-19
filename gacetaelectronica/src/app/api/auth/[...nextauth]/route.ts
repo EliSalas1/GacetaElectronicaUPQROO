@@ -1,85 +1,122 @@
 // src/app/api/auth/[...nextauth]/route.ts
 import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 import getConnection from "@/lib/db";
+import bcrypt from "bcryptjs";
+import type { RowDataPacket } from "mysql2";
+
+interface UsuarioRow extends RowDataPacket {
+  IdUsuario: number;
+  Nombre: string;
+  Apellido: string;
+  Correo: string;
+  Contraseña: string;
+  Rol: string;
+  Estado: number;
+}
 
 export const authOptions: NextAuthOptions = {
-  // 1) Proveedores
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
-  ],
-  secret: process.env.NEXTAUTH_SECRET,
-  pages: {
-    // Ajusta a la ruta donde esté tu login
-    signIn: "/publica/login",
-  },
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Correo", type: "text" },
+        password: { label: "Contraseña", type: "password" },
+      },
+      async authorize(credentials, req) {
+        if (!credentials || !credentials.email || !credentials.password) {
+          return null;
+        }
 
-  callbacks: {
-    // 2) En el JWT almacenamos accessToken y role
-    async jwt({ token, account, profile }) {
-      if (account && profile) {
-        token.accessToken = account.access_token;
-
-        // Conexión a BD
         const pool = await getConnection();
-        const [rows] = await pool.query<[{ idUsuarios: number; Rol: string }]>(
-          "SELECT idUsuarios, Rol FROM Usuarios WHERE Correo = ?",
-          [profile.email]
+        const [rows] = await pool.query<UsuarioRow[]>(
+          "SELECT * FROM Usuarios WHERE Correo = ?",
+          [credentials.email]
         );
 
         if (rows.length === 0) {
-          // Si no existe, lo insertamos como "Usuario"
-          const insert = await pool.query<any>(
-            `INSERT INTO Usuarios
-               (Nombre, Apellido, Correo, Rol, Estado, Contraseña, FechaCreacion)
+          return null;
+        }
+
+        const user = rows[0];
+
+        if (user.Estado !== 1 || !user.Contraseña) return null;
+
+        const isValid = await bcrypt.compare(
+          credentials.password,
+          user.Contraseña
+        );
+
+        if (!isValid) return null;
+
+        return {
+          id: user.IdUsuario, // Mantener como number
+          name: `${user.Nombre} ${user.Apellido}`,
+          email: user.Correo,
+          role: user.Rol,
+        };
+      },
+    }),
+  ],
+  secret: process.env.NEXTAUTH_SECRET,
+  pages: {
+    signIn: "/publica/login",
+  },
+  callbacks: {
+    async jwt({ token, account, profile, user }) {
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+        token.role = (user as any).role; // role no forma parte de User por defecto
+      }
+
+      if (account?.provider === "google" && profile?.email) {
+        const pool = await getConnection();
+
+        const [existing] = await pool.query<UsuarioRow[]>(
+          "SELECT * FROM Usuarios WHERE Correo = ?",
+          [profile.email]
+        );
+
+        if (existing.length === 0) {
+          await pool.query(
+            `INSERT INTO Usuarios (Nombre, Apellido, Correo, Rol, Estado, Contraseña, FechaCreacion)
              VALUES (?, ?, ?, ?, ?, ?, NOW())`,
             [
-              profile.given_name,
-              profile.family_name,
+              profile.given_name || "",
+              profile.family_name || "",
               profile.email,
-              "Usuario", // rol por defecto
-              1,         // estado activo
-              "",        // contraseña vacía para OAuth
+              "Usuario",
+              1,
+              "",
             ]
           );
-          // Si quieres, puedes leer el insertId aquí:
-          // const newId = (insert as OkPacket).insertId;
-          token.role = "Usuario";
-        } else {
-          // Ya existe, recuperamos el rol
-          token.role = rows[0].Rol;
-          // Y opcionalmente, limitamos a 2 registros por email:
-          if (rows.length >= 2) {
-            throw new Error("Este correo ya tiene el límite de registros alcanzado.");
-          }
         }
+
+        token.accessToken = account.access_token;
       }
+
       return token;
     },
-
-    // 3) En la sesión exponemos accessToken y role
     async session({ session, token }) {
-      session.accessToken = token.accessToken as string;
-      session.user = {
-        ...session.user,
-        role: token.role as string,
-      };
+      if (session.user) {
+        session.user.id = token.id as number;
+        session.user.role = token.role as string;
+        session.accessToken = token.accessToken as string;
+      }
       return session;
     },
-
-    // 4) Control de redirecciones
     async redirect({ url, baseUrl }) {
-      // Si es ruta interna, mantenla
       if (url.startsWith("/")) return `${baseUrl}${url}`;
-      // Si es externa, al home
       return baseUrl;
     },
   },
 };
 
-// 5) Exportar el handler para GET y POST
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
