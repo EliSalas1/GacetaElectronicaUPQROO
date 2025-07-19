@@ -1,10 +1,10 @@
-// api/auth/[...nextauth]/route.ts
-
-import NextAuth from "next-auth";
+// src/app/api/auth/[...nextauth]/route.ts
+import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import getConnection from "@/lib/db"; // Importa nuestra función de conexión a la base de datos
+import getConnection from "@/lib/db";
 
-const handler = NextAuth({
+export const authOptions: NextAuthOptions = {
+  // 1) Proveedores
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -13,44 +13,73 @@ const handler = NextAuth({
   ],
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
-    signIn: "/login", // Redirige al login personalizado
+    // Ajusta a la ruta donde esté tu login
+    signIn: "/publica/login",
   },
+
   callbacks: {
+    // 2) En el JWT almacenamos accessToken y role
     async jwt({ token, account, profile }) {
       if (account && profile) {
         token.accessToken = account.access_token;
 
-        // Conexión a la base de datos
+        // Conexión a BD
         const pool = await getConnection();
-        
-        // Verificamos si el correo ya existe en la base de datos
-        const [userExists] = await pool.query('SELECT * FROM Usuarios WHERE Correo = ?', [profile.email]);
+        const [rows] = await pool.query<[{ idUsuarios: number; Rol: string }]>(
+          "SELECT idUsuarios, Rol FROM Usuarios WHERE Correo = ?",
+          [profile.email]
+        );
 
-        if (userExists.length === 0) {
-          // Si el correo no existe, se puede insertar un nuevo usuario
-          await pool.query(
-            `INSERT INTO Usuarios (Nombre, Apellido, Correo, Rol, Estado, Contraseña, FechaCreacion)
+        if (rows.length === 0) {
+          // Si no existe, lo insertamos como "Usuario"
+          const insert = await pool.query<any>(
+            `INSERT INTO Usuarios
+               (Nombre, Apellido, Correo, Rol, Estado, Contraseña, FechaCreacion)
              VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-            [profile.given_name, profile.family_name, profile.email, 'Usuario', 1, '', new Date()]
+            [
+              profile.given_name,
+              profile.family_name,
+              profile.email,
+              "Usuario", // rol por defecto
+              1,         // estado activo
+              "",        // contraseña vacía para OAuth
+            ]
           );
+          // Si quieres, puedes leer el insertId aquí:
+          // const newId = (insert as OkPacket).insertId;
+          token.role = "Usuario";
         } else {
-          // Aquí puedes agregar una verificación para limitar a 2 registros por correo
-          if (userExists.length >= 2) {
+          // Ya existe, recuperamos el rol
+          token.role = rows[0].Rol;
+          // Y opcionalmente, limitamos a 2 registros por email:
+          if (rows.length >= 2) {
             throw new Error("Este correo ya tiene el límite de registros alcanzado.");
           }
         }
       }
       return token;
     },
+
+    // 3) En la sesión exponemos accessToken y role
     async session({ session, token }) {
-      session.accessToken = token.accessToken; // Añadimos el access_token a la sesión
+      session.accessToken = token.accessToken as string;
+      session.user = {
+        ...session.user,
+        role: token.role as string,
+      };
       return session;
     },
+
+    // 4) Control de redirecciones
     async redirect({ url, baseUrl }) {
-      if (url.startsWith('/')) return `${baseUrl}${url}`; // Redirigir a páginas internas
-      return baseUrl; // Si la URL es externa, regresar al home
+      // Si es ruta interna, mantenla
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Si es externa, al home
+      return baseUrl;
     },
   },
-});
+};
 
+// 5) Exportar el handler para GET y POST
+const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };

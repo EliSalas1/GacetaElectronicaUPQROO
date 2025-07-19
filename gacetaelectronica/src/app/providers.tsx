@@ -1,13 +1,23 @@
-"use client"
+"use client";
 
-import { UserProvider } from "@/contexts/UserContext"
-import { Toaster } from "@/components/ui/sonner"
+import { SessionProvider } from "next-auth/react";
+import type { Session } from "next-auth";
+import { UserProvider } from "@/contexts/UserContext";
+import { Toaster } from "@/components/ui/sonner";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  children,
+  session,
+}: {
+  children: React.ReactNode;
+  session?: Session;
+}) {
   return (
-    <UserProvider>
-      {children}
-      <Toaster />
-    </UserProvider>
-  )
+    <SessionProvider session={session}>
+      <UserProvider>
+        {children}
+        <Toaster />
+      </UserProvider>
+    </SessionProvider>
+  );
 }
