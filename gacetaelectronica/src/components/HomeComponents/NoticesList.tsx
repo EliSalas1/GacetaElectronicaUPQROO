@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SkeletonSchema from "@/components/SkeletonSchema";
+import Image from "next/image";
 
 interface Articulo {
   id: number;
@@ -14,6 +15,7 @@ interface Articulo {
   category: string;
   author: string;
   etiqueta: string[];
+  imagenUrl: string;
 }
 
 function getTagColor(tag: string): string {
@@ -35,6 +37,12 @@ function getTagColor(tag: string): string {
     default:
       return "bg-gray-200 text-gray-700 border-gray-300";
   }
+}
+
+function getDriveImageUrl(driveUrl: string): string | null {
+  const regex = /\/d\/([a-zA-Z0-9_-]+)/;
+  const match = driveUrl.match(regex);
+  return match ? `https://drive.google.com/uc?export=preview&id=${match[1]}` : null;
 }
 
 export default function NoticesList() {
@@ -70,6 +78,16 @@ export default function NoticesList() {
                 ? `${autores[0].Nombre} ${autores[0].Apellido ?? ""}`.trim()
                 : "Sin autor";
 
+            const recursoRes = await fetch(
+              `/api/recursos?articuloId=${articulo.id}`
+            );
+            const recursos = await recursoRes.json();
+            const imagenUrl = Array.isArray(recursos) && recursos.length > 0
+              ? getDriveImageUrl(recursos[0].Ruta)
+              : null;
+              
+            console.log("Recurso", recursos[0]);
+
 
             return {
               id: articulo.id,
@@ -80,6 +98,7 @@ export default function NoticesList() {
               category: articulo.category,
               author,
               etiqueta: etiquetas.map((e: any) => e.Nombre),
+              imagenUrl,
             };
           })
         );
@@ -98,11 +117,8 @@ export default function NoticesList() {
   return (
     <>
       {loading && (
-        <>
-          <SkeletonSchema grid={4} variant="noticias" />
-        </>
+        <SkeletonSchema grid={4} variant="noticias" />
       )}
-
 
       {!loading && (
         <div className="grid md:grid-cols-2 gap-6">
@@ -111,8 +127,17 @@ export default function NoticesList() {
               key={news.id}
               className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-full"
             >
-              <div className="h-48 bg-gray-200 flex items-center justify-center">
-                <div className="w-12 h-12 bg-gray-400 rounded" />
+              <div className="h-48 bg-gray-200 flex items-center justify-center relative">
+                {news.imagenUrl ? (
+                  <Image
+                    src={news.imagenUrl}
+                    alt={news.title}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-12 h-12 bg-gray-400 rounded" />
+                )}
               </div>
 
               <div className="p-6 flex flex-col flex-grow">
@@ -131,9 +156,7 @@ export default function NoticesList() {
                     {news.etiqueta.map((tag, i) => (
                       <span
                         key={i}
-                        className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getTagColor(
-                          tag
-                        )} max-w-xs truncate`}
+                        className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getTagColor(tag)} max-w-xs truncate`}
                       >
                         {tag}
                       </span>
@@ -147,7 +170,7 @@ export default function NoticesList() {
                   className="bg-white text-[#4C0000] border border-[#4C0000] hover:bg-[#4C0000] hover:text-white w-full transition"
                 >
                   <a
-                    href={`#noticia-completa-${news.id}`}
+                    href={`/publica/articulo/${news.id}`}
                     className="flex items-center justify-center gap-2"
                   >
                     Leer artículo completo

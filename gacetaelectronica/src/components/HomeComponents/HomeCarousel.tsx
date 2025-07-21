@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import SkeletonSchema from "@/components/SkeletonSchema";
+import Image from "next/image";
 
 interface Article {
   id: number;
@@ -10,13 +11,20 @@ interface Article {
   createdAt: string;
   category: string;
   author?: string;
+  imagenUrl?: string | null;
 }
 
 interface Usuario {
   idUsuarios: number;
   Nombre: string;
   Apellido?: string;
-  Correo: string;
+
+}
+
+function getDriveImageUrl(driveUrl: string): string | null {
+  const regex = /\/d\/([a-zA-Z0-9_-]+)/;
+  const match = driveUrl.match(regex);
+  return match ? `https://drive.google.com/uc?export=preview&id=${match[1]}` : null;
 }
 
 export default function HomeCarousel() {
@@ -24,7 +32,6 @@ export default function HomeCarousel() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Contenido estático para el primer slide
   const staticSlide = {
     id: 0,
     category: "Información",
@@ -33,49 +40,55 @@ export default function HomeCarousel() {
       "Convocatoria abierta para que estudiantes y docentes participen en la Gaceta Universitaria UPQROO.",
     createdAt: new Date().toLocaleDateString(),
     author: "Gaceta Electrónica",
+    imagenUrl: null,
   };
 
   useEffect(() => {
-    async function fetchArticlesAndAuthors() {
+    async function fetchArticlesAndAuthorsAndImages() {
       try {
         setLoading(true);
         const res = await fetch('/api/articulos?limit=4');
         if (!res.ok) throw new Error('Error al obtener artículos');
         const data: Article[] = await res.json();
 
-        const articlesWithAuthors = await Promise.all(
+        const articlesWithDetails = await Promise.all(
           data.map(async (article) => {
             const resUsers = await fetch(`/api/articuloUsuario?articuloId=${article.id}`);
             if (!resUsers.ok) throw new Error('Error al obtener autores');
             const users: Usuario[] = await resUsers.json();
-
             const authorName = users.length > 0
               ? `${users[0].Nombre} ${users[0].Apellido ?? ''}`.trim()
               : "Sin autor";
 
+            const resRecursos = await fetch(`/api/recursos?articuloId=${article.id}`);
+            const recursos = resRecursos.ok ? await resRecursos.json() : [];
+            const imagenUrl = Array.isArray(recursos) && recursos.length > 0
+              ? getDriveImageUrl(recursos[0].Ruta || recursos[0].ruta || recursos[0].url || "")
+              : null;
+
             return {
               ...article,
               author: authorName,
+              imagenUrl,
             };
           })
         );
 
-        setArticles(articlesWithAuthors);
+        setArticles(articlesWithDetails);
       } catch (error) {
         console.error(error);
       } finally {
         setLoading(false);
       }
     }
-    fetchArticlesAndAuthors();
+    fetchArticlesAndAuthorsAndImages();
   }, []);
 
   useEffect(() => {
     if (articles.length === 0) return;
-    // Cambiar sólo entre slides dinámicos (índices 1 a articles.length)
     const interval = setInterval(() => {
       setCurrentSlide((prev) => {
-        if (prev === articles.length) return 1;
+        if (prev === allSlides.length - 1) return 0;
         return prev + 1;
       });
     }, 7000);
@@ -86,7 +99,6 @@ export default function HomeCarousel() {
     return <SkeletonSchema grid={1} variant="carousel" />;
   }
 
-  // Los slides son: [staticSlide, ...articles]
   const allSlides = [staticSlide, ...articles];
 
   return (
@@ -111,24 +123,31 @@ export default function HomeCarousel() {
                     {item.category}
                   </span>
                   <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
-                  <p className="text-gray-600 text-sm mb-2 line-clamp-3">
-                    {item.resumen}
-                  </p>
+                  <p className="text-gray-600 text-sm mb-2 line-clamp-3">{item.resumen}</p>
                   <div className="text-xs text-gray-500 mb-3">
                     A. {item.author} • {item.createdAt}
                   </div>
-                  {/* Solo mostrar botón "Leer más" para slides dinámicos */}
                   {index !== 0 && (
                     <a
-                      href={`#noticia-${item.id}`}
+                      href={`/publica/articulo/${item.id}`}
                       className="inline-block bg-[#4C0000] hover:bg-[#390000] text-white px-3 py-1.5 rounded text-sm transition w-fit"
                     >
                       Leer más
                     </a>
                   )}
                 </div>
-                <div className="w-full md:w-1/2 bg-gray-200 min-h-[200px] flex items-center justify-center">
-                  <div className="w-14 h-14 bg-gray-400 rounded-full" />
+                <div className="w-full md:w-1/2 bg-gray-200 min-h-[200px] flex items-center justify-center relative">
+                  {item.imagenUrl ? (
+                    <Image
+                      src={item.imagenUrl}
+                      alt={item.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 bg-gray-400 rounded-full" />
+                  )}
                 </div>
               </div>
             ))}
@@ -136,17 +155,15 @@ export default function HomeCarousel() {
         </div>
       </div>
 
-      {/* Indicators */}
       <div className="flex justify-center mt-4 space-x-1">
         {allSlides.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-              currentSlide === index
+            className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${currentSlide === index
                 ? "bg-orange-500 scale-105"
                 : "bg-gray-400 hover:bg-gray-500"
-            }`}
+              }`}
             aria-label={`Ir a la noticia ${index + 1}`}
           />
         ))}
