@@ -1,8 +1,34 @@
+'use client';
+
+import { useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import GoogleButton from "@/components/Sign-in-up/GoogleButton";
 import AuthForm from "@/components/Sign-in-up/AuthForm";
 import SidePanel from "@/components/Sign-in-up/SidePanel";
 
 export default function LoginPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      switch (session.user.role) {
+        case "Admin":
+          router.replace("/private/administrador");
+          break;
+        case "Redactor":
+          router.replace("/private/redactor");
+          break;
+        case "Revisor":
+          router.replace("/private/supervisor");
+          break;
+        default:
+          router.replace("/");
+      }
+    }
+  }, [status, session, router]);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2" style={{ backgroundColor: "var(--color-fondo)" }}>
       <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
