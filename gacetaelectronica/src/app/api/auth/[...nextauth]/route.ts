@@ -55,7 +55,7 @@ export const authOptions: NextAuthOptions = {
         if (!isValid) return null;
 
         return {
-          id: user.IdUsuario, // Mantener como number
+          id: user.IdUsuario,
           name: `${user.Nombre} ${user.Apellido}`,
           email: user.Correo,
           role: user.Rol,
@@ -72,7 +72,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.email = user.email;
-        token.role = (user as any).role; // role no forma parte de User por defecto
+        token.role = (user as any).role;
       }
 
       if (account?.provider === "google" && profile?.email) {
@@ -96,11 +96,15 @@ export const authOptions: NextAuthOptions = {
               "",
             ]
           );
+          token.role = "Usuario"; // Nuevo usuario, rol por defecto
+        } else {
+          token.role = existing[0].Rol; // 👈 IMPORTANTE: recuperar rol existente
         }
 
         token.accessToken = account.access_token;
       }
 
+      console.log("🔥 JWT Callback → token.role:", token.role);
       return token;
     },
     async session({ session, token }) {
@@ -108,6 +112,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as number;
         session.user.role = token.role as string;
         session.accessToken = token.accessToken as string;
+        console.log("✅ Session Callback → session.user.role:", session.user.role);
       }
       return session;
     },
