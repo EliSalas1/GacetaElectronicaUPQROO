@@ -47,7 +47,7 @@ export default function SearchBar() {
   };
 
   return (
-    <section className="py-8 bg-white relative">
+    <section className="py-8 relative">
       <div className="max-w-7xl mx-auto px-4">
         <form onSubmit={handleSubmit} className="flex items-center space-x-4">
           <div className="flex-1 relative">
