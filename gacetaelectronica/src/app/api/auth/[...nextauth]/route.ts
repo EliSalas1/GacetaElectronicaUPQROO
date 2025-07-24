@@ -58,6 +58,7 @@ export const authOptions: NextAuthOptions = {
         // Asigna el rol al user antes de devolverlo
         return {
           id: user.IdUsuario,
+          id: user.IdUsuario,
           name: `${user.Nombre} ${user.Apellido}`,
           email: user.Correo,
           role: user.Rol, // Asegúrate de que el rol esté aquí
