@@ -1,4 +1,3 @@
-// src/app/api/auth/[...nextauth]/route.ts
 import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -54,11 +53,14 @@ export const authOptions: NextAuthOptions = {
 
         if (!isValid) return null;
 
+        console.log(`Usuario logueado: ${user.Nombre} ${user.Apellido}, Rol: ${user.Rol}`);
+
+        // Asigna el rol al user antes de devolverlo
         return {
-          id: user.IdUsuario, // Mantener como number
+          id: user.IdUsuario,
           name: `${user.Nombre} ${user.Apellido}`,
           email: user.Correo,
-          role: user.Rol,
+          role: user.Rol, // Asegúrate de que el rol esté aquí
         };
       },
     }),
@@ -68,52 +70,24 @@ export const authOptions: NextAuthOptions = {
     signIn: "/publica/login",
   },
   callbacks: {
-    async jwt({ token, account, profile, user }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
-        token.role = (user as any).role; // role no forma parte de User por defecto
+        token.role = user.role;  // Asegúrate de que el rol se guarda aquí
+        console.log(`Rol asignado al token: ${token.role}`);
       }
-
-      if (account?.provider === "google" && profile?.email) {
-        const pool = await getConnection();
-
-        const [existing] = await pool.query<UsuarioRow[]>(
-          "SELECT * FROM Usuarios WHERE Correo = ?",
-          [profile.email]
-        );
-
-        if (existing.length === 0) {
-          await pool.query(
-            `INSERT INTO Usuarios (Nombre, Apellido, Correo, Rol, Estado, Contraseña, FechaCreacion)
-             VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-            [
-              profile.given_name || "",
-              profile.family_name || "",
-              profile.email,
-              "Usuario",
-              1,
-              "",
-            ]
-          );
-        }
-
-        token.accessToken = account.access_token;
-      }
-
       return token;
     },
+
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as number;
-        session.user.role = token.role as string;
+        session.user.role = token.role as string;  // Asigna el rol a la sesión
         session.accessToken = token.accessToken as string;
+        console.log(`Rol del usuario en la sesión: ${session.user.role}`);
       }
       return session;
-    },
-    async redirect({ url, baseUrl }) {
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      return baseUrl;
     },
   },
 };
