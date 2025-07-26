@@ -40,7 +40,7 @@ export default function HomeCarousel() {
       "Convocatoria abierta para que estudiantes y docentes participen en la Gaceta Universitaria UPQROO.",
     createdAt: new Date().toLocaleDateString(),
     author: "Gaceta Electrónica",
-    imagenUrl: null,
+    imagenUrl: getDriveImageUrl("https://drive.google.com/file/d/1Ssyr7tHtrzwc7Mb88Kg_iVSlxp_1y0IW/view?usp=sharing"),
   };
 
   useEffect(() => {
@@ -161,8 +161,8 @@ export default function HomeCarousel() {
             key={index}
             onClick={() => setCurrentSlide(index)}
             className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${currentSlide === index
-                ? "bg-orange-500 scale-105"
-                : "bg-gray-400 hover:bg-gray-500"
+              ? "bg-orange-500 scale-105"
+              : "bg-gray-400 hover:bg-gray-500"
               }`}
             aria-label={`Ir a la noticia ${index + 1}`}
           />

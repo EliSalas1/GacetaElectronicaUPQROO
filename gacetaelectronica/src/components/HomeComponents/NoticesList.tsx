@@ -17,20 +17,21 @@ interface Articulo {
   etiqueta: string[];
   imagenUrl: string;
 }
-
 function getTagColor(tag: string): string {
-  switch (tag) {
-    case "Arte PUT":
+  const normalizedTag = tag.trim().normalize(); // Elimina espacios/saltos y normaliza caracteres
+
+  switch (normalizedTag) {
+    case "Arte":
       return "bg-blue-100 text-blue-800 border-blue-200";
-    case "ArticuloAcademico":
+    case "Artículo académico":
       return "bg-green-100 text-green-800 border-green-200";
-    case "ArticuloDifusion":
+    case "Artículo de difusión":
       return "bg-red-100 text-red-800 border-emerald-200";
-    case "NotaSocial":
+    case "Nota social":
       return "bg-purple-100 text-purple-800 border-purple-200";
     case "Historieta":
       return "bg-pink-100 text-pink-800 border-pink-200";
-    case "RelatoCorto":
+    case "Relato corto":
       return "bg-orange-100 text-orange-800 border-indigo-200";
     case "Logro":
       return "bg-yellow-100 text-yellow-800 border-yellow-200";
@@ -38,6 +39,7 @@ function getTagColor(tag: string): string {
       return "bg-gray-200 text-gray-700 border-gray-300";
   }
 }
+
 
 function getDriveImageUrl(driveUrl: string): string | null {
   const regex = /\/d\/([a-zA-Z0-9_-]+)/;
@@ -85,7 +87,7 @@ export default function NoticesList() {
             const imagenUrl = Array.isArray(recursos) && recursos.length > 0
               ? getDriveImageUrl(recursos[0].Ruta)
               : null;
-              
+
             console.log("Recurso", recursos[0]);
 
 

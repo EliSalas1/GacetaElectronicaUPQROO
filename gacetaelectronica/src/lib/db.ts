@@ -2,9 +2,14 @@ import mysql, { Pool } from 'mysql2/promise';
 import { exec, ChildProcess } from 'child_process';
 import os from 'os';
 
-let pool: Pool | null = null;
-let sshProcess: ChildProcess | null = null;
-let tunnelEstablished = false;
+declare global {
+  var _mysqlPool: Pool | null;
+  var _sshProcess: ChildProcess | null;
+  var _tunnelEstablished: boolean | null;
+}
+
+let sshProcess: ChildProcess | null = global._sshProcess || null;
+let tunnelEstablished: boolean = global._tunnelEstablished || false;
 
 const dbConfig = {
   host: '127.0.0.1',
@@ -13,16 +18,15 @@ const dbConfig = {
   password: 'gacetaUP2025',
   database: 'gaceta_bd',
   waitForConnections: true,
-  connectionLimit: 1000,
-  queueLimit: 0
+  connectionLimit: 10, // usa un número razonable
+  queueLimit: 0,
 };
 
-// Abre el túnel SSH si no está abierto
+// Abrir túnel SSH
 async function openSshTunnel(): Promise<void> {
   return new Promise((resolve, reject) => {
     if (tunnelEstablished) return resolve();
 
-    // Verifica el sistema operativo para decidir el comando adecuado
     const isWindows = os.platform() === 'win32';
     const sshCommand = isWindows
       ? `"C:\\plink.exe" -ssh gestionvinculacion@academico.upqroo.edu.mx -P 22 -pw GVUpqroo25* -N -L 3307:localhost:3306`
@@ -35,16 +39,17 @@ async function openSshTunnel(): Promise<void> {
       }
     });
 
-    // Esperar 1 segundo para establecer el túnel
     setTimeout(() => {
       tunnelEstablished = true;
+      global._sshProcess = sshProcess;
+      global._tunnelEstablished = true;
       console.log('✅ Túnel SSH creado con éxito');
       resolve();
     }, 1000);
   });
 }
 
-// Maneja el cierre del túnel cuando el proceso termina
+// Cleanup en salida
 function setupTunnelCleanup() {
   const cleanup = () => {
     if (sshProcess) {
@@ -52,23 +57,25 @@ function setupTunnelCleanup() {
       sshProcess.kill();
       sshProcess = null;
       tunnelEstablished = false;
+      global._sshProcess = null;
+      global._tunnelEstablished = false;
     }
     process.exit();
   };
 
-  process.on('SIGINT', cleanup);   // Ctrl+C
-  process.on('SIGTERM', cleanup);  // kill
-  process.on('exit', cleanup);     // salida normal
+  process.on('SIGINT', cleanup);
+  process.on('SIGTERM', cleanup);
+  process.on('exit', cleanup);
 }
 
-// Obtiene el pool de conexiones
+// Singleton de conexión
 export default async function getConnection(): Promise<Pool> {
-  if (!pool) {
+  if (!global._mysqlPool) {
     await openSshTunnel();
-    setupTunnelCleanup(); // solo la primera vez
-    pool = mysql.createPool(dbConfig);
+    setupTunnelCleanup();
+    global._mysqlPool = mysql.createPool(dbConfig);
     console.log('✅ Pool de conexiones MySQL creado');
   }
 
-  return pool;
+  return global._mysqlPool;
 }
