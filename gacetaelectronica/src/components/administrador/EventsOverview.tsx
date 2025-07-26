@@ -56,11 +56,11 @@ export default function EventOverview() {
 
   // Filtrado local
   const filteredEvents = events.filter((event) => {
-    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = event.Nombre.toLowerCase().includes(searchTerm.toLowerCase());
     let matchesFilter = true;
     if (filterBy && filterValue && filterValue !== "all") {
       if (filterBy === "status") matchesFilter = event.status === filterValue;
-      if (filterBy === "location") matchesFilter = event.location === filterValue;
+      if (filterBy === "location") matchesFilter = event.Lugar === filterValue;
     }
     return matchesSearch && matchesFilter;
   });
@@ -122,9 +122,9 @@ export default function EventOverview() {
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 {(filterBy === "status"
-                  ? ["published", "pending", "draft"]
+                  ? ["publicado", "revisión", "rechazado"]
                   : filterBy === "location"
-                  ? Array.from(new Set(events.map((e) => e.location)))
+                  ? Array.from(new Set(events.map((e) => e.Lugar)))
                   : []
                 ).map((option) => (
                   <SelectItem key={option} value={option}>
@@ -157,12 +157,12 @@ export default function EventOverview() {
               </TableHeader>
               <TableBody>
                 {filteredEvents.map((event) => (
-                  <TableRow key={event.id}>
-                    <TableCell className="font-medium">{event.title}</TableCell>
-                    <TableCell>{formatDate(event.date)}</TableCell>
-                    <TableCell>{event.time}</TableCell>
-                    <TableCell>{event.location}</TableCell>
-                    <TableCell>{event.shortDescription}</TableCell>
+                  <TableRow key={event.IdEvento}>
+                    <TableCell className="font-medium">{event.Nombre}</TableCell>
+                    <TableCell>{formatDate(event.Fecha)}</TableCell>
+                    <TableCell>{event.Hora}</TableCell>
+                    <TableCell>{event.Lugar}</TableCell>
+                    <TableCell>{event.DesCorta}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button
@@ -214,22 +214,22 @@ export default function EventOverview() {
         event={selectedEvent}
         onSave={async (updatedEvent) => {
           try {
-            const res = await fetch(`/api/eventos?id=${updatedEvent.id}`, {
+            const res = await fetch(`/api/eventos?id=${updatedEvent.IdEvento}`, {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                Nombre: updatedEvent.title,
-                Fecha: updatedEvent.date,
-                Hora: updatedEvent.time,
-                Lugar: updatedEvent.location,
-                DesCorta: updatedEvent.shortDescription,
-                DesLarga: updatedEvent.longDescription,
+                Nombre: updatedEvent.Nombre,
+                Fecha: updatedEvent.Fecha,
+                Hora: updatedEvent.Hora,
+                Lugar: updatedEvent.Lugar,
+                DesCorta: updatedEvent.DesCorta,
+                DesLarga: updatedEvent.DesLarga,
               }),
             });
             if (!res.ok) throw new Error("Error al actualizar evento");
             setEvents((prev) =>
               prev.map((e) =>
-                e.id === updatedEvent.id ? { ...e, ...updatedEvent } : e
+                e.IdEvento === updatedEvent.IdEvento ? { ...e, ...updatedEvent } : e
               )
             );
           } catch (err) {
@@ -248,11 +248,11 @@ export default function EventOverview() {
         event={selectedEvent}
         onConfirm={async () => {
           try {
-            const res = await fetch(`/api/eventos?id=${selectedEvent?.id}`, {
+            const res = await fetch(`/api/eventos?id=${selectedEvent?.IdEvento}`, {
               method: "DELETE",
             });
             if (!res.ok) throw new Error("Error al eliminar evento");
-            setEvents((prev) => prev.filter((e) => e.id !== selectedEvent?.id));
+            setEvents((prev) => prev.filter((e) => e.IdEvento !== selectedEvent?.IdEvento));
           } catch (err) {
             console.error(err);
             alert("Error al eliminar evento");

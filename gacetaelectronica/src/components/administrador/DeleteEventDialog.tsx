@@ -21,8 +21,8 @@ export function DeleteEventDialog({ open, onOpenChange, event, onConfirm }: Prop
           <DialogTitle>¿Eliminar evento?</DialogTitle>
         </DialogHeader>
         <p>
-          ¿Estás seguro de que deseas eliminar el evento <strong>&quot;{event.title}&quot;</strong>? Esta acción no se puede deshacer.
-        </p>
+          ¿Estás seguro de que deseas eliminar el evento <strong>&quot;{event.Nombre}&quot;</strong>? Esta acción no se puede deshacer.
+        </p> {/*antes donde dice event.Nombre decia event.title */}
         <DialogFooter>
           <Button variant="secondary" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button variant="destructive" onClick={onConfirm}>Eliminar</Button>
