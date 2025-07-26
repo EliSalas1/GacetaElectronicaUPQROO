@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, FileText, Settings, Plus } from "lucide-react";
@@ -30,8 +32,23 @@ function filtrarPorUltimoMes<T extends ItemConFecha>(items: T[]): T[] {
 }
 
 export default function Page() {
-  // TODO: Este hook es solo para hacer dinámico el componente durante desarrollo.
-  // El rol se debe obtener desde el backend mediante autenticación real.
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  // Protección de ruta cliente
+  useEffect(() => {
+    if (status === "loading") return;
+
+    if (!session || session.user.role !== "Admin") {
+      router.replace("/forbidden");
+    }
+  }, [session, status, router]);
+
+  // Si está cargando la sesión, evita el render
+  if (status === "loading" || !session || session.user.role !== "Admin") {
+    return null;
+  }
+
   useInitializeUser("Administrador");
   const [activeTab, setActiveTab] = useState("overview");
   const { data, loading } = useFetch<UserInterface>("api/usuarios");

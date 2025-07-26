@@ -5,9 +5,9 @@ import { redirect } from "next/navigation";
 
 export default async function PrivateLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
-  if (!session) redirect("/login");        // no autenticado
-  if (session.user.role !== "Admin" && session.user.role !== "Revisor") {
-    redirect("/forbidden");                 // sin permiso
+  if (!session) {
+    redirect("/publica/login"); // No autenticado
   }
+  // Ya no chequeamos rutas aquí: el middleware se encarga
   return <>{children}</>;
 }

@@ -11,7 +11,7 @@ interface UsuarioRow extends RowDataPacket {
   Nombre: string;
   Apellido: string;
   Correo: string;
-  Contraseña: string;
+  Contraseña: string | null;
   Rol: string;
   Estado: number;
 }
@@ -19,101 +19,83 @@ interface UsuarioRow extends RowDataPacket {
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientId:     process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
     CredentialsProvider({
-      name: "Credentials",
+      name: "Credenciales",
       credentials: {
-        email: { label: "Correo", type: "text" },
+        email:    { label: "Correo",     type: "text"     },
         password: { label: "Contraseña", type: "password" },
       },
-      async authorize(credentials, req) {
-        if (!credentials || !credentials.email || !credentials.password) {
+      async authorize(credentials) {
+        if (
+          !credentials ||
+          !credentials.email.endsWith("@upqroo.edu.mx")
+        ) {
+          // dominio no permitido
           return null;
         }
-
         const pool = await getConnection();
         const [rows] = await pool.query<UsuarioRow[]>(
           "SELECT * FROM Usuarios WHERE Correo = ?",
           [credentials.email]
         );
-
-        if (rows.length === 0) {
-          return null;
-        }
-
+        if (rows.length === 0) return null;
         const user = rows[0];
-
         if (user.Estado !== 1 || !user.Contraseña) return null;
-
         const isValid = await bcrypt.compare(
           credentials.password,
           user.Contraseña
         );
-
         if (!isValid) return null;
 
         return {
-          id: user.IdUsuario, // Mantener como number
-          name: `${user.Nombre} ${user.Apellido}`,
+          id:    user.IdUsuario,
+          name:  `${user.Nombre} ${user.Apellido}`,
           email: user.Correo,
-          role: user.Rol,
         };
       },
     }),
   ],
+
   secret: process.env.NEXTAUTH_SECRET,
+
   pages: {
     signIn: "/publica/login",
+    error:  "/publica/unauthorized" // aquí puedes manejar errores de dominio
   },
+
   callbacks: {
-    async jwt({ token, account, profile, user }) {
-      if (user) {
-        token.id = user.id;
-        token.email = user.email;
-        token.role = (user as any).role; // role no forma parte de User por defecto
+    /** → Este callback corre tanto en OAuth (Google) como en Credentials.  */
+    async signIn({ user }) {
+      // user.email siempre existe tras Google o Credenciales
+      if (user.email!.endsWith("@upqroo.edu.mx")) {
+        return true;
       }
+      // rechaza el login y redirige a /publica/unauthorized
+      return "/publica/unauthorized";
+    },
 
-      if (account?.provider === "google" && profile?.email) {
+    /** Asegúrate luego de seguir inyectando rol como ya tienes */
+    async jwt({ token, user }) {
+      if (user) token.email = user.email;
+      if (token.email) {
         const pool = await getConnection();
-
-        const [existing] = await pool.query<UsuarioRow[]>(
-          "SELECT * FROM Usuarios WHERE Correo = ?",
-          [profile.email]
+        const [rows] = await pool.query<{ Rol: string }[]>(
+          "SELECT Rol FROM Usuarios WHERE Correo = ?",
+          [token.email]
         );
-
-        if (existing.length === 0) {
-          await pool.query(
-            `INSERT INTO Usuarios (Nombre, Apellido, Correo, Rol, Estado, Contraseña, FechaCreacion)
-             VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-            [
-              profile.given_name || "",
-              profile.family_name || "",
-              profile.email,
-              "Usuario",
-              1,
-              "",
-            ]
-          );
-        }
-
-        token.accessToken = account.access_token;
+        if (rows.length) token.role = rows[0].Rol;
       }
-
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as number;
+        session.user.id   = token.id as number;
         session.user.role = token.role as string;
-        session.accessToken = token.accessToken as string;
       }
       return session;
-    },
-    async redirect({ url, baseUrl }) {
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      return baseUrl;
     },
   },
 };

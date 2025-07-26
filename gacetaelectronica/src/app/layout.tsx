@@ -1,4 +1,3 @@
-// src/app/layout.tsx
 import React from "react";
 import "./globals.css";
 import type { Metadata } from "next";
