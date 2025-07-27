@@ -1,27 +1,47 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit, Trash2 } from "lucide-react";
-import { Input } from "@/components/ui/input"; // Asegúrate de importar Input
+import { Eye, Edit, Trash2, Filter } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { ArticleInterface } from "@/entities/article";
 import { EditArticleDialog } from "./EditArticleDialog";
 import { DeleteArticleDialog } from "./DeleteArticleDialog";
 import { ViewArticleDialog } from "./ViewArticleDialog";
 import { useFetch } from "@/hooks/useFetch";
 import { Spinner } from "../Spinner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const getStatusBadge = (status: number) => {
   switch (status) {
     case 1:
       return <Badge className="bg-green-100 text-green-800">Publicado</Badge>;
     case 2:
-      return <Badge className="bg-yellow-100 text-yellow-800">En Revisión</Badge>;
+      return (
+        <Badge className="bg-yellow-100 text-yellow-800">En Revisión</Badge>
+      );
     case 3:
       return <Badge className="bg-red-100 text-red-800">Rechazado</Badge>;
     case 4:
@@ -32,26 +52,27 @@ const getStatusBadge = (status: number) => {
 };
 
 export default function ArticleOverview() {
-  const [selectedArticle, setSelectedArticle] = useState<Partial<ArticleInterface> | null>(null);
+  const [selectedArticle, setSelectedArticle] =
+    useState<Partial<ArticleInterface> | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(""); // Estado para la búsqueda
-  const [filterBy, setFilterBy] = useState(""); // Filtro por categoría o estado
-  const [filterValue, setFilterValue] = useState(""); // Valor del filtro
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterBy, setFilterBy] = useState("");
+  const [filterValue, setFilterValue] = useState("");
 
-  const { data, loading } = useFetch<ArticleInterface>('/api/articulos');
+  const { data, loading, fetchData } =
+    useFetch<ArticleInterface[]>("/api/articulos");
 
   const filteredData = data?.filter((article) => {
-    // Comprobación de que article.Titulo no sea undefined o null
     const matchesSearch = article.Titulo
       ? article.Titulo.toLowerCase().includes(searchTerm.toLowerCase())
       : false;
-    
+
     const matchesFilter =
       (filterBy === "category" && filterValue === "all") ||
       (filterBy === "status" && filterValue === "all") ||
-      (filterBy && article[filterBy] === filterValue);
+      (filterBy && article[filterBy as keyof ArticleInterface] === filterValue);
 
     return matchesSearch && matchesFilter;
   });
@@ -67,9 +88,7 @@ export default function ArticleOverview() {
             </CardDescription>
           </div>
 
-          {/* Filtros inline */}
           <div className="flex gap-2 w-full md:w-auto">
-            {/* Input búsqueda */}
             <div className="relative w-full md:w-64">
               <Input
                 className="pl-10"
@@ -79,12 +98,11 @@ export default function ArticleOverview() {
               />
             </div>
 
-            {/* Filtro por campo */}
             <Select
               value={filterBy}
               onValueChange={(value) => {
                 setFilterBy(value);
-                setFilterValue(""); // Reset valor cuando cambias el filtro
+                setFilterValue("");
               }}
             >
               <SelectTrigger className="w-40">
@@ -97,7 +115,6 @@ export default function ArticleOverview() {
               </SelectContent>
             </Select>
 
-            {/* Filtro por valor */}
             <Select value={filterValue} onValueChange={setFilterValue}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Filtrar valor" />
@@ -105,9 +122,9 @@ export default function ArticleOverview() {
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 {(filterBy === "category"
-                  ? ["1", "2"] // Pone los valores según tus categorías
+                  ? ["1", "2"]
                   : filterBy === "status"
-                  ? ["1", "2"] // Pone los valores según tus estados
+                  ? ["1", "2"]
                   : []
                 ).map((option) => (
                   <SelectItem key={option} value={option}>
@@ -134,16 +151,21 @@ export default function ArticleOverview() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center flex justify-center">
+                  <TableCell
+                    colSpan={6}
+                    className="text-center flex justify-center"
+                  >
                     <Spinner />
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredData?.map((article) => (
                   <TableRow key={article.idArticulo}>
-                    <TableCell className="font-medium">{article.Titulo}</TableCell>
+                    <TableCell className="font-medium">
+                      {article.Titulo}
+                    </TableCell>
                     <TableCell>{article.Resumen}</TableCell>
-                    <TableCell className="capitalize">{article.IdCategoria}</TableCell>
+                    <TableCell>{article.IdCategoria}</TableCell>
                     <TableCell>{getStatusBadge(article.Estatus)}</TableCell>
                     <TableCell>{article.FechaCreacion}</TableCell>
                     <TableCell>
@@ -195,26 +217,7 @@ export default function ArticleOverview() {
           if (!value) setSelectedArticle(null);
         }}
         article={selectedArticle}
-        onSave={async (updatedArticle) => {
-          try {
-            const res = await fetch(`/api/articulos?id=${updatedArticle.id}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                Titulo: updatedArticle.title,
-                IdCategoria: 1,
-                Estatus: updatedArticle.status === "Publicado" ? 1 : 2,
-              }),
-            });
-            if (!res.ok) throw new Error("Error al actualizar");
-            setArticles((prev) =>
-              prev.map((a) => (a.id === updatedArticle.id ? { ...a, ...updatedArticle } : a))
-            );
-          } catch (err) {
-            console.error(err);
-            alert("Error al guardar cambios");
-          }
-        }}
+        onUpdated={fetchData} // ✅ Aquí se actualiza la tabla
       />
 
       <DeleteArticleDialog
@@ -224,11 +227,7 @@ export default function ArticleOverview() {
           if (!value) setSelectedArticle(null);
         }}
         article={selectedArticle}
-        onConfirm={() => {
-          // handle delete logic here
-          console.log("Deleted article:", selectedArticle?.IdCategoria);
-          setDeleteOpen(false);
-        }}
+        onDeleted={fetchData} // ✅ También aquí
       />
 
       <ViewArticleDialog
