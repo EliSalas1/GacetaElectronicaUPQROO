@@ -1,5 +1,4 @@
-// components/dialogs/EditArticleDialog.tsx
-"use client"
+"use client";
 
 import {
   Dialog,
@@ -7,39 +6,50 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useEffect, useState } from "react"
-import { ArticleInterface } from "@/entities/article"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useEffect, useState } from "react";
+import { ArticleInterface } from "@/entities/article";
 
 interface Props {
-  open: boolean
-  onOpenChange: (value: boolean) => void
-  article: Partial<ArticleInterface> | null
-  onSave: (updatedArticle: Partial<ArticleInterface>) => void
+  open: boolean;
+  onOpenChange: (value: boolean) => void;
+  article: Partial<ArticleInterface> | null;
+  onSave: (updatedArticle: Partial<ArticleInterface>) => void;
 }
 
 export function EditArticleDialog({ open, onOpenChange, article, onSave }: Props) {
-  const [title, setTitle] = useState("")
-  const [category, setCategory] = useState("")
-  const [state, setState] = useState("")
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("");
+  const [status, setStatus] = useState("");
 
   useEffect(() => {
     if (article) {
-      setTitle(article.title || "")
-      setCategory(article.category || "")
-      setState(article.status || "")
+      setTitle(article.title || "");
+      setCategory(article.category || "");
+      setStatus(article.status || "");
     }
-  }, [article])
+  }, [article]);
 
   const handleSubmit = () => {
-    if (!article) return
-    onSave({ id: article.id, title, category, status })
-    onOpenChange(false)
-  }
+    if (!article) return;
+    onSave({
+      id: article.id,
+      title,
+      category,
+      status,
+    });
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -59,22 +69,26 @@ export function EditArticleDialog({ open, onOpenChange, article, onSave }: Props
           </div>
           <div className="space-y-2">
             <Label>Estado</Label>
-            <Select value={state} onValueChange={setState}>
+            <Select value={status} onValueChange={setStatus}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecciona estado" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Publicado">Publicado</SelectItem>
-                <SelectItem value="Borrador">Borrador</SelectItem>
-                <SelectItem value="Archivado">Archivado</SelectItem>
+                <SelectItem value="published">Publicado</SelectItem>
+                <SelectItem value="pending">En Revisión</SelectItem>
+                <SelectItem value="unknown">Desconocido</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <Button className="w-full" onClick={handleSubmit} disabled={!title || !category || !state}>
+          <Button
+            className="w-full"
+            onClick={handleSubmit}
+            disabled={!title || !category || !status}
+          >
             Guardar Cambios
           </Button>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

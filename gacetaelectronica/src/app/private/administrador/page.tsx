@@ -32,6 +32,9 @@ function filtrarPorUltimoMes<T extends ItemConFecha>(items: T[]): T[] {
 }
 
 export default function Page() {
+  // Llamada a la inicialización del usuario (esto debe estar fuera de cualquier condición)
+  useInitializeUser("Administrador");
+
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -49,11 +52,10 @@ export default function Page() {
     return null;
   }
 
-  useInitializeUser("Administrador");
+  // Hooks de estado y datos
   const [activeTab, setActiveTab] = useState("overview");
   const { data, loading } = useFetch<UserInterface>("api/usuarios");
-  const { data: dataArticulos, loading: loadingArticulos } =
-    useFetch("api/articulos");
+  const { data: dataArticulos, loading: loadingArticulos } = useFetch("api/articulos");
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -94,7 +96,7 @@ export default function Page() {
                   ) : (
                     <>
                       <div className="text-2xl font-bold">
-                        {Array.isArray(data) ? data.length : ""}
+                        {Array.isArray(data) ? data.length : "0"}
                       </div>
                       <p className="text-xs text-muted-foreground">
                         +
@@ -124,7 +126,7 @@ export default function Page() {
                         {Array.isArray(dataArticulos)
                           ? dataArticulos.filter((item) => item.Estatus === 3)
                               .length
-                          : ""}
+                          : "0"}
                       </div>
                       <p className="text-xs text-muted-foreground">
                         +
@@ -154,7 +156,7 @@ export default function Page() {
                         {Array.isArray(dataArticulos)
                           ? dataArticulos.filter((item) => item.Estatus === 1)
                               .length
-                          : ""}
+                          : "0"}
                       </div>
                       <p className="text-xs text-muted-foreground">
                         Pendientes de aprobación
@@ -179,7 +181,7 @@ export default function Page() {
                       <div className="text-2xl font-bold">
                         {Array.isArray(data)
                           ? data.filter((item) => item.Rol === "Autor").length
-                          : ""}
+                          : "0"}
                       </div>
                       <p className="text-xs text-muted-foreground">
                         De {Array.isArray(data) ? data.length : "0"} total

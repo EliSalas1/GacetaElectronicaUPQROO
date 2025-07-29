@@ -25,7 +25,7 @@ export function DeleteArticleDialog({ open, onOpenChange, article, onConfirm }: 
         <DialogHeader>
           <DialogTitle>Eliminar Artículo</DialogTitle>
           <DialogDescription>
-            ¿Estás seguro de que deseas eliminar el artículo <strong>{article?.title}</strong>? Esta acción no se puede deshacer.
+            ¿Estás seguro de que deseas eliminar el artículo <strong>{article?.Titulo}</strong>? Esta acción no se puede deshacer.
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-end gap-2 mt-4">

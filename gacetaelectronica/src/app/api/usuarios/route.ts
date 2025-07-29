@@ -2,8 +2,6 @@ import { NextRequest } from 'next/server';
 import getConnection from '@/lib/db';
 import bcrypt from "bcryptjs"; // Asegúrate de importar esto arriba
 
-
-// ✅ GET - Obtener todos los usuarios, uno por ID o por email
 export async function GET(req: NextRequest) {
   try {
     const pool = await getConnection();
@@ -13,13 +11,13 @@ export async function GET(req: NextRequest) {
     if (id) {
       const [rows] = await pool.query('SELECT * FROM Usuarios WHERE idUsuarios = ?', [id]) as [any[], any];
       if (rows.length === 0) {
-        return new Response('Usuario no encontrado', { status: 404 });
+        return new Response(JSON.stringify({ message: 'Usuario no encontrado' }), { status: 404 });
       }
       return Response.json(rows[0]);
     } else if (email) {
       const [rows] = await pool.query('SELECT * FROM Usuarios WHERE Correo = ?', [email]) as [any[], any];
       if (rows.length === 0) {
-        return new Response('Usuario no encontrado', { status: 404 });
+        return new Response(JSON.stringify({ message: 'Usuario no encontrado' }), { status: 404 });
       }
       return Response.json(rows[0]);
     } else {
@@ -28,7 +26,7 @@ export async function GET(req: NextRequest) {
     }
   } catch (err) {
     console.error('Error en GET usuarios:', err);
-    return new Response('Error al obtener usuarios', { status: 500 });
+    return new Response(JSON.stringify({ message: 'Error al obtener usuarios', error: err }), { status: 500 });
   }
 }
 

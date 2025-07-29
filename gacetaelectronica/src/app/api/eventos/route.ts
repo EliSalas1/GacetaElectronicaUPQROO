@@ -2,23 +2,25 @@ import { NextRequest } from 'next/server';
 import getConnection from '@/lib/db';
 
 // ✅ GET: Obtener todos los eventos o uno por ID
+// GET: Obtener eventos con paginación
 export async function GET(req: NextRequest) {
   try {
     const pool = await getConnection();
-    const id = req.nextUrl.searchParams.get('id');
+    
+    // Parámetros de paginación
+    const limit = parseInt(req.nextUrl.searchParams.get('limit') || '15');  // Número de eventos por página
+    const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0'); // Página actual
 
-    if (id) {
-      const [rows] = await pool.query('SELECT * FROM Evento WHERE IdEvento = ?', [id]) as [any[], any];
-      if (rows.length === 0) {
-        return new Response('Evento no encontrado', { status: 404 });
-      }
-      return Response.json(rows[0]);
-    } else {
-      const [rows] = await pool.query('SELECT * FROM Evento') as [any[], any];
-      return Response.json(rows);
-    }
+    // Consulta con paginación
+    const [rows] = await pool.query(
+      `SELECT * FROM Evento 
+       LIMIT ? OFFSET ?`,
+      [limit, offset]
+    ) as [any[], any];
+    
+    return Response.json(rows);
   } catch (err) {
-    console.error('Error en GET eventos:', err);
+    console.error('Error al obtener eventos:', err);
     return new Response('Error al obtener eventos', { status: 500 });
   }
 }
