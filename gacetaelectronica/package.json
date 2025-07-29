@@ -23,6 +23,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dynamic": "^4.2.2",
     "express": "^5.1.0",
     "googleapis": "^152.0.0",
     "lucide-react": "^0.514.0",

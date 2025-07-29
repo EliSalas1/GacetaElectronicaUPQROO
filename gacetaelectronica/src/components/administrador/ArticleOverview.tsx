@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from "react";
 import {
@@ -53,11 +53,9 @@ export default function ArticleOverview() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterBy, setFilterBy] = useState("");
   const [filterValue, setFilterValue] = useState("");
-  
-  // Recupera los artículos desde la API
+
   const { data: articles, loading } = useFetch<ArticleInterface[]>("/api/articulos?limit=50&offset=0");
 
-  // Verificación de los datos recibidos
   useEffect(() => {
     console.log("Artículos cargados:", articles);
   }, [articles]);
@@ -120,7 +118,7 @@ export default function ArticleOverview() {
                       {option}
                     </SelectItem>
                   ))}
-                {filterBy === "category" &&
+                {filterBy === "category" && Array.isArray(articles) &&
                   Array.from(new Set(articles.map((article) => article.category))).map((option) => (
                     <SelectItem key={option} value={option}>
                       {option}
@@ -145,44 +143,48 @@ export default function ArticleOverview() {
               </TableRow>
             </TableHeader>
             <TableBody>
-  {loading ? (
-    <TableRow>
-      <TableCell colSpan={7} className="text-center">
-        <Spinner />
-      </TableCell>
-    </TableRow>
-  ) : (
-    filteredData.map((article) => (
-      <TableRow key={article.id}> {/* Asegúrate de que `article.id` sea único */}
-        <TableCell className="font-medium">{article.title}</TableCell>
-        <TableCell>{article.resumen}</TableCell>
-        <TableCell>{article.category}</TableCell>
-        <TableCell>{article.author}</TableCell>
-        <TableCell>{getStatusBadge(article.status)}</TableCell>
-        <TableCell>{new Date(article.createdAt).toLocaleDateString("es-MX")}</TableCell>
-        <TableCell>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setViewOpen(true); }}>
-              <Eye className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setEditOpen(true); }}>
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setDeleteOpen(true); }}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </TableCell>
-      </TableRow>
-    ))
-  )}
-</TableBody>
-
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center">
+                    <Spinner />
+                  </TableCell>
+                </TableRow>
+              ) : filteredData.length > 0 ? (
+                filteredData.map((article) => (
+                  <TableRow key={article.id}>
+                    <TableCell className="font-medium">{article.title}</TableCell>
+                    <TableCell>{article.resumen}</TableCell>
+                    <TableCell>{article.category}</TableCell>
+                    <TableCell>{article.author}</TableCell>
+                    <TableCell>{getStatusBadge(article.status)}</TableCell>
+                    <TableCell>{new Date(article.createdAt).toLocaleDateString("es-MX")}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setViewOpen(true); }}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setEditOpen(true); }}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setDeleteOpen(true); }}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center">
+                    No hay artículos disponibles.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
           </Table>
         </CardContent>
       </Card>
 
-      {/* Edit Article Dialog */}
       <EditArticleDialog
         open={editOpen}
         onOpenChange={(value) => {
@@ -203,11 +205,10 @@ export default function ArticleOverview() {
                 Titulo: updatedArticle.title,
                 Resumen: updatedArticle.resumen,
                 Estatus: updatedArticle.status === "published" ? 1 : 2,
-                IdCategoria: 1
+                IdCategoria: 1,
               }),
             });
             if (!res.ok) throw new Error("Error al actualizar artículo");
-            // aquí puedes refrescar la lista si tienes una función como `refetch()`
             alert("Artículo actualizado");
           } catch (err) {
             console.error(err);
@@ -216,7 +217,6 @@ export default function ArticleOverview() {
         }}
       />
 
-      {/* Delete Article Dialog */}
       <DeleteArticleDialog
         open={deleteOpen}
         onOpenChange={(value) => {
@@ -231,7 +231,6 @@ export default function ArticleOverview() {
             });
             if (!res.ok) throw new Error("Error al eliminar");
             alert("Artículo eliminado");
-            // Aquí podrías hacer refetch o actualizar el estado manualmente
           } catch (err) {
             console.error(err);
             alert("Error al eliminar artículo");
@@ -241,7 +240,6 @@ export default function ArticleOverview() {
         }}
       />
 
-      {/* View Article Dialog */}
       <ViewArticleDialog
         open={viewOpen}
         onOpenChange={(value) => {
