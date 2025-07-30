@@ -35,12 +35,14 @@ export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<UserInterface | null>(null);
   const [isDialogUserOpen, setIsDialogUserOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [filterRole, setFilterRole] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
 
-  // ✅ Obtener usuarios desde API (ruta corregida)
+  // ✅ Obtener usuarios desde API
   const fetchUsuarios = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/usuarios"); // 👈 Asegúrate que tu handler esté aquí
+      const res = await fetch("/api/usuarios");
       if (!res.ok) throw new Error("Error al cargar usuarios");
       const data: UserInterface[] = await res.json();
       setUsuarios(data);
@@ -57,28 +59,40 @@ export default function UserManagement() {
   }, []);
 
   useEffect(() => {
-    const result = usuarios
-      .filter((u) => ["Admin", "Autor", "Revisor"].includes(u.Rol))
-      .filter(
+    let result = usuarios;
+
+    // Filtrar por búsqueda
+    if (searchValue) {
+      result = result.filter(
         (u) =>
           u.Nombre.toLowerCase().includes(searchValue.toLowerCase()) ||
           u.Correo.toLowerCase().includes(searchValue.toLowerCase())
       );
+    }
+
+    // Filtrar por rol
+    if (filterRole) {
+      result = result.filter((u) => u.Rol === filterRole);
+    }
+
+    // Filtrar por estado
+    if (filterStatus) {
+      result = result.filter(
+        (u) => (u.Estado ? "Activo" : "Inactivo") === filterStatus
+      );
+    }
+
     setFilteredData(result);
-  }, [searchValue, usuarios]);
+  }, [searchValue, filterRole, filterStatus, usuarios]);
 
   const getRoleBadge = (role: string) => {
     switch (role) {
       case "Admin":
-        return (
-          <Badge className="bg-purple-100 text-purple-800">Administrador</Badge>
-        );
+        return <Badge className="bg-purple-100 text-purple-800">Administrador</Badge>;
       case "Autor":
         return <Badge className="bg-blue-100 text-blue-800">Autor</Badge>;
       case "Revisor":
         return <Badge className="bg-green-100 text-green-800">Revisor</Badge>;
-      case "Usuario":
-        return <Badge className="bg-green-100 text-green-800">Usuario</Badge>;
       default:
         return <Badge variant="outline">Desconocido</Badge>;
     }
@@ -155,12 +169,35 @@ export default function UserManagement() {
               <FilterSearchBar
                 searchValue={searchValue}
                 onSearchChange={setSearchValue}
-                filterBy={""}
-                onFilterByChange={() => {}}
-                filterValue={""}
-                onFilterValueChange={() => {}}
-                availableFields={[]}
-                getFilterValues={() => []}
+                filterBy={filterRole || filterStatus} // Cambiar el filtro según el valor
+                onFilterByChange={(value) => {
+                  // Cambiar el estado de 'filterBy' (por Rol o Estado)
+                  if (value === "role") {
+                    setFilterRole(null);
+                    setFilterStatus(null);
+                  } else if (value === "status") {
+                    setFilterStatus(null);
+                    setFilterRole(null);
+                  }
+                }}
+                filterValue={filterRole || filterStatus} // Actualizar el filtro con el valor seleccionado
+                onFilterValueChange={(value) => {
+                  if (filterRole !== null) {
+                    setFilterRole(value);
+                  } else if (filterStatus !== null) {
+                    setFilterStatus(value);
+                  }
+                }}
+                availableFields={["role", "status"]} // Campos disponibles para los filtros
+                getFilterValues={() => {
+                  if (filterRole) {
+                    return ["Admin", "Revisor", "Autor", "Todos"];
+                  }
+                  if (filterStatus) {
+                    return ["Activo", "Inactivo", "Todos"];
+                  }
+                  return [];
+                }}
               />
               <NuevoUsuariosDialog
                 onCreate={handleCreateUser}
@@ -194,9 +231,7 @@ export default function UserManagement() {
                     <TableCell>{user.Nombre}</TableCell>
                     <TableCell>{user.Correo}</TableCell>
                     <TableCell>{getRoleBadge(user.Rol)}</TableCell>
-                    <TableCell>
-                      {getStatusBadge(Boolean(user.Estado))}
-                    </TableCell>
+                    <TableCell>{getStatusBadge(Boolean(user.Estado))}</TableCell>
                     <TableCell>
                       {new Date(user.FechaCreacion).toLocaleDateString()}
                     </TableCell>
