@@ -1,43 +1,51 @@
 "use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Clock, CheckCircle, Loader2 } from "lucide-react"
-import ArticleEditor from "@/components/redactor/ArticleEditor"
-import MyArticles from "@/components/redactor/MyArticles"
-import PrivateHeader from "@/components/PrivateHeader"
-import { useSessionUser } from "@/hooks/useSessionUser"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Clock, CheckCircle, Loader2 } from "lucide-react";
+import ArticleEditor from "@/components/redactor/ArticleEditor";
+import MyArticles from "@/components/redactor/MyArticles";
+import PrivateHeader from "@/components/PrivateHeader";
+import { useSessionUser } from "@/hooks/useSessionUser";
 
 interface ArticleStats {
-  published: number
-  pending: number
+  published: number;
+  pending: number;
 }
 
 interface ArticleData {
-  IdArticulo: number
-  Titulo: string
-  Resumen: string
-  Contenido: string
-  IdCategoria: number
+  IdArticulo: number;
+  Titulo: string;
+  Resumen: string;
+  Contenido: string;
+  IdCategoria: number;
   Categoria?: {
-    IdCategoria: number
-    Nombre: string
-  }
+    IdCategoria: number;
+    Nombre: string;
+  };
 }
 
 export default function Page() {
-  const { userInfo, loading: userLoading } = useSessionUser();
+  const router = useRouter();
+  const { userInfo, loading: userLoading, status } = useSessionUser();
   const [activeTab, setActiveTab] = useState("overview");
-  const [stats, setStats] = useState<ArticleStats>({
-    published: 0,
-    pending: 0
-  })
-  const [loading, setLoading] = useState(true)
-  const [editMode, setEditMode] = useState(false)
-  const [articleData, setArticleData] = useState<ArticleData | null>(null)
+  const [stats, setStats] = useState<ArticleStats>({ published: 0, pending: 0 });
+  const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [articleData, setArticleData] = useState<ArticleData | null>(null);
 
-  // Función para obtener estadísticas de artículos del usuario
+  useEffect(() => {
+    if (!userLoading && status === "unauthenticated") {
+      router.push("/publica/login");
+    }
+
+    if (!userLoading && userInfo?.role !== "Autor") {
+      router.push("/forbidden");
+    }
+  }, [userLoading, userInfo?.role, status]);
+
   const loadArticleStats = async () => {
     if (!userInfo?.id) {
       setLoading(false);
@@ -46,26 +54,16 @@ export default function Page() {
 
     try {
       setLoading(true);
-      
-      // Obtener artículos del usuario usando su ID real
       const response = await fetch(`/api/articuloUsuario?usuarioId=${userInfo.id}`);
-      if (!response.ok) {
-        throw new Error("Error al cargar estadísticas");
-      }
+      if (!response.ok) throw new Error("Error al cargar estadísticas");
 
       const userArticles = await response.json();
 
-      // Obtener detalles completos de cada artículo para contar estados
       const articlesWithDetails = await Promise.all(
         userArticles.map(async (article: any) => {
           try {
-            const articleResponse = await fetch(
-              `/api/articulos?id=${article.idArticulo}`
-            );
-            if (articleResponse.ok) {
-              return await articleResponse.json();
-            }
-            return null;
+            const articleResponse = await fetch(`/api/articulos?id=${article.idArticulo}`);
+            return articleResponse.ok ? await articleResponse.json() : null;
           } catch (error) {
             console.error("Error al obtener detalles del artículo:", error);
             return null;
@@ -73,74 +71,54 @@ export default function Page() {
         })
       );
 
-      // Filtrar artículos válidos y contar por estado
-      const validArticles = articlesWithDetails.filter(
-        (article) => article !== null
-      );
+      const validArticles = articlesWithDetails.filter((a) => a !== null);
+      const published = validArticles.filter((a: any) => a.Estatus === 3).length;
+      const pending = validArticles.filter((a: any) => a.Estatus === 1).length;
 
-      const published = validArticles.filter(
-        (article: any) => article.Estatus === 3
-      ).length;
-      const pending = validArticles.filter(
-        (article: any) => article.Estatus === 1
-      ).length;
-
-      setStats({
-        published,
-        pending,
-      });
+      setStats({ published, pending });
     } catch (error) {
       console.error("Error al cargar estadísticas:", error);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  // Función para manejar la edición de artículos
   const handleEditArticle = (article: ArticleData) => {
-    setArticleData(article)
-    setEditMode(true)
-    setActiveTab("new-article")
-  }
+    setArticleData(article);
+    setEditMode(true);
+    setActiveTab("new-article");
+  };
 
-  // Función para limpiar el modo de edición
   const handleClearEditMode = () => {
-    setEditMode(false)
-    setArticleData(null)
-    // Limpiar datos del localStorage
-    localStorage.removeItem('editArticleData')
-  }
+    setEditMode(false);
+    setArticleData(null);
+    localStorage.removeItem("editArticleData");
+  };
 
-  // Función para manejar cuando se actualiza un artículo
   const handleArticleUpdated = () => {
-    setEditMode(false)
-    setArticleData(null)
-    setActiveTab("my-articles")
-    // Recargar estadísticas
-    loadArticleStats()
-  }
+    setEditMode(false);
+    setArticleData(null);
+    setActiveTab("my-articles");
+    loadArticleStats();
+  };
 
   useEffect(() => {
-    if (!userLoading && userInfo?.id) {
-      loadArticleStats()
-    }
-    
-    // Verificar si hay datos de edición en localStorage
-    const storedArticleData = localStorage.getItem('editArticleData')
-    if (storedArticleData) {
+    if (!userLoading && userInfo?.id) loadArticleStats();
+
+    const stored = localStorage.getItem("editArticleData");
+    if (stored) {
       try {
-        const parsedData = JSON.parse(storedArticleData)
-        setArticleData(parsedData)
-        setEditMode(true)
-        setActiveTab("new-article")
-        // Limpiar localStorage después de cargar
-        localStorage.removeItem('editArticleData')
-      } catch (error) {
-        console.error('Error al parsear datos de edición:', error)
-        localStorage.removeItem('editArticleData')
+        const parsed = JSON.parse(stored);
+        setArticleData(parsed);
+        setEditMode(true);
+        setActiveTab("new-article");
+        localStorage.removeItem("editArticleData");
+      } catch (err) {
+        console.error("Error al parsear datos de edición:", err);
+        localStorage.removeItem("editArticleData");
       }
     }
-  }, [userInfo?.id, userLoading])
+  }, [userInfo?.id, userLoading]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -153,15 +131,11 @@ export default function Page() {
           </p>
         </div>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-6"
-        >
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Resumen</TabsTrigger>
             <TabsTrigger value="new-article">
-              {editMode ? 'Editar Artículo' : 'Nuevo Artículo'}
+              {editMode ? "Editar Artículo" : "Nuevo Artículo"}
             </TabsTrigger>
             <TabsTrigger value="my-articles">Mis Artículos</TabsTrigger>
           </TabsList>
@@ -175,9 +149,7 @@ export default function Page() {
               <div className="grid gap-6 md:grid-cols-2 justify-center">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Artículos Publicados
-                    </CardTitle>
+                    <CardTitle className="text-sm font-medium">Artículos Publicados</CardTitle>
                     <CheckCircle className="h-4 w-4 text-green-600" />
                   </CardHeader>
                   <CardContent>
@@ -188,16 +160,12 @@ export default function Page() {
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      En Revisión
-                    </CardTitle>
+                    <CardTitle className="text-sm font-medium">En Revisión</CardTitle>
                     <Clock className="h-4 w-4 text-yellow-600" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{stats.pending}</div>
-                    <p className="text-xs text-muted-foreground">
-                      Pendientes de aprobación
-                    </p>
+                    <p className="text-xs text-muted-foreground">Pendientes de aprobación</p>
                   </CardContent>
                 </Card>
               </div>
@@ -205,8 +173,8 @@ export default function Page() {
           </TabsContent>
 
           <TabsContent value="new-article">
-            <ArticleEditor 
-              editMode={editMode} 
+            <ArticleEditor
+              editMode={editMode}
               articleData={articleData || undefined}
               onArticleUpdated={handleArticleUpdated}
             />

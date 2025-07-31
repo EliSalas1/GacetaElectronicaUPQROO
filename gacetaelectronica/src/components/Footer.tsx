@@ -14,19 +14,19 @@ export default function Footer() {
         <div className="space-y-2">
           <h4 className="font-bold text-base">Categorías</h4>
           <ul className="space-y-1 text-orange-100">
-            <li><Link href="/categorias/investigacion" className="hover:text-white">Ciencia y Tecnología</Link></li>
-            <li><Link href="/categorias/eventos" className="hover:text-white">Humanidades</Link></li>
-            <li><Link href="/categorias/convocatorias" className="hover:text-white">Social y política</Link></li>
-            <li><Link href="/categorias/proyectos" className="hover:text-white">Logros</Link></li>
+            <li><Link href="/publica/categorias" className="hover:text-white">Ciencia y Tecnología</Link></li>
+            <li><Link href="/publica/categorias" className="hover:text-white">Humanidades</Link></li>
+            <li><Link href="/publica/categorias" className="hover:text-white">Social y política</Link></li>
+            <li><Link href="/publica/categorias" className="hover:text-white">Logros</Link></li>
           </ul>
         </div>
 
         <div className="space-y-2">
           <h4 className="font-bold text-base">Enlaces útiles</h4>
           <ul className="space-y-1 text-orange-100">
-            <li><Link href="/acerca-de" className="hover:text-white">Acerca de</Link></li>
-            <li><Link href="/contacto" className="hover:text-white">Contacto</Link></li>
-            <li><Link href="/privacidad" className="hover:text-white">Política de privacidad</Link></li>
+            <li><Link href="/" className="hover:text-white">Acerca de</Link></li>
+            <li><Link href="/" className="hover:text-white">Contacto</Link></li>
+            <li><Link href="/" className="hover:text-white">Política de privacidad</Link></li>
           </ul>
         </div>
 

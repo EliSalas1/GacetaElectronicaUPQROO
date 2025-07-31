@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import ArticleCard from "@/components/CategoriasComponents/articleCards"
+import { Button } from "@/components/ui/button";
+import ArticleCard from "@/components/CategoriasComponents/articleCards";
 
 const categoryTitles = {
   ciencia: "Ciencia y Tecnología",
@@ -9,7 +9,7 @@ const categoryTitles = {
   social: "Social y Política",
   logros: "Logros",
   culturales: "Cultura y Deporte",
-}
+};
 
 // Componente que muestra una sección de artículos agrupados por categoría
 export default function CategorySection({
@@ -18,23 +18,22 @@ export default function CategorySection({
   isExpanded,
   onToggle,
 }: {
-  categoryKey: string
-  articles: any[]
-  isExpanded: boolean
-  onToggle: (key: string) => void
+  categoryKey: string;
+  articles: any[];
+  isExpanded: boolean;
+  onToggle: (key: string) => void;
 }) {
-  const displayedArticles = isExpanded ? articles : articles.slice(0, 3)
+  const displayedArticles = isExpanded ? articles : articles.slice(0, 3);
 
   return (
     <section className="mb-16">
-
       {/* Título de la sección con botón para expandir/colapsar */}
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-3xl font-bold text-accent-900">
           {categoryTitles[categoryKey as keyof typeof categoryTitles]}
         </h2>
 
-        {/* Botón para expandir/colapsar la sección solo si hay más de 3 articulos */}
+        {/* Botón para expandir/colapsar la sección solo si hay más de 3 artículos */}
         {articles.length > 3 && (
           <Button
             variant="outline"
@@ -43,7 +42,6 @@ export default function CategorySection({
           >
             {isExpanded ? "Ver menos" : "Ver más"}
           </Button>
-
         )}
       </div>
 
@@ -58,5 +56,5 @@ export default function CategorySection({
         ))}
       </div>
     </section>
-  )
+  );
 }

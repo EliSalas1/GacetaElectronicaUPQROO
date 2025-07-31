@@ -1,109 +1,70 @@
-import React from "react";
+import { BookOpen, FileText, Newspaper, Users, PenLine, Palette } from "lucide-react";
 
 const contributionTypes = [
   {
     title: "Artículos científicos",
     description: "Investigaciones originales o revisiones breves",
+    icon: <BookOpen className="h-5 w-5 text-blue-500" />,
+    bg: "bg-blue-50",
   },
   {
-    title: "Artículos científicos",
-    description: "Investigaciones originales o revisiones breves",
+    title: "Artículos de divulgación",
+    description: "Temas científicos o culturales explicados al público general",
+    icon: <FileText className="h-5 w-5 text-green-500" />,
+    bg: "bg-green-50",
   },
   {
-    title: "Artículos científicos",
-    description: "Investigaciones originales o revisiones breves",
+    title: "Notas periodísticas",
+    description: "Noticias sobre eventos, logros o actividades universitarias",
+    icon: <Newspaper className="h-5 w-5 text-orange-500" />,
+    bg: "bg-orange-50",
   },
   {
-    title: "Artículos científicos",
-    description: "Investigaciones originales o revisiones breves",
+    title: "Notas sociales",
+    description: "Crónicas, homenajes o entrevistas a miembros de la comunidad",
+    icon: <Users className="h-5 w-5 text-purple-500" />,
+    bg: "bg-purple-50",
   },
   {
-    title: "Artículos científicos",
-    description: "Investigaciones originales o revisiones breves",
+    title: "Relatos cortos",
+    description: "Cuentos, microficciones o poesía",
+    icon: <PenLine className="h-5 w-5 text-indigo-500" />,
+    bg: "bg-indigo-50",
   },
   {
-    title: "Artículos científicos",
-    description: "Investigaciones originales o revisiones breves",
+    title: "Historietas o ilustraciones",
+    description: "Arte gráfico narrativo o conceptual",
+    icon: <Palette className="h-5 w-5 text-pink-500" />,
+    bg: "bg-pink-50",
   },
 ];
 
 export default function ContributionsCard() {
   return (
-    <div
-      style={{
-        background: "#FCFCF8",
-        borderRadius: "12px",
-        padding: "24px",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
-        marginBottom: "24px",
-        border: "1px solid #F3F3ED",
-        textAlign: "left",
-      }}
-    >
-      <h2
-        style={{
-          color: "#4C0000",
-          fontWeight: 600,
-          fontSize: "24px",
-          fontFamily: "Inter, sans-serif",
-          marginBottom: "8px",
-        }}
-      >
-        Tipos de contribuciones aceptadas
-      </h2>
-      <p
-        style={{
-          color: "#5A5A5A",
-          fontSize: "15px",
-          fontFamily: "Inter, sans-serif",
-          marginBottom: "24px",
-        }}
-      >
+    <section className="bg-white border rounded-xl p-6 mb-6 shadow-sm">
+      <div className="flex items-start gap-2 mb-4">
+        <span className="inline-block bg-blue-100 text-blue-600 rounded-full w-6 h-6 text-sm flex items-center justify-center font-bold">
+          1
+        </span>
+        <h2 className="text-lg font-semibold text-[#4C0000]">Tipos de contribuciones aceptadas</h2>
+      </div>
+      <p className="text-sm text-gray-700 mb-6">
         La gaceta acepta los siguientes géneros:
       </p>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(2, 1fr)",
-          gap: "16px",
-          marginBottom: "24px",
-        }}
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {contributionTypes.map((item, index) => (
-          <div
-            key={index}
-            style={{
-              border: "1px solid #F3F3ED",
-              borderRadius: "8px",
-              padding: "16px",
-            }}
-          >
-            <h3
-              style={{
-                color: "#4C0000",
-                fontWeight: 600,
-                fontSize: "16px",
-                margin: "0 0 4px 0",
-              }}
-            >
-              {item.title}
-            </h3>
-            <p style={{ color: "#5A5A5A", fontSize: "14px", margin: 0 }}>
-              {item.description}
-            </p>
+          <div key={index} className={`p-4 border rounded-lg ${item.bg} flex items-start gap-3 hover:shadow-md transition-shadow duration-200`}>
+            {item.icon}
+            <div className="text-left">
+              <h3 className="text-sm font-semibold text-[#4C0000]">{item.title}</h3>
+              <p className="text-sm text-gray-700">{item.description}</p>
+            </div>
           </div>
         ))}
       </div>
-      <p
-        style={{
-          color: "#5A5A5A",
-          fontSize: "15px",
-          fontFamily: "Inter, sans-serif",
-          margin: 0,
-        }}
-      >
-        Otros formatos creativos: Ensayos literarios, fotoreportajes, etc.
+      <p className="text-xs text-gray-600 mt-4">
+        <strong>Otros formatos creativos:</strong> Ensayos literarios, fotoreportajes, etc.
       </p>
-    </div>
+    </section>
   );
 }

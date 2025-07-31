@@ -13,20 +13,29 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogOut, LayoutDashboard, Menu, X } from "lucide-react";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 export default function Header() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { data: session, status } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const user = {
-    name: "Steph",
-    email: "steph@test.com",
-    image: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png",
-    role: "Administrador",
+  const user = session?.user
+    ? {
+        name: session.user.name,
+        email: session.user.email,
+        image: session.user.image,
+        role: session.user.role,
+      }
+    : null;
+
+  const handleLogin = () => {
+    signIn("google");
   };
 
-  const handleLogin = () => setIsLoggedIn(true);
-  const handleLogout = () => setIsLoggedIn(false);
+  const handleLogout = () => {
+    signOut();
+  };
+
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
   const categories = [
@@ -85,73 +94,101 @@ export default function Header() {
             </div>
 
           <Link
-            href="/guia-articulo"
+            href="/publica/guia-articulo"
             className="hover:text-orange-200 transition-colors"
           >
             Guía para artículos
           </Link>
 
             {/* AUTH SECTION */}
-            {!isLoggedIn ? (
-              <button
-                onClick={handleLogin}
-                className="bg-[#FF6400] border border-white text-white hover:bg-white hover:text-[#FF6400]
-                transition-colors px-4 py-2 rounded text-sm"
+            {status !== "authenticated" ? (
+              <Link
+                href="/publica/login"
+                className="bg-[#FF6400] border border-white text-white hover:bg-white hover:text-[#FF6400] transition-colors px-4 py-2 rounded text-sm"
               >
                 Iniciar Sesión
-              </button>
+              </Link>
             ) : (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 group transition-all duration-200 rounded-full border-2 border-white p-1 hover:bg-white">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage
-                        src={user.image || "/placeholder.svg"}
-                        alt={user.name}
-                      />
-                      <AvatarFallback className="bg-white text-[#FF6400] group-hover:bg-[#FF6400] group-hover:text-white transition-colors duration-200">
-                        {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-56 bg-white text-black"
-                  align="end"
-                  forceMount
-                >
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-semibold text-[#FF6400]">
-                        {user.name}
-                      </p>
-                      <p className="text-xs text-gray-500">{user.email}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {(user.role === "Administrador" ||
-                    user.role === "Supervisor" ||
-                    user.role === "Redactor") && (
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href="/panel"
-                        className="flex items-center gap-2 hover:text-[#FF6400]"
-                      >
-                        <LayoutDashboard className="h-4 w-4" />
-                        <span>Panel de {user.role}</span>
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleLogout}
-                    className="text-red-600 hover:text-red-700"
+              user && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 group transition-all duration-200 rounded-full border-2 border-white p-1 hover:bg-white">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage
+                          src={user.image || "/placeholder.svg"}
+                          alt={user.name || user.email || "U"}
+                        />
+                        <AvatarFallback>
+                          {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    className="w-56 bg-white text-black"
+                    align="end"
+                    forceMount
                   >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Cerrar sesión</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-semibold text-[#FF6400]">
+                          {user.name}
+                        </p>
+                        <p className="text-xs text-gray-500">{user.email}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                      {user.role === "Admin" && (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/private/administrador" className="flex items-center gap-2 hover:text-[#FF6400]">
+                              <LayoutDashboard className="h-4 w-4" />
+                              <span>Panel de Admin</span>
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/private/supervisor" className="flex items-center gap-2 hover:text-[#FF6400]">
+                              <LayoutDashboard className="h-4 w-4" />
+                              <span>Panel de Supervisor</span>
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/private/redactor" className="flex items-center gap-2 hover:text-[#FF6400]">
+                              <LayoutDashboard className="h-4 w-4" />
+                              <span>Panel de Redactor</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {user.role === "Revisor" && (
+                        <DropdownMenuItem asChild>
+                          <Link href="/private/supervisor" className="flex items-center gap-2 hover:text-[#FF6400]">
+                            <LayoutDashboard className="h-4 w-4" />
+                            <span>Panel de Supervisor</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+
+                      {user.role === "Redactor" && (
+                        <DropdownMenuItem asChild>
+                          <Link href="/private/redactor" className="flex items-center gap-2 hover:text-[#FF6400]">
+                            <LayoutDashboard className="h-4 w-4" />
+                            <span>Panel de Redactor</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Cerrar sesión</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )
             )}
           </nav>
 
@@ -189,7 +226,7 @@ export default function Header() {
                   {categories.map((cat) => (
                     <Link
                       key={cat}
-                      href="/categorias"
+                      href="/publica/categorias"
                       className="block py-2 text-sm hover:text-orange-200 transition-colors duration-200"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
@@ -200,7 +237,7 @@ export default function Header() {
               </div>
 
               <Link
-                href="/crear-articulo"
+                href="/publica/guia-articulo"
                 className="block px-4 py-3 hover:bg-orange-500 rounded-md transition-colors duration-200"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
@@ -208,46 +245,83 @@ export default function Header() {
               </Link>
 
               <div className="px-4 pt-4 border-t border-orange-300 mt-4">
-                {!isLoggedIn ? (
-                  <button
-                    onClick={() => {
-                      handleLogin();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="w-full bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#FF6400] transition-all duration-200 px-4 py-3 rounded-lg font-medium"
+                {status !== "authenticated" ? (
+                  <Link
+                  href="/publica/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full block text-center bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#FF6400] transition-all duration-200 px-4 py-3 rounded-lg font-medium"
                   >
                     Iniciar Sesión
-                  </button>
+                  </Link>
                 ) : (
                   <div className="space-y-2">
                     <div className="flex items-center gap-3 px-4 py-3 bg-orange-500 rounded-md">
                       <Avatar className="h-8 w-8">
                         <AvatarImage
-                          src={user.image || "/placeholder.svg"}
-                          alt={user.name}
+                          src={user?.image || "/placeholder.svg"}
+                          alt={user?.name || user?.email || "U"}
                         />
                         <AvatarFallback className="bg-white text-[#FF6400]">
-                          {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
+                          {user?.name?.charAt(0) || user?.email?.charAt(0) || "U"}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="text-sm font-medium">{user.name}</p>
-                        <p className="text-xs text-orange-100">{user.email}</p>
+                        <p className="text-sm font-medium">{user?.name}</p>
+                        <p className="text-xs text-orange-100">{user?.email}</p>
                       </div>
                     </div>
 
-                    {(user.role === "Administrador" ||
-                      user.role === "Supervisor" ||
-                      user.role === "Redactor") && (
-                      <Link
-                        href="/panel"
-                        className="flex items-center gap-2 px-4 py-3 hover:bg-orange-500 rounded-md transition-colors duration-200"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <LayoutDashboard className="h-4 w-4" />
-                        <span>Panel de {user.role}</span>
-                      </Link>
-                    )}
+                    {user?.role === "Admin" && (
+                    <>
+                    <Link
+                      href="/private/administrador"
+                      className="flex items-center gap-2 px-4 py-3 hover:bg-orange-500 rounded-md transition-colors duration-200"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      <span>Panel de Admin</span>
+                    </Link>
+                    <Link
+                      href="/private/supervisor"
+                      className="flex items-center gap-2 px-4 py-3 hover:bg-orange-500 rounded-md transition-colors duration-200"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span>Panel de Supervisor</span>
+                    </Link>
+                    <Link
+                      href="/private/redactor"
+                      className="flex items-center gap-2 px-4 py-3 hover:bg-orange-500 rounded-md transition-colors duration-200"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span>Panel de Redactor</span>
+                    </Link>
+                    </>
+                  )}
+
+                  {user?.role === "Revisor" && (
+                  <Link
+                    href="/private/supervisor"
+                    className="flex items-center gap-2 px-4 py-3 hover:bg-orange-500 rounded-md transition-colors duration-200"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                  <LayoutDashboard className="h-4 w-4" />
+                  <span>Panel de Supervisor</span>
+                  </Link>
+                  )}
+
+                  {user?.role === "Redactor" && (
+                  <Link
+                  href="/private/redactor"
+                  className="flex items-center gap-2 px-4 py-3 hover:bg-orange-500 rounded-md transition-colors duration-200"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                  <LayoutDashboard className="h-4 w-4" />
+                    <span>Panel de Redactor</span>
+                  </Link>
+                  )}
+
 
                     <button
                       onClick={() => {
