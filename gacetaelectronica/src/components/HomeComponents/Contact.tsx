@@ -29,7 +29,7 @@ export default function Contact() {
             </p>
           </div>
           <a
-            href="#guia-envio"
+            href="/publica/guia-articulo"
             className="inline-flex items-center justify-center bg-black hover:bg-neutral-800 text-white px-7 py-3 rounded text-sm transition font-semibold mx-auto"
           >
             <Album className="h-5 w-5 mr-2" />
@@ -49,7 +49,7 @@ export default function Contact() {
             </p>
           </div>
           <a
-            href="/registro"
+            href="/publica/signup"
             className="inline-flex items-center justify-center bg-black hover:bg-neutral-800 text-white px-7 py-3 rounded text-sm transition font-semibold mx-auto"
           >
             <Mail className="h-5 w-5 mr-2" />

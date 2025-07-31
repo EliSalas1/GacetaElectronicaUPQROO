@@ -1,46 +1,25 @@
-import React from "react";
+import React from "react"
 
 interface SimpleCardProps {
-  title: string;
-  text: React.ReactNode;
+  number?: string
+  title: string
+  text: React.ReactNode
 }
 
-export default function SimpleCard({ title, text }: SimpleCardProps) {
+export default function SimpleCard({ number, title, text }: SimpleCardProps) {
   return (
-    <div
-      style={{
-        background: "#FCFCF8",
-        borderRadius: "12px",
-        padding: "24px",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
-        marginBottom: "24px",
-        border: "1px solid #F3F3ED",
-        textAlign: "left",
-      }}
-    >
-      <h2
-        style={{
-          color: "#4C0000",
-          fontWeight: 600, // SemiBold
-          fontSize: "24px",
-          fontFamily: "Inter, sans-serif",
-          marginBottom: "12px",
-        }}
-      >
+    <section className="bg-white border border-gray-200 rounded-xl p-6 mb-6 shadow-sm">
+      <h2 className="text-lg font-semibold text-red-800 mb-4 flex items-center gap-2">
+        {number && (
+          <span className="inline-block bg-blue-100 text-blue-600 rounded-full w-6 h-6 text-sm flex items-center justify-center font-bold">
+            {number}
+          </span>
+        )}
         {title}
       </h2>
-      <div
-        style={{
-          color: "#5A5A5A",
-          fontWeight: 400, // Regular
-          fontSize: "15px",
-          fontFamily: "Inter, sans-serif",
-          margin: 0,
-          lineHeight: 1.6,
-        }}
-      >
+      <div className="text-sm text-gray-700 leading-relaxed">
         {text}
       </div>
-    </div>
-  );
+    </section>
+  )
 }

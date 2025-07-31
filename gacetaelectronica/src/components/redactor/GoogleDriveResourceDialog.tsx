@@ -10,7 +10,7 @@ import { Upload, Link, X } from "lucide-react"
 
 const resourceTypes = [
   { id: "imagen", label: "Imagen" },
-  { id: "video", label: "Video" },
+  //{ id: "video", label: "Video" },
   { id: "pdf", label: "PDF" }
 ]
 
