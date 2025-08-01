@@ -19,7 +19,7 @@ export default function SearchBar() {
 
   useEffect(() => {
     if (debouncedTermino.trim()) {
-      fetch(`/api/buscador?q=${encodeURIComponent(debouncedTermino)}`)
+      fetch(`/api/buscadorArticulos?q=${encodeURIComponent(debouncedTermino)}`)
         .then(res => res.json())
         .then(data => {
           setResultados(data);
@@ -41,7 +41,7 @@ export default function SearchBar() {
   };
 
   const handleResultClick = (resultado: SearchResult) => {
-    router.push(`/${resultado.tipo}/${resultado.id}`);
+    router.push(`/publica/articulo/${resultado.id}`);
     setTermino('');
     setMostrarResultados(false);
   };

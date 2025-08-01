@@ -11,10 +11,12 @@ export interface ArticleInterface {
 }
 
 export enum Categoria {
-  CienciaTecnologia = "Ciencia y Tecnología",
+  CienciaTecnologia = "Ciencia y tecnología",
   Humanidades = "Humanidades",
   SocialPolitica = "Social y política",
   Logros = "Logros",
+  culturales = "Cultural y deportiva",
+
 }
 
 export enum Etiqueta {
