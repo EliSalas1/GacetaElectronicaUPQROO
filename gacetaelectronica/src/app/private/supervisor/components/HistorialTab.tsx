@@ -25,7 +25,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { FunnelIcon } from "@heroicons/react/24/solid";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 interface ArticuloHistorial {
@@ -35,27 +36,28 @@ interface ArticuloHistorial {
   Estatus: number;
   Comentario?: string;
 }
-
 interface Usuario {
   idUsuarios: number;
   Nombre: string;
 }
-
 const ITEMS_PER_PAGE = 10;
 
 export default function HistorialTab() {
   const [articulos, setArticulos] = useState<ArticuloHistorial[]>([]);
   const [autoresMap, setAutoresMap] = useState<Record<number, string>>({});
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterType, setFilterType] = useState<"decision" | "autor" | "fecha">("decision");
+  const [filterDecision, setFilterDecision] = useState("all");
+  const [filterAutor, setFilterAutor] = useState("all");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Fetch artículos revisados y autores
   useEffect(() => {
-    async function fetchData() {
+    (async () => {
       try {
         const res = await fetch("/api/filtros/articulosPendientes?tipo=Otros");
-        if (!res.ok) throw new Error("Error al obtener artículos");
+        if (!res.ok) throw new Error();
         const data: ArticuloHistorial[] = await res.json();
         setArticulos(data);
 
@@ -63,7 +65,7 @@ export default function HistorialTab() {
           data.map(async (art) => {
             try {
               const resUsuarios = await fetch(`/api/articuloUsuario?articuloId=${art.idArticulo}`);
-              if (!resUsuarios.ok) throw new Error("No se pudo obtener autor");
+              if (!resUsuarios.ok) throw new Error();
               const usuarios: Usuario[] = await resUsuarios.json();
               return [art.idArticulo, usuarios[0]?.Nombre || "Desconocido"] as [number, string];
             } catch {
@@ -71,59 +73,53 @@ export default function HistorialTab() {
             }
           })
         );
-
         setAutoresMap(Object.fromEntries(autoresEntries));
-      } catch (error) {
-        console.error(error);
+      } catch {
         toast.error("Error al cargar historial.");
       }
-    }
-    fetchData();
+    })();
   }, []);
 
-  const getDecisionBadge = (estatus: number) => {
-    const isPublicado = estatus === 1;
-    return (
-      <Badge
-        variant={isPublicado ? "default" : "destructive"}
-        className={
-          isPublicado
-            ? "bg-green-100 text-green-800 hover:bg-green-200"
-            : "bg-red-100 text-red-800 hover:bg-red-200"
-        }
-      >
-        {isPublicado ? "Publicado" : "Rechazado"}
-      </Badge>
-    );
-  };
+  const autoresUnicos = useMemo(() => [...new Set(Object.values(autoresMap))], [autoresMap]);
 
-  // Filtrar artículos
-  const filteredArticulos = articulos.filter((articulo) => {
+  const filteredArticulos = articulos.filter((a) => {
     const term = searchTerm.toLowerCase();
-    const matchesSearch =
-      articulo.Titulo.toLowerCase().includes(term) ||
-      (autoresMap[articulo.idArticulo]?.toLowerCase().includes(term) ?? false) ||
-      (articulo.Comentario?.toLowerCase().includes(term) ?? false);
+    const matchSearch =
+      a.Titulo.toLowerCase().includes(term) ||
+      (autoresMap[a.idArticulo]?.toLowerCase().includes(term) ?? false) ||
+      (a.Comentario?.toLowerCase().includes(term) ?? false);
 
-    const matchesStatus =
-      filterStatus === "all" ||
-      (filterStatus === "publicado" && articulo.Estatus === 1) ||
-      (filterStatus === "rechazado" && articulo.Estatus === 2);
-
-    return matchesSearch && matchesStatus;
+    if (filterType === "decision")
+      return (
+        matchSearch &&
+        (filterDecision === "all" ||
+          (filterDecision === "publicado" && a.Estatus === 1) ||
+          (filterDecision === "rechazado" && a.Estatus === 2))
+      );
+    if (filterType === "autor")
+      return matchSearch && (filterAutor === "all" || autoresMap[a.idArticulo] === filterAutor);
+    if (filterType === "fecha") {
+      const fecha = new Date(a.FechaCreacion);
+      const desde = filterDateFrom ? new Date(filterDateFrom) : null;
+      const hasta = filterDateTo ? new Date(filterDateTo) : null;
+      return matchSearch && (!desde || fecha >= desde) && (!hasta || fecha <= hasta);
+    }
+    return matchSearch;
   });
 
-  // Paginación
   const totalPages = Math.ceil(filteredArticulos.length / ITEMS_PER_PAGE);
-  const currentItems = filteredArticulos.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const currentItems = filteredArticulos.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  // Resetear a página 1 si cambian los filtros
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, filterStatus]);
+  useEffect(() => setCurrentPage(1), [searchTerm, filterType, filterDecision, filterAutor, filterDateFrom, filterDateTo]);
+
+  const getDecisionBadge = (estatus: number) => (
+    <Badge
+      variant={estatus === 1 ? "default" : "destructive"}
+      className={estatus === 1 ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-red-100 text-red-800 hover:bg-red-200"}
+    >
+      {estatus === 1 ? "Publicado" : "Rechazado"}
+    </Badge>
+  );
 
   return (
     <Card>
@@ -138,24 +134,79 @@ export default function HistorialTab() {
               </span>
             </CardDescription>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <Input
-              placeholder="Buscar por título, autor o comentario"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full sm:w-72"
-              spellCheck={false}
-            />
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Filtrar por decisión" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="publicado">Publicado</SelectItem>
-                <SelectItem value="rechazado">Rechazado</SelectItem>
-              </SelectContent>
-            </Select>
+
+          {/* Controles */}
+          <div className="flex flex-col gap-2 w-full sm:w-auto">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Buscar título, autor o comentario"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full sm:w-72"
+                spellCheck={false}
+              />
+
+              {/* Selector principal con dependiente */}
+              <div className="relative flex flex-col items-end gap-2">
+                <Select value={filterType} onValueChange={(v) => setFilterType(v as any)}>
+                  <SelectTrigger className="w-40 flex items-center gap-2">
+                    <FunnelIcon className="w-4 h-4" />
+                    <SelectValue placeholder="Filtro" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="decision">Decisión</SelectItem>
+                    <SelectItem value="autor">Autor</SelectItem>
+                    <SelectItem value="fecha">Fecha de revisión</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {filterType === "decision" && (
+                  <Select value={filterDecision} onValueChange={setFilterDecision}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Decisión" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="publicado">Publicado</SelectItem>
+                      <SelectItem value="rechazado">Rechazado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {filterType === "autor" && (
+                  <Select value={filterAutor} onValueChange={setFilterAutor}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Autor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {autoresUnicos.map((autor) => (
+                        <SelectItem key={autor} value={autor}>
+                          {autor}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {filterType === "fecha" && (
+                  <div className="absolute top-full right-0 mt-2 flex flex-col sm:flex-row gap-2 bg-white p-2 rounded-md shadow-md z-10">
+                    <Input
+                      type="date"
+                      value={filterDateFrom}
+                      onChange={(e) => setFilterDateFrom(e.target.value)}
+                      className="w-40"
+                    />
+                    <Input
+                      type="date"
+                      value={filterDateTo}
+                      onChange={(e) => setFilterDateTo(e.target.value)}
+                      className="w-40"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -174,26 +225,17 @@ export default function HistorialTab() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {currentItems.length > 0 ? (
-                  currentItems.map((articulo) => (
-                    <TableRow key={articulo.idArticulo}>
-                      <TableCell className="font-medium text-sm sm:text-base">
-                        {articulo.Titulo}
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell text-sm">
-                        {autoresMap[articulo.idArticulo] ?? "Cargando..."}
-                      </TableCell>
+                {currentItems.length ? (
+                  currentItems.map((a) => (
+                    <TableRow key={a.idArticulo}>
+                      <TableCell className="font-medium text-sm sm:text-base">{a.Titulo}</TableCell>
+                      <TableCell className="hidden sm:table-cell text-sm">{autoresMap[a.idArticulo] ?? "Cargando..."}</TableCell>
                       <TableCell className="hidden md:table-cell text-sm">
-                        {new Date(articulo.FechaCreacion).toLocaleDateString("es-ES")}
+                        {new Date(a.FechaCreacion).toLocaleDateString("es-ES")}
                       </TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        {getDecisionBadge(articulo.Estatus)}
-                      </TableCell>
-                      <TableCell
-                        className="hidden xl:table-cell max-w-xs text-sm truncate"
-                        title={articulo.Comentario || "Sin comentarios"}
-                      >
-                        {articulo.Comentario || "Sin comentarios"}
+                      <TableCell className="hidden lg:table-cell">{getDecisionBadge(a.Estatus)}</TableCell>
+                      <TableCell className="hidden xl:table-cell max-w-xs text-sm truncate" title={a.Comentario || "Sin comentarios"}>
+                        {a.Comentario || "Sin comentarios"}
                       </TableCell>
                     </TableRow>
                   ))
@@ -209,26 +251,15 @@ export default function HistorialTab() {
           </div>
         </div>
 
-        {/* Controles de paginación */}
         {totalPages > 1 && (
           <div className="flex justify-end mt-4 gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => prev - 1)}
-            >
+            <Button size="sm" variant="outline" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
               Anterior
             </Button>
             <span className="text-sm flex items-center">
               Página {currentPage} de {totalPages}
             </span>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((prev) => prev + 1)}
-            >
+            <Button size="sm" variant="outline" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>
               Siguiente
             </Button>
           </div>

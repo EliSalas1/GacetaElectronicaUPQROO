@@ -17,8 +17,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Eye, Check, X } from "lucide-react";
+import { FunnelIcon } from "@heroicons/react/24/solid";
 import FeedbackModal from "./FeedbackModal";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 
 interface Articulo {
@@ -27,7 +36,6 @@ interface Articulo {
   categoria: string;
   FechaCreacion: string;
 }
-
 interface Usuario {
   idUsuarios: number;
   Nombre: string;
@@ -35,11 +43,7 @@ interface Usuario {
 
 const ITEMS_PER_PAGE = 10;
 
-export default function PendientesTab({
-  onViewArticle,
-}: {
-  onViewArticle?: (articleId: number) => void;
-}) {
+export default function PendientesTab({ onViewArticle }: { onViewArticle?: (id: number) => void }) {
   const [articulos, setArticulos] = useState<Articulo[]>([]);
   const [autoresMap, setAutoresMap] = useState<Record<number, string>>({});
   const [feedbackModal, setFeedbackModal] = useState({
@@ -49,22 +53,27 @@ export default function PendientesTab({
     authorName: "",
   });
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState<"categoria" | "autor" | "fecha">("categoria");
+  const [filterCategoria, setFilterCategoria] = useState("all");
+  const [filterAutor, setFilterAutor] = useState("all");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Fetch artículos y autores
   useEffect(() => {
-    async function fetchData() {
+    (async () => {
       try {
-        const resArticulos = await fetch("/api/filtros/articulosPendientes?tipo=pendientes");
-        if (!resArticulos.ok) throw new Error("Error al obtener artículos");
-        const articulosData: Articulo[] = await resArticulos.json();
-        setArticulos(articulosData);
+        const res = await fetch("/api/filtros/articulosPendientes?tipo=pendientes");
+        if (!res.ok) throw new Error("Error al obtener artículos");
+        const data: Articulo[] = await res.json();
+        setArticulos(data);
 
         const autoresEntries = await Promise.all(
-          articulosData.map(async (art) => {
+          data.map(async (art) => {
             try {
-              const resUsuarios = await fetch(`/api/articuloUsuario/?articuloId=${art.idArticulo}`);
-              if (!resUsuarios.ok) throw new Error("No se pudo obtener autor");
+              const resUsuarios = await fetch(`/api/articuloUsuario?articuloId=${art.idArticulo}`);
+              if (!resUsuarios.ok) throw new Error();
               const usuarios: Usuario[] = await resUsuarios.json();
               return [art.idArticulo, usuarios[0]?.Nombre || "Desconocido"] as [number, string];
             } catch {
@@ -73,46 +82,51 @@ export default function PendientesTab({
           })
         );
         setAutoresMap(Object.fromEntries(autoresEntries));
-      } catch (error) {
-        console.error(error);
+      } catch {
         toast.error("Error al cargar artículos o autores.");
       }
-    }
-    fetchData();
+    })();
   }, []);
 
-  // Calcular artículos visibles en la página actual
-  const totalPages = Math.ceil(articulos.length / ITEMS_PER_PAGE);
-  const currentItems = articulos.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const categoriasUnicas = useMemo(() => [...new Set(articulos.map((a) => a.categoria).filter(Boolean))], [articulos]);
+  const autoresUnicos = useMemo(() => [...new Set(Object.values(autoresMap))], [autoresMap]);
 
-  const handleApproveArticle = async (articleId: number, articleTitle: string) => {
+  const filteredArticulos = articulos.filter((a) => {
+    const term = searchTerm.toLowerCase();
+    const matchSearch = a.Titulo.toLowerCase().includes(term) || (autoresMap[a.idArticulo]?.toLowerCase().includes(term) ?? false);
+
+    if (filterType === "categoria") return matchSearch && (filterCategoria === "all" || a.categoria === filterCategoria);
+    if (filterType === "autor") return matchSearch && (filterAutor === "all" || autoresMap[a.idArticulo] === filterAutor);
+    if (filterType === "fecha") {
+      const fecha = new Date(a.FechaCreacion);
+      const desde = filterDateFrom ? new Date(filterDateFrom) : null;
+      const hasta = filterDateTo ? new Date(filterDateTo) : null;
+      return matchSearch && (!desde || fecha >= desde) && (!hasta || fecha <= hasta);
+    }
+    return matchSearch;
+  });
+
+  const totalPages = Math.ceil(filteredArticulos.length / ITEMS_PER_PAGE);
+  const currentItems = filteredArticulos.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  useEffect(() => setCurrentPage(1), [searchTerm, filterType, filterCategoria, filterAutor, filterDateFrom, filterDateTo]);
+
+  const handleApproveArticle = async (id: number, title: string) => {
     try {
-      const res = await fetch(`/api/articulos?id=${articleId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ Estatus: 1 }),
-      });
-      if (!res.ok) throw new Error("No se pudo aprobar el artículo");
-      toast.success(`Artículo "${articleTitle}" aprobado correctamente`);
-      setArticulos((prev) => prev.filter((art) => art.idArticulo !== articleId));
-    } catch (error) {
-      console.error(error);
+      const res = await fetch(`/api/articulos?id=${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ Estatus: 1 }) });
+      if (!res.ok) throw new Error();
+      toast.success(`Artículo "${title}" aprobado correctamente`);
+      setArticulos((p) => p.filter((a) => a.idArticulo !== id));
+    } catch {
       toast.error("Error al aprobar el artículo.");
     }
   };
-
-  const handleRejectArticle = async (articleId: number, articleTitle: string) => {
+  const handleRejectArticle = async (id: number, title: string) => {
     try {
-      const res = await fetch(`/api/articulos?id=${articleId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ Estatus: 2 }),
-      });
-      if (!res.ok) throw new Error("No se pudo rechazar el artículo");
-      toast.success(`Artículo "${articleTitle}" rechazado correctamente`);
-      setArticulos((prev) => prev.filter((art) => art.idArticulo !== articleId));
-    } catch (error) {
-      console.error(error);
+      const res = await fetch(`/api/articulos?id=${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ Estatus: 2 }) });
+      if (!res.ok) throw new Error();
+      toast.success(`Artículo "${title}" rechazado correctamente`);
+      setArticulos((p) => p.filter((a) => a.idArticulo !== id));
+    } catch {
       toast.error("Error al rechazar el artículo.");
     }
   };
@@ -123,17 +137,72 @@ export default function PendientesTab({
         <CardHeader className="px-3 sm:px-6 py-3 sm:py-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <CardTitle className="text-lg sm:text-xl">
-                Artículos Pendientes de Revisión
-              </CardTitle>
+              <CardTitle className="text-lg sm:text-xl">Artículos Pendientes de Revisión</CardTitle>
               <CardDescription className="text-sm sm:text-base mt-1">
                 Artículos que requieren revisión y aprobación del supervisor.
-                {articulos.length > 0 && (
-                  <span className="block sm:inline sm:ml-2 text-xs sm:text-sm font-medium">
-                    Mostrando {articulos.length} artículos en total
-                  </span>
-                )}
+                <span className="block sm:inline sm:ml-2 text-xs sm:text-sm font-medium">
+                  Mostrando {filteredArticulos.length} artículos en total
+                </span>
               </CardDescription>
+            </div>
+
+            {/* Filtros */}
+            <div className="flex flex-col gap-2 w-full sm:w-auto">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Buscar título o autor"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full sm:w-72"
+                  spellCheck={false}
+                />
+                <div className="relative flex flex-col items-end gap-2">
+                  <Select value={filterType} onValueChange={(v) => setFilterType(v as any)}>
+                    <SelectTrigger className="w-40 flex items-center gap-2">
+                      <FunnelIcon className="w-4 h-4" />
+                      <SelectValue placeholder="Filtro" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="categoria">Categoría</SelectItem>
+                      <SelectItem value="autor">Autor</SelectItem>
+                      <SelectItem value="fecha">Fecha de Envío</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {filterType === "categoria" && (
+                    <Select value={filterCategoria} onValueChange={setFilterCategoria}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Categoría" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        {categoriasUnicas.map((cat) => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {filterType === "autor" && (
+                    <Select value={filterAutor} onValueChange={setFilterAutor}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Autor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        {autoresUnicos.map((autor) => (
+                          <SelectItem key={autor} value={autor}>{autor}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {filterType === "fecha" && (
+                    <div className="absolute top-full right-0 mt-2 flex flex-col sm:flex-row gap-2 bg-white p-2 rounded-md shadow-md z-10">
+                      <Input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} className="w-40" />
+                      <Input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} className="w-40" />
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -152,59 +221,23 @@ export default function PendientesTab({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {currentItems.length > 0 ? (
-                    currentItems.map((articulo) => (
-                      <TableRow key={articulo.idArticulo}>
-                        <TableCell className="font-medium text-sm sm:text-base">
-                          {articulo.Titulo}
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell text-sm">
-                          {autoresMap[articulo.idArticulo] ?? "Cargando..."}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell text-sm">
-                          {articulo.categoria || "Sin categoría"}
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell text-sm">
-                          {new Date(articulo.FechaCreacion).toLocaleDateString("es-ES")}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onViewArticle?.(articulo.idArticulo)}
-                              className="h-8 w-8 p-0"
-                              title="Ver artículo"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleApproveArticle(articulo.idArticulo, articulo.Titulo)}
-                              className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
-                              title="Aprobar artículo"
-                            >
-                              <Check className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRejectArticle(articulo.idArticulo, articulo.Titulo)}
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                              title="Rechazar artículo"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        No hay artículos pendientes de revisión
+                  {currentItems.length ? currentItems.map((a) => (
+                    <TableRow key={a.idArticulo}>
+                      <TableCell className="font-medium text-sm sm:text-base">{a.Titulo}</TableCell>
+                      <TableCell className="hidden sm:table-cell text-sm">{autoresMap[a.idArticulo] ?? "Cargando..."}</TableCell>
+                      <TableCell className="hidden md:table-cell text-sm">{a.categoria || "Sin categoría"}</TableCell>
+                      <TableCell className="hidden lg:table-cell text-sm">{new Date(a.FechaCreacion).toLocaleDateString("es-ES")}</TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => onViewArticle?.(a.idArticulo)} className="h-8 w-8 p-0" title="Ver artículo"><Eye className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleApproveArticle(a.idArticulo, a.Titulo)} className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50" title="Aprobar artículo"><Check className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleRejectArticle(a.idArticulo, a.Titulo)} className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" title="Rechazar artículo"><X className="h-4 w-4" /></Button>
+                        </div>
                       </TableCell>
+                    </TableRow>
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No hay artículos pendientes de revisión</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -212,28 +245,11 @@ export default function PendientesTab({
             </div>
           </div>
 
-          {/* Controles de paginación */}
           {totalPages > 1 && (
             <div className="flex justify-end mt-4 gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((prev) => prev - 1)}
-              >
-                Anterior
-              </Button>
-              <span className="text-sm flex items-center">
-                Página {currentPage} de {totalPages}
-              </span>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((prev) => prev + 1)}
-              >
-                Siguiente
-              </Button>
+              <Button size="sm" variant="outline" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>Anterior</Button>
+              <span className="text-sm flex items-center">Página {currentPage} de {totalPages}</span>
+              <Button size="sm" variant="outline" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>Siguiente</Button>
             </div>
           )}
         </CardContent>
@@ -241,9 +257,7 @@ export default function PendientesTab({
 
       <FeedbackModal
         isOpen={feedbackModal.isOpen}
-        onClose={() =>
-          setFeedbackModal({ isOpen: false, articleId: null, articleTitle: "", authorName: "" })
-        }
+        onClose={() => setFeedbackModal({ isOpen: false, articleId: null, articleTitle: "", authorName: "" })}
         articleTitle={feedbackModal.articleTitle}
         authorName={feedbackModal.authorName}
         articleId={feedbackModal.articleId || 0}
