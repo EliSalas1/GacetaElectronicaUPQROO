@@ -93,22 +93,6 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
           </span>
         ))}
       </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       <div
       className="rounded-lg mb-8 flex items-center justify-center bg-gray-200 overflow-hidden"
       style={{
@@ -137,23 +121,6 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
   />
         )}
     </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       {/* Contenido principal */}
       <div
         className="text-gray-700 leading-relaxed space-y-4"
