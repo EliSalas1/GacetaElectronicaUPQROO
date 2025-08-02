@@ -75,41 +75,50 @@ GROUP BY a.idArticulo
       return Response.json(rows[0]);
     }
 
-    // Si no hay ID, hacer consulta paginada
+    // Si no hay ID, hacer consulta paginada o completa
+    const limit = req.nextUrl.searchParams.get('limit');
+    const offset = req.nextUrl.searchParams.get('offset');
 
-    const limit = parseInt(req.nextUrl.searchParams.get('limit') || '10');
-    const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0');
+    let query = `
+      SELECT 
+        a.IdArticulo AS id,
+        a.Titulo AS title,
+        a.Resumen AS resumen,
+        DATE_FORMAT(a.FechaCreacion, '%Y-%m-%d') AS createdAt,
+        CASE a.Estatus
+          WHEN 0 THEN 'pending'
+          WHEN 1 THEN 'published'
+          WHEN 2 THEN 'rejected'
+          ELSE 'unknown'
+        END AS status,
+        COALESCE(c.Nombre, 'Sin Categoría') AS category,
+        COALESCE(u.Nombre, 'Sin autor') AS author
+      FROM Articulos a
+      LEFT JOIN Categorias c ON a.IdCategoria = c.IdCategoria
+      LEFT JOIN (
+        SELECT DISTINCT Articulos_idArticulo, Usuarios_idUsuarios
+        FROM ArticuloUsuario
+        LIMIT 1
+      ) au ON a.IdArticulo = au.Articulos_idArticulo
+      LEFT JOIN Usuarios u ON au.Usuarios_idUsuarios = u.idUsuarios
+      ORDER BY a.FechaCreacion DESC
+    `;
 
-    if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
-      return new Response('Parámetros de paginación inválidos', { status: 400 });
+    let params: any[] = [];
+
+    if (limit && offset) {
+      const limitNum = parseInt(limit);
+      const offsetNum = parseInt(offset);
+      
+      if (isNaN(limitNum) || isNaN(offsetNum) || limitNum < 0 || offsetNum < 0) {
+        return new Response('Parámetros de paginación inválidos', { status: 400 });
+      }
+      
+      query += ' LIMIT ? OFFSET ?';
+      params = [limitNum, offsetNum];
     }
 
-    const [rows] = await pool.query(
-      `SELECT 
-     a.IdArticulo AS id,
-     a.Titulo AS title,
-     a.Resumen AS resumen,  -- ✅ NUEVO CAMPO
-     DATE_FORMAT(a.FechaCreacion, '%Y-%m-%d') AS createdAt,
-     CASE a.Estatus
-       WHEN 0 THEN 'pending'
-       WHEN 1 THEN 'published'
-       WHEN 2 THEN 'rejected'
-       ELSE 'unknown'
-     END AS status,
-     COALESCE(c.Nombre, 'Sin Categoría') AS category,
-     COALESCE(u.Nombre, 'Sin autor') AS author
-   FROM Articulos a
-   LEFT JOIN Categorias c ON a.IdCategoria = c.IdCategoria
-   LEFT JOIN (
-     SELECT DISTINCT Articulos_idArticulo, Usuarios_idUsuarios
-     FROM ArticuloUsuario
-     LIMIT 1
-   ) au ON a.IdArticulo = au.Articulos_idArticulo
-   LEFT JOIN Usuarios u ON au.Usuarios_idUsuarios = u.idUsuarios
-   ORDER BY a.FechaCreacion DESC
-   LIMIT ? OFFSET ?`,
-      [limit, offset]
-    );
+    const [rows] = await pool.query(query, params);
 
     return Response.json(rows);
   } catch (err) {

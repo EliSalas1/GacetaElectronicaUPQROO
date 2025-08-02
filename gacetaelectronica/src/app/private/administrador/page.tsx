@@ -14,33 +14,51 @@ import AgregarEvento from "@/components/administrador/AgregarEvento";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("overview");
-  const { data: dataUsuarios, loading: loadingUsuarios } = useFetch("api/usuarios");
-  const { data: dataArticulos, loading: loadingArticulos } = useFetch("api/articulos");
-  const { data: dataEventos, loading: loadingEventos } = useFetch("api/eventos");
-
+  const [loading, setLoading] = useState(true);
   const [totalUsuarios, setTotalUsuarios] = useState(0);
   const [totalArticulos, setTotalArticulos] = useState(0);
+  const [articulosPublicados, setArticulosPublicados] = useState(0);
+  const [articulosPendientes, setArticulosPendientes] = useState(0);
   const [totalEventos, setTotalEventos] = useState(0);
   const [redactoresActivos, setRedactoresActivos] = useState(0);
 
-  useEffect(() => {
-    if (!loadingUsuarios && dataUsuarios) {
-      setTotalUsuarios(dataUsuarios.length);
-      setRedactoresActivos(dataUsuarios.filter((user) => user.Rol === "Autor").length);
+  const loadStats = async () => {
+    try {
+      setLoading(true);
+      
+      // Cargar usuarios
+      const usuariosResponse = await fetch('/api/usuarios');
+      if (usuariosResponse.ok) {
+        const usuarios = await usuariosResponse.json();
+        setTotalUsuarios(usuarios.length);
+        setRedactoresActivos(usuarios.filter((user: any) => user.Rol === "Autor").length);
+      }
+
+      // Cargar artículos
+      const articulosResponse = await fetch('/api/articulos');
+      if (articulosResponse.ok) {
+        const articulos = await articulosResponse.json();
+        setTotalArticulos(articulos.length);
+        setArticulosPublicados(articulos.filter((item: any) => item.status === 'published').length);
+        setArticulosPendientes(articulos.filter((item: any) => item.status === 'pending').length);
+      }
+
+      // Cargar eventos
+      const eventosResponse = await fetch('/api/eventos');
+      if (eventosResponse.ok) {
+        const eventos = await eventosResponse.json();
+        setTotalEventos(eventos.length);
+      }
+    } catch (error) {
+      console.error("Error al cargar estadísticas:", error);
+    } finally {
+      setLoading(false);
     }
-  }, [dataUsuarios, loadingUsuarios]);
+  };
 
   useEffect(() => {
-    if (!loadingArticulos && dataArticulos) {
-      setTotalArticulos(dataArticulos.length);
-    }
-  }, [dataArticulos, loadingArticulos]);
-
-  useEffect(() => {
-    if (!loadingEventos && dataEventos) {
-      setTotalEventos(dataEventos.length);
-    }
-  }, [dataEventos, loadingEventos]);
+    loadStats();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -71,18 +89,18 @@ export default function Page() {
                   <CardTitle className="text-sm font-medium">Total Usuarios</CardTitle>
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
-                <CardContent>
-                  {loadingUsuarios ? (
-                    <Spinner />
-                  ) : (
-                    <>
-                      <div className="text-2xl font-bold">{totalUsuarios}</div>
-                      <p className="text-xs text-muted-foreground">
-                        +{totalUsuarios} desde el mes pasado
-                      </p>
-                    </>
-                  )}
-                </CardContent>
+                                 <CardContent>
+                   {loading ? (
+                     <Spinner />
+                   ) : (
+                     <>
+                       <div className="text-2xl font-bold">{totalUsuarios}</div>
+                       <p className="text-xs text-muted-foreground">
+                         +{totalUsuarios} desde el mes pasado
+                       </p>
+                     </>
+                   )}
+                 </CardContent>
               </Card>
 
               {/* Artículos Publicados */}
@@ -91,18 +109,18 @@ export default function Page() {
                   <CardTitle className="text-sm font-medium">Artículos Publicados</CardTitle>
                   <FileText className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
-                <CardContent>
-                  {loadingArticulos ? (
-                    <Spinner />
-                  ) : (
-                    <>
-                      <div className="text-2xl font-bold">{totalArticulos}</div>
-                      <p className="text-xs text-muted-foreground">
-                        +{totalArticulos} esta semana
-                      </p>
-                    </>
-                  )}
-                </CardContent>
+                                 <CardContent>
+                   {loading ? (
+                     <Spinner />
+                   ) : (
+                     <>
+                       <div className="text-2xl font-bold">{articulosPublicados}</div>
+                       <p className="text-xs text-muted-foreground">
+                         De {totalArticulos} total
+                       </p>
+                     </>
+                   )}
+                 </CardContent>
               </Card>
 
               {/* En Revisión */}
@@ -111,18 +129,16 @@ export default function Page() {
                   <CardTitle className="text-sm font-medium">En Revisión</CardTitle>
                   <Settings className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
-                <CardContent>
-                  {loadingArticulos ? (
-                    <Spinner />
-                  ) : (
-                    <>
-                      <div className="text-2xl font-bold">
-                        {dataArticulos?.filter((item) => item.Estatus === 1).length || 0}
-                      </div>
-                      <p className="text-xs text-muted-foreground">Pendientes de aprobación</p>
-                    </>
-                  )}
-                </CardContent>
+                                 <CardContent>
+                   {loading ? (
+                     <Spinner />
+                   ) : (
+                     <>
+                       <div className="text-2xl font-bold">{articulosPendientes}</div>
+                       <p className="text-xs text-muted-foreground">Pendientes de aprobación</p>
+                     </>
+                   )}
+                 </CardContent>
               </Card>
 
               {/* Redactores Activos */}
@@ -131,16 +147,16 @@ export default function Page() {
                   <CardTitle className="text-sm font-medium">Redactores Activos</CardTitle>
                   <Plus className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
-                <CardContent>
-                  {loadingUsuarios ? (
-                    <Spinner />
-                  ) : (
-                    <>
-                      <div className="text-2xl font-bold">{redactoresActivos}</div>
-                      <p className="text-xs text-muted-foreground">De {totalUsuarios} total</p>
-                    </>
-                  )}
-                </CardContent>
+                                 <CardContent>
+                   {loading ? (
+                     <Spinner />
+                   ) : (
+                     <>
+                       <div className="text-2xl font-bold">{redactoresActivos}</div>
+                       <p className="text-xs text-muted-foreground">De {totalUsuarios} total</p>
+                     </>
+                   )}
+                 </CardContent>
               </Card>
 
               {/* Total de Eventos */}
@@ -149,18 +165,18 @@ export default function Page() {
                   <CardTitle className="text-sm font-medium">Total de Eventos</CardTitle>
                   <Plus className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
-                <CardContent>
-                  {loadingEventos ? (
-                    <Spinner />
-                  ) : (
-                    <>
-                      <div className="text-2xl font-bold">{totalEventos}</div>
-                      <p className="text-xs text-muted-foreground">
-                        +{totalEventos} este mes
-                      </p>
-                    </>
-                  )}
-                </CardContent>
+                                 <CardContent>
+                   {loading ? (
+                     <Spinner />
+                   ) : (
+                     <>
+                       <div className="text-2xl font-bold">{totalEventos}</div>
+                       <p className="text-xs text-muted-foreground">
+                         +{totalEventos} este mes
+                       </p>
+                     </>
+                   )}
+                 </CardContent>
               </Card>
             </div>
           </TabsContent>

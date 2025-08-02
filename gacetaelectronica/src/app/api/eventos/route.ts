@@ -7,16 +7,26 @@ export async function GET(req: NextRequest) {
   try {
     const pool = await getConnection();
     
-    // Parámetros de paginación
-    const limit = parseInt(req.nextUrl.searchParams.get('limit') || '15');  // Número de eventos por página
-    const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0'); // Página actual
+    // Parámetros de paginación opcionales
+    const limit = req.nextUrl.searchParams.get('limit');
+    const offset = req.nextUrl.searchParams.get('offset');
 
-    // Consulta con paginación
-    const [rows] = await pool.query(
-      `SELECT * FROM Evento 
-       LIMIT ? OFFSET ?`,
-      [limit, offset]
-    ) as [any[], any];
+    let query = 'SELECT * FROM Evento';
+    let params: any[] = [];
+
+    if (limit && offset) {
+      const limitNum = parseInt(limit);
+      const offsetNum = parseInt(offset);
+      
+      if (isNaN(limitNum) || isNaN(offsetNum) || limitNum < 0 || offsetNum < 0) {
+        return new Response('Parámetros de paginación inválidos', { status: 400 });
+      }
+      
+      query += ' LIMIT ? OFFSET ?';
+      params = [limitNum, offsetNum];
+    }
+    
+    const [rows] = await pool.query(query, params) as [any[], any];
     
     return Response.json(rows);
   } catch (err) {
