@@ -169,34 +169,21 @@ export async function PUT(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const conn = await getConnection();
-    const usuarioId = req.nextUrl.searchParams.get('usuarioId');
-    const logroId = req.nextUrl.searchParams.get('logroId');
+    const usuarioId = req.nextUrl.searchParams.get('idUsuario'); // Cambié el nombre de parámetro a 'idUsuario' para ser consistente
 
-    if (!usuarioId || !logroId) {
-      return new Response('Se requieren usuarioId y logroId', { status: 400 });
+    if (!usuarioId) {
+      return new Response('Se requiere idUsuario', { status: 400 });
     }
 
-    // ✅ Verificar si la relación existe
-    const [existing] = await conn.query(
-      `SELECT * FROM UsuarioLogro 
-       WHERE Usuarios_IdUsuarios = ? AND Logros_IdLogro = ?`,
-      [usuarioId, logroId]
-    );
+    // ✅ Eliminar primero las relaciones de UsuarioLogro
+    await conn.query('DELETE FROM UsuarioLogro WHERE Usuarios_idUsuarios = ?', [usuarioId]);
 
-    if ((existing as any[]).length === 0) {
-      return new Response('La relación no existe', { status: 404 });
-    }
+    // ✅ Ahora eliminar el usuario de la tabla Usuarios
+    await conn.query('DELETE FROM Usuarios WHERE idUsuarios = ?', [usuarioId]);
 
-    // ✅ Eliminar la relación entre el usuario y el logro
-    await conn.query(
-      `DELETE FROM UsuarioLogro 
-       WHERE Usuarios_IdUsuarios = ? AND Logros_IdLogro = ?`,
-      [usuarioId, logroId]
-    );
-
-    return new Response('Relación eliminada correctamente', { status: 200 });
+    return new Response('Usuario eliminado correctamente', { status: 200 });
   } catch (err) {
     console.error(err);
-    return new Response('Error al eliminar relación Usuario-Logro', { status: 500 });
+    return new Response('Error al eliminar el usuario', { status: 500 });
   }
 }

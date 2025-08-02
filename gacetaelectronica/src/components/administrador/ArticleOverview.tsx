@@ -34,12 +34,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Función para obtener el estado con badge
 const getStatusBadge = (status: string) => {
   switch (status) {
     case "published":
       return <Badge className="bg-green-100 text-green-800">Publicado</Badge>;
     case "pending":
       return <Badge className="bg-yellow-100 text-yellow-800">En Revisión</Badge>;
+    case "rejected": // Estado para "Rechazado"
+      return <Badge className="bg-red-100 text-red-800">Rechazado</Badge>;
+    case "unknown": // Estado Desconocido también como Rechazado en rojo
+      return <Badge className="bg-red-100 text-red-800">Rechazado</Badge>;
     default:
       return <Badge variant="outline">Desconocido</Badge>;
   }
@@ -120,7 +125,7 @@ export default function ArticleOverview() {
         body: JSON.stringify({
           Titulo: updatedArticle.title,
           Resumen: updatedArticle.resumen,
-          Estatus: updatedArticle.status === "published" ? 1 : 2,
+          Estatus: updatedArticle.status === "published" ? 1 : updatedArticle.status === "rejected" ? 2 : 0,
           IdCategoria: 1,
         }),
       });
@@ -151,10 +156,10 @@ export default function ArticleOverview() {
 
       // Eliminar el artículo del estado local sin necesidad de recargar la página
       const updatedArticles = articles.filter((article) => article.id !== selectedArticle?.id);
-      setArticles(updatedArticles); // Actualiza el estado local de los artículos
+      setArticles(updatedArticles);
 
       alert("Artículo eliminado");
-      setDeleteOpen(false); // Cierra el modal de eliminación
+      setDeleteOpen(false);
     } catch (err) {
       console.error(err);
       alert("Error al eliminar artículo");
@@ -202,7 +207,7 @@ export default function ArticleOverview() {
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 {filterBy === "status" &&
-                  ["published", "pending", "unknown"].map((option) => (
+                  ["published", "pending", "rejected"].map((option) => (
                     <SelectItem key={option} value={option}>
                       {option}
                     </SelectItem>
@@ -244,18 +249,18 @@ export default function ArticleOverview() {
                     <TableCell className="font-medium max-w-xs truncate">{article.title}</TableCell>
                     <TableCell className="max-w-xs truncate">{article.resumen}</TableCell>
                     <TableCell>{article.category}</TableCell>
-                    <TableCell>{article.author}</TableCell> {/* Mostrar autor */}
+                    <TableCell>{article.author}</TableCell>
                     <TableCell>{getStatusBadge(article.status)}</TableCell>
                     <TableCell>{new Date(article.createdAt).toLocaleDateString("es-MX")}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setViewOpen(true); }}>
+                        <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setViewOpen(true); }} >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setEditOpen(true); }}>
+                        <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setEditOpen(true); }} >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setDeleteOpen(true); }}>
+                        <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setDeleteOpen(true); }} >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

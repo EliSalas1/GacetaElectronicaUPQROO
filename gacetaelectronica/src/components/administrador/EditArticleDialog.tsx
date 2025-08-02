@@ -76,7 +76,7 @@ export function EditArticleDialog({ open, onOpenChange, article, onSave }: Props
               <SelectContent>
                 <SelectItem value="published">Publicado</SelectItem>
                 <SelectItem value="pending">En Revisión</SelectItem>
-                <SelectItem value="unknown">Desconocido</SelectItem>
+                <SelectItem value="rejected">Rechazado</SelectItem> {/* Aquí agregamos el estado "Rechazado" */}
               </SelectContent>
             </Select>
           </div>

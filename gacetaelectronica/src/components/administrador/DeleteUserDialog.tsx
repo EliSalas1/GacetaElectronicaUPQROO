@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { Button } from "@/components/ui/button"
 import CustomDialog from "../Dialog"
@@ -23,8 +23,14 @@ export default function DeleteUserDialog({
 
   const onConfirmHandler = async () => {
     setLoading(true)
-    await onConfirm(usuario.idUsuarios)
-    setLoading(false)
+    try {
+      await onConfirm(usuario.idUsuarios)
+    } catch (err) {
+      console.error(err)
+      alert('Error al eliminar el usuario')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -43,8 +49,8 @@ export default function DeleteUserDialog({
           <Button variant="outline" onClick={() => setIsOpen(false)}>
             Cancelar
           </Button>
-          <Button disabled={loading} variant={loading ? "ghost" : "destructive"} onClick={() => onConfirmHandler()}>
-            {loading ? <Spinner/> : "Eliminar"}
+          <Button disabled={loading} variant={loading ? "ghost" : "destructive"} onClick={onConfirmHandler}>
+            {loading ? <Spinner /> : "Eliminar"}
           </Button>
         </div>
       }

@@ -98,7 +98,7 @@ export const authOptions: NextAuthOptions = {
       if (token.email && !token.role) {
         try {
           const pool = await getConnection();
-          const [rows] = await pool.query<RowDataPacket[]>(
+          const [rows] = await pool.query<{ Rol: string }[]>(
             "SELECT Rol FROM Usuarios WHERE Correo = ?",
             [token.email]
           );
