@@ -40,8 +40,9 @@ export async function GET(req: NextRequest) {
   DATE_FORMAT(a.FechaRevision, '%Y-%m-%d') AS reviewedAt,
   a.Comentario AS comment,
   CASE a.Estatus
+    WHEN 0 THEN 'pending'
     WHEN 1 THEN 'published'
-    WHEN 2 THEN 'pending'
+    WHEN 2 THEN 'rejected'
     ELSE 'unknown'
   END AS status,
   COALESCE(c.Nombre, 'Sin Categoría') AS Categoria,
@@ -90,8 +91,9 @@ GROUP BY a.idArticulo
      a.Resumen AS resumen,  -- ✅ NUEVO CAMPO
      DATE_FORMAT(a.FechaCreacion, '%Y-%m-%d') AS createdAt,
      CASE a.Estatus
+       WHEN 0 THEN 'pending'
        WHEN 1 THEN 'published'
-       WHEN 2 THEN 'pending'
+       WHEN 2 THEN 'rejected'
        ELSE 'unknown'
      END AS status,
      COALESCE(c.Nombre, 'Sin Categoría') AS category,
@@ -149,7 +151,7 @@ export async function POST(req: NextRequest) {
     // Inserta el nuevo artículo
     const [result] = await pool.query(
       `INSERT INTO Articulos (Titulo, Resumen, Contenido, IdCategoria, FechaCreacion, Estatus)
-       VALUES (?, ?, ?, ?, NOW(), 1)`,
+       VALUES (?, ?, ?, ?, NOW(), 0)`,
       [Titulo.trim(), Resumen.trim(), Contenido.trim(), IdCategoria]
     );
 
@@ -202,7 +204,7 @@ async function createArticleWithRelations(body: any) {
     // Inserta el nuevo artículo
     const [result] = await connection.query(
       `INSERT INTO Articulos (Titulo, Resumen, Contenido, IdCategoria, FechaCreacion, Estatus)
-       VALUES (?, ?, ?, ?, NOW(), 1)`,
+       VALUES (?, ?, ?, ?, NOW(), 0)`,
       [Titulo.trim(), Resumen.trim(), Contenido.trim(), IdCategoria]
     );
 

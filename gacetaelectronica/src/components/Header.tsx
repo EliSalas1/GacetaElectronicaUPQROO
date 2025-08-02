@@ -94,7 +94,7 @@ export default function Header() {
             </div>
 
           <Link
-            href="/guia-articulo"
+            href="/publica/guia-articulo"
             className="hover:text-orange-200 transition-colors"
           >
             Guía para artículos
@@ -138,48 +138,47 @@ export default function Header() {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-{user.role === "Admin" && (
-  <>
-    <DropdownMenuItem asChild>
-      <Link href="/private/administrador" className="flex items-center gap-2 hover:text-[#FF6400]">
-        <LayoutDashboard className="h-4 w-4" />
-        <span>Panel de Admin</span>
-      </Link>
-    </DropdownMenuItem>
-    <DropdownMenuItem asChild>
-      <Link href="/private/supervisor" className="flex items-center gap-2 hover:text-[#FF6400]">
-        <LayoutDashboard className="h-4 w-4" />
-        <span>Panel de Supervisor</span>
-      </Link>
-    </DropdownMenuItem>
-    <DropdownMenuItem asChild>
-      <Link href="/private/redactor" className="flex items-center gap-2 hover:text-[#FF6400]">
-        <LayoutDashboard className="h-4 w-4" />
-        <span>Panel de Redactor</span>
-      </Link>
-    </DropdownMenuItem>
-  </>
-)}
+                      {user.role === "Admin" && (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/private/administrador" className="flex items-center gap-2 hover:text-[#FF6400]">
+                              <LayoutDashboard className="h-4 w-4" />
+                              <span>Panel de Admin</span>
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/private/supervisor" className="flex items-center gap-2 hover:text-[#FF6400]">
+                              <LayoutDashboard className="h-4 w-4" />
+                              <span>Panel de Supervisor</span>
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/private/redactor" className="flex items-center gap-2 hover:text-[#FF6400]">
+                              <LayoutDashboard className="h-4 w-4" />
+                              <span>Panel de Redactor</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
 
-{user.role === "Revisor" && (
-  <DropdownMenuItem asChild>
-    <Link href="/private/supervisor" className="flex items-center gap-2 hover:text-[#FF6400]">
-      <LayoutDashboard className="h-4 w-4" />
-      <span>Panel de Supervisor</span>
-    </Link>
-  </DropdownMenuItem>
-)}
+                      {user.role === "Revisor" && (
+                        <DropdownMenuItem asChild>
+                          <Link href="/private/supervisor" className="flex items-center gap-2 hover:text-[#FF6400]">
+                            <LayoutDashboard className="h-4 w-4" />
+                            <span>Panel de Supervisor</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
 
-{user.role === "Redactor" && (
-  <DropdownMenuItem asChild>
-    <Link href="/private/redactor" className="flex items-center gap-2 hover:text-[#FF6400]">
-      <LayoutDashboard className="h-4 w-4" />
-      <span>Panel de Redactor</span>
-    </Link>
-  </DropdownMenuItem>
-)}
-<DropdownMenuSeparator />
-
+                      {user.role === "Autor" && (
+                        <DropdownMenuItem asChild>
+                          <Link href="/private/redactor" className="flex items-center gap-2 hover:text-[#FF6400]">
+                            <LayoutDashboard className="h-4 w-4" />
+                            <span>Panel de Redactor</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={handleLogout}
                       className="text-red-600 hover:text-red-700"
@@ -227,7 +226,7 @@ export default function Header() {
                   {categories.map((cat) => (
                     <Link
                       key={cat}
-                      href="/categorias"
+                      href="/publica/categorias"
                       className="block py-2 text-sm hover:text-orange-200 transition-colors duration-200"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
@@ -238,7 +237,7 @@ export default function Header() {
               </div>
 
               <Link
-                href="/crear-articulo"
+                href="/publica/guia-articulo"
                 className="block px-4 py-3 hover:bg-orange-500 rounded-md transition-colors duration-200"
                 onClick={() => setIsMobileMenuOpen(false)}
               >

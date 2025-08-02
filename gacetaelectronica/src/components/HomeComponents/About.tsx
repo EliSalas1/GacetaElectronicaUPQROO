@@ -7,9 +7,9 @@ export default function About() {
     }}>
       <div className="absolute inset-0 bg-black/50" />
       <div className="relative max-w-3xl mx-auto px-4 text-center">
-        <h2 className="text-3xl font-bold mb-4">Acerca de Nosotrossssss</h2>
+        <h2 className="text-3xl font-bold mb-4">Acerca de Nosotros</h2>
         <p className="text-base leading-relaxed text-gray-200">
-          La Gaceta de la Universidad Politécnica de Quintana Roo es un espacio informativo dedicado a difundir las actividades, logros y proyectos de nuestra comunidad universitaria.
+          La Gaceta de la Universidad Politécnica de Quintana Roo es un espacio informativo dedicado a difundir las actividades, logros y proyectos de nuestra comunidad universitaria. No dudes en compartir tus conocimientos.
         </p>
       </div>
     </section>

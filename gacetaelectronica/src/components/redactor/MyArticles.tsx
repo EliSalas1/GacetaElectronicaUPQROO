@@ -26,7 +26,9 @@ interface Articulo {
   FechaCreacion: string
   FechaRevision?: string
   Comentario?:   string
+  IdCategoria:   number
   Categoria?: {
+    IdCategoria: number
     Nombre: string
   }
 }
@@ -37,12 +39,12 @@ interface MyArticlesProps {
 
 const getStatusBadge = (status: number) => {
   switch (status) {
-    case 1:
+    case 0:
       return <Badge className="bg-yellow-100 text-yellow-800">En Revisión</Badge>
+    case 1:
+      return <Badge className="bg-green-100 text-green-800">Publicado</Badge>
     case 2:
       return <Badge className="bg-red-100 text-red-800">Rechazado</Badge>
-    case 3:
-      return <Badge className="bg-green-100 text-green-800">Publicado</Badge>
     default:
       return <Badge className="bg-gray-100 text-gray-800">Desconocido</Badge>
   }
@@ -50,9 +52,9 @@ const getStatusBadge = (status: number) => {
 
 const getStatusText = (status: number) => {
   switch (status) {
-    case 1: return "En Revisión"
+    case 0: return "En Revisión"
+    case 1: return "Publicado"
     case 2: return "Rechazado"
-    case 3: return "Publicado"
     default: return "Desconocido"
   }
 }
@@ -100,8 +102,12 @@ export default function MyArticles({ onEditArticle }: MyArticlesProps) {
             FechaCreacion: raw.createdAt,
             FechaRevision: raw.reviewedAt,
             Comentario:    raw.comment,
-            Estatus:       ({ published: 3, pending: 1, unknown: 0 } as any)[raw.status] ?? 0,
-            Categoria:     { Nombre: raw.category || raw.Categoria || 'Sin categoría' }
+            Estatus:       ({ published: 1, pending: 0, rejected: 2, unknown: 0 } as any)[raw.status] ?? 0,
+            IdCategoria:   raw.IdCategoria || 0,
+            Categoria:     { 
+              IdCategoria: raw.IdCategoria || 0,
+              Nombre: raw.category || raw.Categoria || 'Sin categoría' 
+            }
           }
           return mapped
         })

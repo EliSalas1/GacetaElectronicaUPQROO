@@ -1,14 +1,16 @@
-import { GuiaArticulosContainer } from "./components/container";
+"use client";
+
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { GuiaArticulosContainer } from "./components/container";
 
-export default function GuiaArticulo() {
+export default function GuiaArticuloPage() {
   return (
     <>
       <Header />
-      <div>
+      <main className="min-h-screen bg-[#F8F9FC] py-10 px-4">
         <GuiaArticulosContainer />
-      </div>
+      </main>
       <Footer />
     </>
   );
