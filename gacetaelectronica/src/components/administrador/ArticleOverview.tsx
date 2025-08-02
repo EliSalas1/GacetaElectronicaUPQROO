@@ -53,12 +53,47 @@ export default function ArticleOverview() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterBy, setFilterBy] = useState("");
   const [filterValue, setFilterValue] = useState("");
+  const [articles, setArticles] = useState<ArticleInterface[]>([]);
+  const [authorsLoaded, setAuthorsLoaded] = useState(false);
 
-  const { data: articles, loading } = useFetch<ArticleInterface[]>("/api/articulos?limit=50&offset=0");
+  const { data, loading } = useFetch<ArticleInterface[]>("/api/articulos?limit=50&offset=0");
 
   useEffect(() => {
-    console.log("Artículos cargados:", articles);
-  }, [articles]);
+    if (data) {
+      setArticles(data); // Cargar los artículos
+    }
+  }, [data]);
+
+  // Obtener el autor de un artículo en base a su ID
+  const fetchAuthor = async (articuloId: number) => {
+    try {
+      const res = await fetch(`/api/articuloUsuario?articuloId=${articuloId}`);
+      const authorData = await res.json();
+      return authorData[0] ? `${authorData[0].Nombre} ${authorData[0].Apellido}` : "Sin autor";
+    } catch (err) {
+      console.error(err);
+      return "Sin autor";
+    }
+  };
+
+  // Evitar los GETs infinitos y controlar las solicitudes a los autores
+  useEffect(() => {
+    if (articles.length > 0 && !authorsLoaded) {
+      const fetchArticlesWithAuthors = async () => {
+        const articlesWithAuthors = await Promise.all(
+          articles.map(async (article) => {
+            const author = await fetchAuthor(article.id);
+            return { ...article, author };
+          })
+        );
+
+        setArticles(articlesWithAuthors); // Actualiza los artículos con los datos de autor
+        setAuthorsLoaded(true); // Marcar que ya hemos cargado los autores
+      };
+
+      fetchArticlesWithAuthors();
+    }
+  }, [articles, authorsLoaded]); // Solo ejecuta cuando se actualicen los artículos y los autores no se hayan cargado aún
 
   const filteredData = Array.isArray(articles)
     ? articles.filter((article) => {
@@ -71,6 +106,60 @@ export default function ArticleOverview() {
         return matchesSearch && matchesFilter;
       })
     : [];
+
+  const handleSave = async (updatedArticle: ArticleInterface) => {
+    if (!updatedArticle?.id || !updatedArticle?.title || !updatedArticle?.status) {
+      alert("Faltan campos requeridos");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/articulos?id=${updatedArticle.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          Titulo: updatedArticle.title,
+          Resumen: updatedArticle.resumen,
+          Estatus: updatedArticle.status === "published" ? 1 : 2,
+          IdCategoria: 1,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Error al actualizar artículo");
+
+      // Actualizar el artículo en el estado local sin necesidad de recargar la página
+      const updatedArticles = articles.map((article) =>
+        article.id === updatedArticle.id ? { ...article, ...updatedArticle } : article
+      );
+
+      setArticles(updatedArticles); // Actualiza el estado local de los artículos
+      setSelectedArticle(updatedArticle);
+      alert("Artículo actualizado");
+    } catch (err) {
+      console.error(err);
+      alert("Error al guardar cambios");
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const res = await fetch(`/api/articulos?id=${selectedArticle?.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Error al eliminar");
+
+      // Eliminar el artículo del estado local sin necesidad de recargar la página
+      const updatedArticles = articles.filter((article) => article.id !== selectedArticle?.id);
+      setArticles(updatedArticles); // Actualiza el estado local de los artículos
+
+      alert("Artículo eliminado");
+      setDeleteOpen(false); // Cierra el modal de eliminación
+    } catch (err) {
+      console.error(err);
+      alert("Error al eliminar artículo");
+    }
+  };
 
   return (
     <main className="flex flex-col gap-6">
@@ -133,8 +222,8 @@ export default function ArticleOverview() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Título</TableHead>
-                <TableHead>Resumen</TableHead>
+                <TableHead className="max-w-xs truncate">Título</TableHead>
+                <TableHead className="max-w-xs truncate">Resumen</TableHead>
                 <TableHead>Categoría</TableHead>
                 <TableHead>Autor</TableHead>
                 <TableHead>Estado</TableHead>
@@ -152,10 +241,10 @@ export default function ArticleOverview() {
               ) : filteredData.length > 0 ? (
                 filteredData.map((article) => (
                   <TableRow key={article.id}>
-                    <TableCell className="font-medium">{article.title}</TableCell>
-                    <TableCell>{article.resumen}</TableCell>
+                    <TableCell className="font-medium max-w-xs truncate">{article.title}</TableCell>
+                    <TableCell className="max-w-xs truncate">{article.resumen}</TableCell>
                     <TableCell>{article.category}</TableCell>
-                    <TableCell>{article.author}</TableCell>
+                    <TableCell>{article.author}</TableCell> {/* Mostrar autor */}
                     <TableCell>{getStatusBadge(article.status)}</TableCell>
                     <TableCell>{new Date(article.createdAt).toLocaleDateString("es-MX")}</TableCell>
                     <TableCell>
@@ -192,29 +281,7 @@ export default function ArticleOverview() {
           if (!value) setSelectedArticle(null);
         }}
         article={selectedArticle}
-        onSave={async (updatedArticle) => {
-          if (!updatedArticle?.id || !updatedArticle?.title || !updatedArticle?.status) {
-            alert("Faltan campos requeridos");
-            return;
-          }
-          try {
-            const res = await fetch(`/api/articulos?id=${updatedArticle.id}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                Titulo: updatedArticle.title,
-                Resumen: updatedArticle.resumen,
-                Estatus: updatedArticle.status === "published" ? 1 : 2,
-                IdCategoria: 1,
-              }),
-            });
-            if (!res.ok) throw new Error("Error al actualizar artículo");
-            alert("Artículo actualizado");
-          } catch (err) {
-            console.error(err);
-            alert("Error al guardar cambios");
-          }
-        }}
+        onSave={handleSave}
       />
 
       <DeleteArticleDialog
@@ -224,20 +291,7 @@ export default function ArticleOverview() {
           if (!value) setSelectedArticle(null);
         }}
         article={selectedArticle}
-        onConfirm={async () => {
-          try {
-            const res = await fetch(`/api/articulos?id=${selectedArticle?.id}`, {
-              method: "DELETE",
-            });
-            if (!res.ok) throw new Error("Error al eliminar");
-            alert("Artículo eliminado");
-          } catch (err) {
-            console.error(err);
-            alert("Error al eliminar artículo");
-          } finally {
-            setDeleteOpen(false);
-          }
-        }}
+        onConfirm={handleDelete}
       />
 
       <ViewArticleDialog

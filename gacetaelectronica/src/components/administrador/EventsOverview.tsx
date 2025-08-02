@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import { useState, useEffect } from "react";
 import { Eye, Edit, Trash2, Search, Filter } from "lucide-react";
@@ -12,6 +12,7 @@ import { EditEventDialog } from "./EditEventDialog";
 import { DeleteEventDialog } from "./DeleteEventDialog";
 import { ViewEventDialog } from "./ViewEventDialog";
 import { Spinner } from "../Spinner";
+import { toast } from 'sonner'
 
 export default function EventOverview() {
   const [selectedEvent, setSelectedEvent] = useState<EventInterface | null>(null);
@@ -21,11 +22,9 @@ export default function EventOverview() {
   const [events, setEvents] = useState<EventInterface[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Estados de la paginación
-  const [page, setPage] = useState(0);  // Página actual
-  const [totalPages, setTotalPages] = useState(0);  // Total de páginas
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
-  // Parámetros de filtro
   const [searchTerm, setSearchTerm] = useState("");
   const [filterBy, setFilterBy] = useState("");
   const [filterValue, setFilterValue] = useState("");
@@ -36,7 +35,6 @@ export default function EventOverview() {
       try {
         const res = await fetch(`/api/eventos?limit=15&offset=${page * 15}`);
         const data = await res.json();
-        // Aquí deberías manejar la paginación si la API la soporta
         const mapped = data.map((e: any) => ({
           id: e.IdEvento,
           title: e.Nombre,
@@ -47,10 +45,9 @@ export default function EventOverview() {
           longDescription: e.DesLarga,
         }));
         setEvents(mapped);
-        // Asumir que la API devuelve el número total de eventos para calcular las páginas
         const totalEvents = await fetch("/api/eventos/count");
         const total = await totalEvents.json();
-        setTotalPages(Math.ceil(total / 15));  // Total de páginas
+        setTotalPages(Math.ceil(total / 15));
       } catch (err) {
         console.error("Error al cargar eventos:", err);
       } finally {
@@ -59,9 +56,8 @@ export default function EventOverview() {
     };
 
     fetchEvents();
-  }, [page]);  // Se ejecuta cada vez que la página cambia
+  }, [page]);
 
-  // Filtrado local de eventos
   const filteredEvents = events.filter((event) => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase());
     let matchesFilter = true;
@@ -81,6 +77,63 @@ export default function EventOverview() {
     });
   };
 
+  const handleSaveEvent = async (updatedEvent: EventInterface) => {
+    try {
+      const response = await fetch(`/api/eventos?id=${updatedEvent.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nombre: updatedEvent.title,
+          desCorta: updatedEvent.shortDescription,
+          desLarga: updatedEvent.longDescription,
+          fecha: updatedEvent.date,
+          hora: updatedEvent.time,
+          lugar: updatedEvent.location,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al guardar el evento");
+      }
+
+      const result = await response.json();
+      console.log(result.message);
+
+      setEditOpen(false);
+      setEvents((prev) =>
+        prev.map((event) =>
+          event.id === updatedEvent.id ? { ...event, ...updatedEvent } : event
+        )
+      );
+    } catch (error) {
+      console.error("Error al guardar el evento:", error);
+    }
+  };
+
+  const handleDeleteEvent = async (id: number) => {
+    try {
+      const response = await fetch(`/api/eventos?id=${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al eliminar");
+      }
+
+      // Eliminar el evento del estado local
+      setEvents((prevEvents) => prevEvents.filter((event) => event.id !== id));
+
+      // Mostrar mensaje de éxito
+      toast.success("Evento eliminado correctamente");
+      setDeleteOpen(false); // Cerrar el modal de eliminación
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al eliminar el evento");
+    }
+  };
+
   return (
     <>
       <Card>
@@ -90,7 +143,6 @@ export default function EventOverview() {
             <CardDescription>Vista general de los eventos registrados</CardDescription>
           </div>
 
-          {/* Filtros inline */}
           <div className="flex gap-2 w-full md:w-auto">
             <div className="relative w-full md:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -175,35 +227,18 @@ export default function EventOverview() {
         </CardContent>
       </Card>
 
-      <div className="flex justify-between mt-4">
-        <Button
-          variant="outline"
-          disabled={page <= 0}
-          onClick={() => setPage(page - 1)}
-        >
-          Anterior
-        </Button>
-        <Button
-          variant="outline"
-          disabled={page + 1 >= totalPages}
-          onClick={() => setPage(page + 1)}
-        >
-          Siguiente
-        </Button>
-      </div>
-
       <EditEventDialog
         open={editOpen}
         onOpenChange={(value) => { setEditOpen(value); if (!value) setSelectedEvent(null); }}
         event={selectedEvent}
-        onSave={async (updatedEvent) => { /* Lógica de guardar */ }}
+        onSave={handleSaveEvent}
       />
 
       <DeleteEventDialog
         open={deleteOpen}
         onOpenChange={(value) => { setDeleteOpen(value); if (!value) setSelectedEvent(null); }}
         event={selectedEvent}
-        onConfirm={async () => { /* Lógica de eliminar */ }}
+        onConfirm={handleDeleteEvent}
       />
 
       <ViewEventDialog

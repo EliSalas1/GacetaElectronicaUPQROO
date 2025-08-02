@@ -36,7 +36,7 @@ export function ViewArticleDialog({ open, onOpenChange, article }: Props) {
           <p><strong>Categoría:</strong> {article.category}</p>
           <p><strong>Estado:</strong> {article.status}</p>
           <p><strong>Fecha de Creación:</strong> {article.createdAt}</p>
-          <p><strong>Fecha de Publicación:</strong> {article.publishedAt || "No publicada"}</p>
+          <p><strong>Resumen:</strong> {article.resumen}</p> {/* Aquí agregamos el resumen */}
         </div>
 
         <DialogFooter>

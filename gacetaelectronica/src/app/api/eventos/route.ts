@@ -59,7 +59,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ✅ PUT: Actualizar evento por ID
 export async function PUT(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get('id');
@@ -71,11 +70,13 @@ export async function PUT(req: NextRequest) {
 
     const pool = await getConnection();
 
+    // Verificar si el evento existe
     const [exists] = await pool.query('SELECT * FROM Evento WHERE IdEvento = ?', [id]) as [any[], any];
     if (exists.length === 0) {
       return new Response('Evento no encontrado', { status: 404 });
     }
 
+    // Verificar si el nombre ya está registrado
     const [duplicate] = await pool.query(
       'SELECT * FROM Evento WHERE Nombre = ? AND IdEvento != ?',
       [nombre.trim(), id]
@@ -84,6 +85,7 @@ export async function PUT(req: NextRequest) {
       return new Response('Ya existe otro evento con ese nombre', { status: 409 });
     }
 
+    // Actualizar el evento
     await pool.query(
       `UPDATE Evento
        SET Nombre = ?, DesCorta = ?, DesLarga = ?, Fecha = ?, Hora = ?, Lugar = ?
@@ -93,10 +95,11 @@ export async function PUT(req: NextRequest) {
 
     return Response.json({ message: 'Evento actualizado' });
   } catch (err) {
-    console.error('Error en PUT eventos:', err);
+    console.error('Error al actualizar evento:', err);
     return new Response('Error al actualizar evento', { status: 500 });
   }
 }
+
 
 // ✅ DELETE: Eliminar evento por ID
 export async function DELETE(req: NextRequest) {
@@ -107,11 +110,17 @@ export async function DELETE(req: NextRequest) {
     }
 
     const pool = await getConnection();
+
+    // Eliminar las filas relacionadas en UsuarioEvento
+    await pool.query('DELETE FROM UsuarioEvento WHERE Evento_IdEvento = ?', [id]);
+
+    // Verificar si el evento existe
     const [exists] = await pool.query('SELECT * FROM Evento WHERE IdEvento = ?', [id]) as [any[], any];
     if (exists.length === 0) {
       return new Response('Evento no encontrado', { status: 404 });
     }
 
+    // Eliminar el evento
     await pool.query('DELETE FROM Evento WHERE IdEvento = ?', [id]);
 
     return Response.json({ message: 'Evento eliminado' });
