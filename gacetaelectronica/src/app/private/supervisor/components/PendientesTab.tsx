@@ -19,7 +19,8 @@ import {
 import { toast } from "sonner";
 
 interface Articulo {
-  idArticulo: number; Titulo: string; categoria: string; FechaCreacion: string;
+  idArticulo: number; Titulo: string; categoria: string;
+  FechaCreacion: string; FechaRevision?: string;
   Estatus: number; Comentario?: string; Resumen?: string;
 }
 interface Usuario { idUsuarios: number; Nombre: string; }
@@ -93,15 +94,25 @@ export default function PendientesTab() {
       : updateArticulo(art.idArticulo,{Estatus:2},`Artículo "${art.Titulo}" rechazado correctamente`);
 
   const handleFeedbackSubmit = async (comment:string): Promise<void> => {
+    const articulo = articulos.find(a => a.idArticulo === feedbackModal.articleId);
+    const body:any = { Comentario: comment };
+    if (articulo && !articulo.FechaRevision) body.FechaRevision = new Date().toISOString();
+
     const res = await fetch(`/api/articulos?id=${feedbackModal.articleId}`, {
-      method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify({Comentario:comment})
+      method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)
     });
     if (!res.ok) {
       toast.error(await res.text());
       return;
     }
-    toast.success("Comentario agregado al artículo (estatus sin cambios)");
-    setArticulos(prev => prev.map(a => a.idArticulo === feedbackModal.articleId ? {...a, Comentario:comment} : a));
+    toast.success("Comentario agregado y fecha de revisión actualizada");
+    setArticulos(prev =>
+      prev.map(a =>
+        a.idArticulo === feedbackModal.articleId
+          ? { ...a, Comentario: comment, FechaRevision: body.FechaRevision || a.FechaRevision }
+          : a
+      )
+    );
     setFeedbackModal({ isOpen:false, articleId:0, articleTitle:"", authorName:"" });
   };
 
