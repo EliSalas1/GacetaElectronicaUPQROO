@@ -34,7 +34,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
           {article.Categoria || "Sin categoría"}
         </span>
       </div>
-
+      
       {/* Título */}
       <h1
         className="mb-2"
@@ -131,6 +131,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
         }}
       >
         {article.Contenido || "No hay contenido disponible"}
+
       </div>
     </div>
   );
