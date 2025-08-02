@@ -122,7 +122,7 @@ export default function Page() {
                     <>
                       <div className="text-2xl font-bold">
                         {Array.isArray(dataArticulos)
-                          ? dataArticulos.filter((item) => item.Estatus === 3)
+                          ? dataArticulos.filter((item) => item.Estatus === 1)
                               .length
                           : ""}
                       </div>
@@ -152,7 +152,7 @@ export default function Page() {
                     <>
                       <div className="text-2xl font-bold">
                         {Array.isArray(dataArticulos)
-                          ? dataArticulos.filter((item) => item.Estatus === 1)
+                          ? dataArticulos.filter((item) => item.Estatus === 0)
                               .length
                           : ""}
                       </div>

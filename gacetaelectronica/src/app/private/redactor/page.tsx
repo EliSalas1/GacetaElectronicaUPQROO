@@ -72,8 +72,8 @@ export default function Page() {
       );
 
       const validArticles = articlesWithDetails.filter((a) => a !== null);
-      const published = validArticles.filter((a: any) => a.Estatus === 3).length;
-      const pending = validArticles.filter((a: any) => a.Estatus === 1).length;
+      const published = validArticles.filter((a: any) => a.status === 'published').length;
+      const pending = validArticles.filter((a: any) => a.status === 'pending').length;
 
       setStats({ published, pending });
     } catch (error) {
