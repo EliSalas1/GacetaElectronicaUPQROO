@@ -1,60 +1,165 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit, Trash2 } from "lucide-react";
-import { Input } from "@/components/ui/input"; // Asegúrate de importar Input
+import { Input } from "@/components/ui/input";
+import { Eye, Edit, Trash2, Filter } from "lucide-react";
 import { ArticleInterface } from "@/entities/article";
 import { EditArticleDialog } from "./EditArticleDialog";
 import { DeleteArticleDialog } from "./DeleteArticleDialog";
 import { ViewArticleDialog } from "./ViewArticleDialog";
 import { useFetch } from "@/hooks/useFetch";
 import { Spinner } from "../Spinner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-const getStatusBadge = (status: number) => {
+const getStatusBadge = (status: string) => {
   switch (status) {
-    case 1:
+    case "published":
       return <Badge className="bg-green-100 text-green-800">Publicado</Badge>;
-    case 2:
+    case "pending":
       return <Badge className="bg-yellow-100 text-yellow-800">En Revisión</Badge>;
-    case 3:
-      return <Badge className="bg-red-100 text-red-800">Rechazado</Badge>;
-    case 4:
-      return <Badge variant="secondary">Borrado</Badge>;
     default:
       return <Badge variant="outline">Desconocido</Badge>;
   }
 };
 
 export default function ArticleOverview() {
-  const [selectedArticle, setSelectedArticle] = useState<Partial<ArticleInterface> | null>(null);
+  const [selectedArticle, setSelectedArticle] = useState<ArticleInterface | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(""); // Estado para la búsqueda
-  const [filterBy, setFilterBy] = useState(""); // Filtro por categoría o estado
-  const [filterValue, setFilterValue] = useState(""); // Valor del filtro
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterBy, setFilterBy] = useState("");
+  const [filterValue, setFilterValue] = useState("");
+  const [articles, setArticles] = useState<ArticleInterface[]>([]);
+  const [authorsLoaded, setAuthorsLoaded] = useState(false);
 
-  const { data, loading } = useFetch<ArticleInterface>('/api/articulos');
+  const { data, loading } = useFetch<ArticleInterface[]>("/api/articulos?limit=50&offset=0");
 
-  const filteredData = data?.filter((article) => {
-    // Comprobación de que article.Titulo no sea undefined o null
-    const matchesSearch = article.Titulo
-      ? article.Titulo.toLowerCase().includes(searchTerm.toLowerCase())
-      : false;
-    
-    const matchesFilter =
-      (filterBy === "category" && filterValue === "all") ||
-      (filterBy === "status" && filterValue === "all") ||
-      (filterBy && article[filterBy] === filterValue);
+  useEffect(() => {
+    if (data) {
+      setArticles(data); // Cargar los artículos
+    }
+  }, [data]);
 
-    return matchesSearch && matchesFilter;
-  });
+  // Obtener el autor de un artículo en base a su ID
+  const fetchAuthor = async (articuloId: number) => {
+    try {
+      const res = await fetch(`/api/articuloUsuario?articuloId=${articuloId}`);
+      const authorData = await res.json();
+      return authorData[0] ? `${authorData[0].Nombre} ${authorData[0].Apellido}` : "Sin autor";
+    } catch (err) {
+      console.error(err);
+      return "Sin autor";
+    }
+  };
+
+  // Evitar los GETs infinitos y controlar las solicitudes a los autores
+  useEffect(() => {
+    if (articles.length > 0 && !authorsLoaded) {
+      const fetchArticlesWithAuthors = async () => {
+        const articlesWithAuthors = await Promise.all(
+          articles.map(async (article) => {
+            const author = await fetchAuthor(article.id);
+            return { ...article, author };
+          })
+        );
+
+        setArticles(articlesWithAuthors); // Actualiza los artículos con los datos de autor
+        setAuthorsLoaded(true); // Marcar que ya hemos cargado los autores
+      };
+
+      fetchArticlesWithAuthors();
+    }
+  }, [articles, authorsLoaded]); // Solo ejecuta cuando se actualicen los artículos y los autores no se hayan cargado aún
+
+  const filteredData = Array.isArray(articles)
+    ? articles.filter((article) => {
+        const matchesSearch = article.title?.toLowerCase().includes(searchTerm.toLowerCase());
+        let matchesFilter = true;
+        if (filterBy && filterValue && filterValue !== "all") {
+          if (filterBy === "category") matchesFilter = article.category === filterValue;
+          if (filterBy === "status") matchesFilter = article.status === filterValue;
+        }
+        return matchesSearch && matchesFilter;
+      })
+    : [];
+
+  const handleSave = async (updatedArticle: ArticleInterface) => {
+    if (!updatedArticle?.id || !updatedArticle?.title || !updatedArticle?.status) {
+      alert("Faltan campos requeridos");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/articulos?id=${updatedArticle.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          Titulo: updatedArticle.title,
+          Resumen: updatedArticle.resumen,
+          Estatus: updatedArticle.status === "published" ? 1 : 2,
+          IdCategoria: 1,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Error al actualizar artículo");
+
+      // Actualizar el artículo en el estado local sin necesidad de recargar la página
+      const updatedArticles = articles.map((article) =>
+        article.id === updatedArticle.id ? { ...article, ...updatedArticle } : article
+      );
+
+      setArticles(updatedArticles); // Actualiza el estado local de los artículos
+      setSelectedArticle(updatedArticle);
+      alert("Artículo actualizado");
+    } catch (err) {
+      console.error(err);
+      alert("Error al guardar cambios");
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const res = await fetch(`/api/articulos?id=${selectedArticle?.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Error al eliminar");
+
+      // Eliminar el artículo del estado local sin necesidad de recargar la página
+      const updatedArticles = articles.filter((article) => article.id !== selectedArticle?.id);
+      setArticles(updatedArticles); // Actualiza el estado local de los artículos
+
+      alert("Artículo eliminado");
+      setDeleteOpen(false); // Cierra el modal de eliminación
+    } catch (err) {
+      console.error(err);
+      alert("Error al eliminar artículo");
+    }
+  };
 
   return (
     <main className="flex flex-col gap-6">
@@ -67,24 +172,18 @@ export default function ArticleOverview() {
             </CardDescription>
           </div>
 
-          {/* Filtros inline */}
           <div className="flex gap-2 w-full md:w-auto">
-            {/* Input búsqueda */}
-            <div className="relative w-full md:w-64">
-              <Input
-                className="pl-10"
-                placeholder="Buscar..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
-            {/* Filtro por campo */}
+            <Input
+              className="w-full md:w-64 pl-10"
+              placeholder="Buscar..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
             <Select
               value={filterBy}
               onValueChange={(value) => {
                 setFilterBy(value);
-                setFilterValue(""); // Reset valor cuando cambias el filtro
+                setFilterValue("");
               }}
             >
               <SelectTrigger className="w-40">
@@ -96,24 +195,24 @@ export default function ArticleOverview() {
                 <SelectItem value="status">Estado</SelectItem>
               </SelectContent>
             </Select>
-
-            {/* Filtro por valor */}
             <Select value={filterValue} onValueChange={setFilterValue}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Filtrar valor" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                {(filterBy === "category"
-                  ? ["1", "2"] // Pone los valores según tus categorías
-                  : filterBy === "status"
-                  ? ["1", "2"] // Pone los valores según tus estados
-                  : []
-                ).map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
+                {filterBy === "status" &&
+                  ["published", "pending", "unknown"].map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                {filterBy === "category" && Array.isArray(articles) &&
+                  Array.from(new Set(articles.map((article) => article.category))).map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
@@ -123,65 +222,52 @@ export default function ArticleOverview() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Título</TableHead>
-                <TableHead>Resumen</TableHead>
+                <TableHead className="max-w-xs truncate">Título</TableHead>
+                <TableHead className="max-w-xs truncate">Resumen</TableHead>
                 <TableHead>Categoría</TableHead>
+                <TableHead>Autor</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead>Fecha de Creación</TableHead>
+                <TableHead>Creación</TableHead>
                 <TableHead>Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center flex justify-center">
+                  <TableCell colSpan={7} className="text-center">
                     <Spinner />
                   </TableCell>
                 </TableRow>
-              ) : (
-                filteredData?.map((article) => (
-                  <TableRow key={article.idArticulo}>
-                    <TableCell className="font-medium">{article.Titulo}</TableCell>
-                    <TableCell>{article.Resumen}</TableCell>
-                    <TableCell className="capitalize">{article.IdCategoria}</TableCell>
-                    <TableCell>{getStatusBadge(article.Estatus)}</TableCell>
-                    <TableCell>{article.FechaCreacion}</TableCell>
+              ) : filteredData.length > 0 ? (
+                filteredData.map((article) => (
+                  <TableRow key={article.id}>
+                    <TableCell className="font-medium max-w-xs truncate">{article.title}</TableCell>
+                    <TableCell className="max-w-xs truncate">{article.resumen}</TableCell>
+                    <TableCell>{article.category}</TableCell>
+                    <TableCell>{article.author}</TableCell> {/* Mostrar autor */}
+                    <TableCell>{getStatusBadge(article.status)}</TableCell>
+                    <TableCell>{new Date(article.createdAt).toLocaleDateString("es-MX")}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedArticle(article);
-                            setViewOpen(true);
-                          }}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setViewOpen(true); }}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedArticle(article);
-                            setEditOpen(true);
-                          }}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setEditOpen(true); }}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedArticle(article);
-                            setDeleteOpen(true);
-                          }}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setDeleteOpen(true); }}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
                 ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center">
+                    No hay artículos disponibles.
+                  </TableCell>
+                </TableRow>
               )}
             </TableBody>
           </Table>
@@ -195,26 +281,7 @@ export default function ArticleOverview() {
           if (!value) setSelectedArticle(null);
         }}
         article={selectedArticle}
-        onSave={async (updatedArticle) => {
-          try {
-            const res = await fetch(`/api/articulos?id=${updatedArticle.id}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                Titulo: updatedArticle.title,
-                IdCategoria: 1,
-                Estatus: updatedArticle.status === "Publicado" ? 1 : 2,
-              }),
-            });
-            if (!res.ok) throw new Error("Error al actualizar");
-            setArticles((prev) =>
-              prev.map((a) => (a.id === updatedArticle.id ? { ...a, ...updatedArticle } : a))
-            );
-          } catch (err) {
-            console.error(err);
-            alert("Error al guardar cambios");
-          }
-        }}
+        onSave={handleSave}
       />
 
       <DeleteArticleDialog
@@ -224,11 +291,7 @@ export default function ArticleOverview() {
           if (!value) setSelectedArticle(null);
         }}
         article={selectedArticle}
-        onConfirm={() => {
-          // handle delete logic here
-          console.log("Deleted article:", selectedArticle?.IdCategoria);
-          setDeleteOpen(false);
-        }}
+        onConfirm={handleDelete}
       />
 
       <ViewArticleDialog

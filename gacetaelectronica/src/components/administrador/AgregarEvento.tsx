@@ -9,8 +9,8 @@ import {
   DialogTrigger,
   DialogContent,
   DialogHeader,
-  DialogFooter,
   DialogTitle,
+  DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
@@ -24,7 +24,7 @@ import {
 import { CirclePlus, PencilIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
-export default function CreateEventForm() {
+export default function AgregarEvento() {
   const [longDescription, setLongDescription] = useState('')
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -35,14 +35,16 @@ export default function CreateEventForm() {
     setError(null)
     setLoading(true)
 
-    const formData = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const formData = new FormData(form)
+
     const payload = {
-      nombre: formData.get('title')?.toString().trim(),
-      desCorta: formData.get('shortDesc')?.toString().trim(),
+      nombre: formData.get('nombre')?.toString().trim(),
+      desCorta: formData.get('desCorta')?.toString().trim(),
       desLarga: longDescription.trim(),
-      fecha: formData.get('date')?.toString(),
-      hora: formData.get('time')?.toString(),
-      lugar: formData.get('location')?.toString().trim(),
+      fecha: formData.get('fecha')?.toString(),
+      hora: formData.get('hora')?.toString(),
+      lugar: formData.get('lugar')?.toString().trim(),
     }
 
     if (Object.values(payload).some((v) => !v)) {
@@ -64,119 +66,107 @@ export default function CreateEventForm() {
       }
 
       const json = await res.json()
-      alert(`✅ Evento creado con ID: ${json.id}`)
-      toast.success(json.message || "Evento creado correctamente");
+      toast.success(json.message || 'Evento creado correctamente')
+
+      // Resetear formulario
+      form.reset()
       setLongDescription('')
     } catch (err: any) {
       console.error(err)
-      toast.error(err.message || "Ocurrió un error al crear el evento");
+      toast.error(err.message || 'Ocurrió un error al crear el evento')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Card className="w-full mx-auto">
+    <Card className="w-full max-w-full mx-auto p-6">
       <CardHeader>
-        <CardTitle>Crear evento</CardTitle>
+        <CardTitle className="text-2xl font-semibold">Agregar nuevo evento</CardTitle>
       </CardHeader>
       <CardContent>
-        <form id="event-form" onSubmit={handleSubmit} className="space-y-4">
+        <form id="form-evento" onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <Label className="mb-1" htmlFor="title">
-              Título del Evento
-            </Label>
+            <Label htmlFor="nombre" className="text-lg">Título del evento</Label>
             <Input
-              id="title"
-              name="title"
-              placeholder="Ej. Fiesta universitaria"
+              name="nombre"
+              id="nombre"
+              placeholder="Ej. Taller de diseño"
               required
+              className="w-full p-3"
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-4 md:grid-col-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <Label className="mb-1" htmlFor="date">
-                Fecha
-              </Label>
-              <Input id="date" name="date" type="date" required />
+              <Label htmlFor="fecha" className="text-lg">Fecha</Label>
+              <Input name="fecha" id="fecha" type="date" required className="w-full p-3" />
             </div>
             <div>
-              <Label className="mb-1" htmlFor="time">
-                Hora
-              </Label>
-              <Input id="time" name="time" type="time" required />
+              <Label htmlFor="hora" className="text-lg">Hora</Label>
+              <Input name="hora" id="hora" type="time" required className="w-full p-3" />
             </div>
             <div>
-              <Label className="mb-1" htmlFor="location">
-                Lugar
-              </Label>
+              <Label htmlFor="lugar" className="text-lg">Lugar</Label>
               <Input
-                id="location"
-                name="location"
-                placeholder="Ej. Auditorio principal"
+                name="lugar"
+                id="lugar"
+                placeholder="Ej. Auditorio"
                 required
+                className="w-full p-3"
               />
             </div>
           </div>
 
           <div>
-            <Label className="mb-1" htmlFor="shortDesc">
-              Descripción corta
-            </Label>
+            <Label htmlFor="desCorta" className="text-lg">Descripción corta</Label>
             <Textarea
-              id="shortDesc"
-              name="shortDesc"
-              rows={3}
-              placeholder="Una breve descripción..."
+              name="desCorta"
+              id="desCorta"
+              placeholder="Breve resumen del evento..."
               required
+              className="w-full p-3"
             />
           </div>
 
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button
-                className="cursor-pointer w-full"
-                type="button"
-                variant="outline"
-              >
-                <PencilIcon /> Agregar descripción larga
+              <Button type="button" variant="outline" className="w-full py-3 mt-4">
+                <PencilIcon className="mr-2 h-4 w-4" />
+                Agregar descripción larga
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Descripción larga</DialogTitle>
                 <DialogDescription>
-                  Aquí puedes escribir más detalles sobre el evento.
+                  Agrega más detalles sobre el evento.
                 </DialogDescription>
               </DialogHeader>
               <Textarea
                 value={longDescription}
                 onChange={(e) => setLongDescription(e.target.value)}
-                rows={8}
-                placeholder="Detalles extendidos del evento..."
+                rows={6}
+                placeholder="Información extendida del evento..."
+                className="w-full p-3"
               />
               <DialogFooter>
-                <Button type="button" onClick={() => setOpen(false)}>
-                  Guardar
-                </Button>
+                <Button onClick={() => setOpen(false)}>Guardar</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </form>
 
         {error && (
-          <p className="text-sm text-red-500 mt-2">
-            ⚠️ {error}
-          </p>
+          <p className="text-sm text-red-500 mt-4">{error}</p>
         )}
       </CardContent>
       <CardFooter>
         <Button
           type="submit"
-          form="event-form"
-          className="w-full cursor-pointer"
+          form="form-evento"
           disabled={loading}
+          className="w-full py-3 mt-4"
         >
           <CirclePlus className="mr-2" />
           {loading ? 'Creando...' : 'Crear Evento'}

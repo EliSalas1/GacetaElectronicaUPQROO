@@ -1,20 +1,20 @@
 export interface ArticleInterface {
-  idArticulo: number;
-  Titulo: string;
-  Resumen: string;
-  Contenido: string;
-  Comentario: string;
-  Estatus: number;
-  FechaCreacion: string;   // ISO string
-  FechaRevision: string;   // ISO string
-  IdCategoria: number;
+  id: number;
+  title: string;
+  resumen: string;
+  createdAt: string;
+  status: "published" | "pending" | "unknown";
+  category: string;
+  author: string;
 }
 
 export enum Categoria {
-  CienciaTecnologia = "Ciencia y Tecnología",
+  CienciaTecnologia = "Ciencia y tecnología",
   Humanidades = "Humanidades",
   SocialPolitica = "Social y política",
   Logros = "Logros",
+  culturales = "Cultural y deportiva",
+
 }
 
 export enum Etiqueta {

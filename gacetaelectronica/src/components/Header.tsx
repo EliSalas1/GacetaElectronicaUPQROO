@@ -170,7 +170,7 @@ export default function Header() {
                         </DropdownMenuItem>
                       )}
 
-                      {user.role === "Redactor" && (
+                      {user.role === "Autor" && (
                         <DropdownMenuItem asChild>
                           <Link href="/private/redactor" className="flex items-center gap-2 hover:text-[#FF6400]">
                             <LayoutDashboard className="h-4 w-4" />

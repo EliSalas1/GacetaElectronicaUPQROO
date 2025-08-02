@@ -38,14 +38,27 @@ function getDriveImageUrl(driveUrl: string): string | null {
 }
 
 /**
- * Mapa que relaciona el IdCategoria de la API con la clave interna usada en la UI.
+ * Normaliza el nombre de la categoría para eliminar acentos, espacios y caracteres especiales.
+ */
+
+function normalizeCategoryKey(category: string): string {
+  return category
+    .normalize("NFD") // separa letras y tildes
+    .replace(/[\u0300-\u036f]/g, "") // elimina los acentos
+    .replace(/\s+/g, "") // elimina espacios
+    .replace(/[^a-zA-Z]/g, "") // elimina caracteres especiales (como ñ, /, etc)
+    .toLowerCase();
+}
+
+/**
+ * Mapa que relaciona el nombre limpio de la categoría con la clave interna usada en la UI.
  */
 const CATEGORY_NAME_MAP: Record<string, string> = {
-  cienciatecnologia: "ciencia",
+  cienciaytecnologia: "ciencia",
   humanidades: "humanidades",
   logros: "logros",
-  socialpolitica: "social",
-  culturaldeportiva: "culturales",
+  socialypolitica: "social",
+  culturalydeportiva: "culturales",
 };
 
 /**
@@ -77,8 +90,10 @@ export default function useArticulosPorCategoria() {
               ? getDriveImageUrl(recursos[0].Ruta || recursos[0].ruta || recursos[0].url || "")
               : null;
 
-            const rawKey = articulo.category.toLowerCase();
-            const key = CATEGORY_NAME_MAP[rawKey];
+            // Normaliza la categoría para hacer el mapeo
+            const normalizedKey = normalizeCategoryKey(articulo.category);
+            const key = CATEGORY_NAME_MAP[normalizedKey];
+
             if (!key) return;
 
             const article: ArticleCardProps = {
