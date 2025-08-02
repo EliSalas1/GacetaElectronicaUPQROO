@@ -11,15 +11,15 @@ interface Articulo {
   title: string;
   resumen: string;
   createdAt: string;
-  status: string;
+  estatus: number;
   category: string;
   author: string;
   etiqueta: string[];
   imagenUrl: string;
 }
-function getTagColor(tag: string): string {
-  const normalizedTag = tag.trim().normalize(); // Elimina espacios/saltos y normaliza caracteres
 
+function getTagColor(tag: string): string {
+  const normalizedTag = tag.trim().normalize();
   switch (normalizedTag) {
     case "Arte":
       return "bg-blue-100 text-blue-800 border-blue-200";
@@ -40,11 +40,12 @@ function getTagColor(tag: string): string {
   }
 }
 
-
 function getDriveImageUrl(driveUrl: string): string | null {
   const regex = /\/d\/([a-zA-Z0-9_-]+)/;
   const match = driveUrl.match(regex);
-  return match ? `https://drive.google.com/uc?export=preview&id=${match[1]}` : null;
+  return match
+    ? `https://drive.google.com/uc?export=preview&id=${match[1]}`
+    : null;
 }
 
 export default function NoticesList() {
@@ -57,12 +58,13 @@ export default function NoticesList() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("/api/articulos?limit=10");
+        // Trae todos los artículos publicados (estatus = 1)
+        const res = await fetch("/api/articulosPublicados", { cache: "no-store" });
         if (!res.ok) throw new Error("Error al cargar artículos");
         const data = await res.json();
 
-        const publicados = data.filter((a: any) => a.status === "published");
-        const aleatorios = publicados.sort(() => 0.5 - Math.random()).slice(0, 4);
+        // Selecciona 4 aleatorios de TODOS los publicados
+        const aleatorios = data.sort(() => 0.5 - Math.random()).slice(0, 4);
 
         const enriched = await Promise.all(
           aleatorios.map(async (articulo: any) => {
@@ -84,19 +86,17 @@ export default function NoticesList() {
               `/api/recursos?articuloId=${articulo.id}`
             );
             const recursos = await recursoRes.json();
-            const imagenUrl = Array.isArray(recursos) && recursos.length > 0
-              ? getDriveImageUrl(recursos[0].Ruta)
-              : null;
-
-            console.log("Recurso", recursos[0]);
-
+            const imagenUrl =
+              Array.isArray(recursos) && recursos.length > 0
+                ? getDriveImageUrl(recursos[0].Ruta)
+                : null;
 
             return {
               id: articulo.id,
               title: articulo.title,
               resumen: articulo.resumen,
               createdAt: articulo.createdAt,
-              status: articulo.status,
+              estatus: articulo.estatus,
               category: articulo.category,
               author,
               etiqueta: etiquetas.map((e: any) => e.Nombre),
@@ -118,9 +118,7 @@ export default function NoticesList() {
 
   return (
     <>
-      {loading && (
-        <SkeletonSchema grid={4} variant="noticias" />
-      )}
+      {loading && <SkeletonSchema grid={4} variant="noticias" />}
 
       {!loading && (
         <div className="grid md:grid-cols-2 gap-6">
@@ -147,18 +145,26 @@ export default function NoticesList() {
                   {news.category}
                 </span>
 
-                <h3 className="font-bold text-lg mb-1 line-clamp-2">{news.title}</h3>
+                <h3 className="font-bold text-lg mb-1 line-clamp-2">
+                  {news.title}
+                </h3>
 
-                <p className="text-sm text-gray-600 mb-3 line-clamp-3">{news.resumen}</p>
+                <p className="text-sm text-gray-600 mb-3 line-clamp-3">
+                  {news.resumen}
+                </p>
 
-                <div className="text-xs text-gray-500 mb-3 mt-auto">A. {news.author}</div>
+                <div className="text-xs text-gray-500 mb-3 mt-auto">
+                  A. {news.author}
+                </div>
 
                 {Array.isArray(news.etiqueta) && (
                   <div className="flex flex-wrap gap-2 mb-4">
                     {news.etiqueta.map((tag, i) => (
                       <span
                         key={i}
-                        className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getTagColor(tag)} max-w-xs truncate`}
+                        className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getTagColor(
+                          tag
+                        )} max-w-xs truncate`}
                       >
                         {tag}
                       </span>
