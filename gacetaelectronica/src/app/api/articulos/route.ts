@@ -61,7 +61,7 @@ LEFT JOIN Etiquetas e ON ae.Etiquetas_IdEtiqueta = e.IdEtiqueta
 
 LEFT JOIN Recursos r ON a.idArticulo = r.Articulos_idArticulo
 
-WHERE a.idArticulo = ?
+WHERE a.idArticulo = ? AND a.Estatus = 1
 GROUP BY a.idArticulo
 `,
         [id]
@@ -87,7 +87,7 @@ GROUP BY a.idArticulo
       `SELECT 
      a.IdArticulo AS id,
      a.Titulo AS title,
-     a.Resumen AS resumen,  -- ✅ NUEVO CAMPO
+     a.Resumen AS resumen,  
      DATE_FORMAT(a.FechaCreacion, '%Y-%m-%d') AS createdAt,
      CASE a.Estatus
        WHEN 1 THEN 'published'

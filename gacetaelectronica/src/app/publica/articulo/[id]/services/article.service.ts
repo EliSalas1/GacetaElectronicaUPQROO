@@ -1,19 +1,13 @@
 // src/services/article.service.ts
 
-// 1. Obtener artículos (GET)
-export async function getArticles(limit = 10, offset = 0) {
-    const res = await fetch(`/api/articulos?limit=${limit}&offset=${offset}`);
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
-  }
-  
-  // 2. Obtener un artículo por ID (GET)
-  export async function getArticleById(id: number) {
-    const res = await fetch(`/api/articulos?id=${id}`,);
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
-  }
-  
+
+// 2. Obtener un artículo por ID (GET)
+export async function getArticleById(id: number) {
+  const res = await fetch(`/api/articulos?id=${id}`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
   // 3. Crear artículo (POST)
   export async function createArticle(data: {
     Titulo: string;
