@@ -35,6 +35,8 @@ interface Articulo {
   Titulo: string;
   categoria: string;
   FechaCreacion: string;
+  Estatus: number;
+  Comentario?: string;
 }
 interface Usuario {
   idUsuarios: number;
@@ -48,7 +50,7 @@ export default function PendientesTab({ onViewArticle }: { onViewArticle?: (id: 
   const [autoresMap, setAutoresMap] = useState<Record<number, string>>({});
   const [feedbackModal, setFeedbackModal] = useState({
     isOpen: false,
-    articleId: null,
+    articleId: 0,
     articleTitle: "",
     authorName: "",
   });
@@ -108,11 +110,16 @@ export default function PendientesTab({ onViewArticle }: { onViewArticle?: (id: 
 
   const totalPages = Math.ceil(filteredArticulos.length / ITEMS_PER_PAGE);
   const currentItems = filteredArticulos.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   useEffect(() => setCurrentPage(1), [searchTerm, filterType, filterCategoria, filterAutor, filterDateFrom, filterDateTo]);
 
   const handleApproveArticle = async (id: number, title: string) => {
     try {
-      const res = await fetch(`/api/articulos?id=${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ Estatus: 1 }) });
+      const res = await fetch(`/api/articulos?id=${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ Estatus: 1 }),
+      });
       if (!res.ok) throw new Error();
       toast.success(`Artículo "${title}" aprobado correctamente`);
       setArticulos((p) => p.filter((a) => a.idArticulo !== id));
@@ -120,14 +127,53 @@ export default function PendientesTab({ onViewArticle }: { onViewArticle?: (id: 
       toast.error("Error al aprobar el artículo.");
     }
   };
-  const handleRejectArticle = async (id: number, title: string) => {
+
+  const handleRejectArticle = (art: Articulo) => {
+    if (!art.Comentario || art.Comentario.trim() === "") {
+      setFeedbackModal({
+        isOpen: true,
+        articleId: art.idArticulo,
+        articleTitle: art.Titulo,
+        authorName: autoresMap[art.idArticulo] ?? "Desconocido",
+      });
+    } else {
+      rejectWithStatus(art.idArticulo, art.Titulo);
+    }
+  };
+
+  const rejectWithStatus = async (id: number, title: string) => {
     try {
-      const res = await fetch(`/api/articulos?id=${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ Estatus: 2 }) });
+      const res = await fetch(`/api/articulos?id=${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ Estatus: 2 }),
+      });
       if (!res.ok) throw new Error();
       toast.success(`Artículo "${title}" rechazado correctamente`);
       setArticulos((p) => p.filter((a) => a.idArticulo !== id));
     } catch {
       toast.error("Error al rechazar el artículo.");
+    }
+  };
+
+  const handleFeedbackSubmit = async (comment: string) => {
+    try {
+      const res = await fetch(`/api/articulos?id=${feedbackModal.articleId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ Comentario: comment }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success("Comentario agregado al artículo (estatus sin cambios)");
+      setArticulos((prev) =>
+        prev.map((a) =>
+          a.idArticulo === feedbackModal.articleId ? { ...a, Comentario: comment } : a
+        )
+      );
+    } catch {
+      toast.error("Error al enviar el comentario.");
+    } finally {
+      setFeedbackModal({ isOpen: false, articleId: 0, articleTitle: "", authorName: "" });
     }
   };
 
@@ -171,27 +217,21 @@ export default function PendientesTab({ onViewArticle }: { onViewArticle?: (id: 
 
                   {filterType === "categoria" && (
                     <Select value={filterCategoria} onValueChange={setFilterCategoria}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder="Categoría" />
-                      </SelectTrigger>
+                      <SelectTrigger className="w-40"><SelectValue placeholder="Categoría" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Todos</SelectItem>
-                        {categoriasUnicas.map((cat) => (
-                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        {categoriasUnicas.map((c) => (
+                          <SelectItem key={c} value={c}>{c}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   )}
                   {filterType === "autor" && (
                     <Select value={filterAutor} onValueChange={setFilterAutor}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder="Autor" />
-                      </SelectTrigger>
+                      <SelectTrigger className="w-40"><SelectValue placeholder="Autor" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Todos</SelectItem>
-                        {autoresUnicos.map((autor) => (
-                          <SelectItem key={autor} value={autor}>{autor}</SelectItem>
-                        ))}
+                        {autoresUnicos.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   )}
@@ -221,47 +261,40 @@ export default function PendientesTab({ onViewArticle }: { onViewArticle?: (id: 
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {currentItems.length ? currentItems.map((a) => (
-                    <TableRow key={a.idArticulo}>
-                      <TableCell className="font-medium text-sm sm:text-base">{a.Titulo}</TableCell>
-                      <TableCell className="hidden sm:table-cell text-sm">{autoresMap[a.idArticulo] ?? "Cargando..."}</TableCell>
-                      <TableCell className="hidden md:table-cell text-sm">{a.categoria || "Sin categoría"}</TableCell>
-                      <TableCell className="hidden lg:table-cell text-sm">{new Date(a.FechaCreacion).toLocaleDateString("es-ES")}</TableCell>
+                  {currentItems.length ? currentItems.map((art) => (
+                    <TableRow key={art.idArticulo}>
+                      <TableCell className="font-medium text-sm sm:text-base">{art.Titulo}</TableCell>
+                      <TableCell className="hidden sm:table-cell text-sm">{autoresMap[art.idArticulo] ?? "Cargando..."}</TableCell>
+                      <TableCell className="hidden md:table-cell text-sm">{art.categoria || "Sin categoría"}</TableCell>
+                      <TableCell className="hidden lg:table-cell text-sm">{new Date(art.FechaCreacion).toLocaleDateString("es-ES")}</TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <Button variant="ghost" size="sm" onClick={() => onViewArticle?.(a.idArticulo)} className="h-8 w-8 p-0" title="Ver artículo"><Eye className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleApproveArticle(a.idArticulo, a.Titulo)} className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50" title="Aprobar artículo"><Check className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleRejectArticle(a.idArticulo, a.Titulo)} className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" title="Rechazar artículo"><X className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="sm" onClick={() => onViewArticle?.(art.idArticulo)} className="h-8 w-8 p-0" title="Ver artículo"><Eye className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleApproveArticle(art.idArticulo, art.Titulo)} className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50" title="Aprobar artículo"><Check className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleRejectArticle(art)} className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" title="Rechazar artículo"><X className="h-4 w-4" /></Button>
                         </div>
                       </TableCell>
                     </TableRow>
                   )) : (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No hay artículos pendientes de revisión</TableCell>
-                    </TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No hay artículos pendientes de revisión</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
             </div>
           </div>
-
-          {totalPages > 1 && (
-            <div className="flex justify-end mt-4 gap-2">
-              <Button size="sm" variant="outline" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>Anterior</Button>
-              <span className="text-sm flex items-center">Página {currentPage} de {totalPages}</span>
-              <Button size="sm" variant="outline" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>Siguiente</Button>
-            </div>
-          )}
         </CardContent>
       </Card>
 
-      <FeedbackModal
-        isOpen={feedbackModal.isOpen}
-        onClose={() => setFeedbackModal({ isOpen: false, articleId: null, articleTitle: "", authorName: "" })}
-        articleTitle={feedbackModal.articleTitle}
-        authorName={feedbackModal.authorName}
-        articleId={feedbackModal.articleId || 0}
-      />
+      {feedbackModal.isOpen && (
+        <FeedbackModal
+          isOpen={feedbackModal.isOpen}
+          onClose={() => setFeedbackModal({ isOpen: false, articleId: 0, articleTitle: "", authorName: "" })}
+          articleTitle={feedbackModal.articleTitle}
+          authorName={feedbackModal.authorName}
+          articleId={feedbackModal.articleId}
+          onSubmit={handleFeedbackSubmit}
+        />
+      )}
     </>
   );
 }

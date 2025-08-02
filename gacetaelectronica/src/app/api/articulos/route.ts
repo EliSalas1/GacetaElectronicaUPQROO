@@ -301,19 +301,18 @@ async function createArticleWithRelations(body: any) {
   }
 }
 
-// ✅ PUT: Actualizar artículo por ID
+// ✅ PUT: Actualizar artículo por ID (con soporte para Comentario)
 export async function PUT(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get('id');
     const body = await req.json();
-    
+
     // Verificar si es una actualización completa con recursos y etiquetas
     if (body.recursos || body.etiquetas) {
       return await updateArticleWithRelations(id || '', body);
     }
-    
-    // Actualización simple de artículo
-    const { Titulo, Resumen, Contenido, IdCategoria, Estatus } = body;
+
+    const { Titulo, Resumen, Contenido, IdCategoria, Estatus, Comentario } = body;
 
     if (!id || isNaN(Number(id))) {
       return new Response('ID válido requerido', { status: 400 });
@@ -321,6 +320,7 @@ export async function PUT(req: NextRequest) {
 
     const pool = await getConnection();
 
+    // Verifica que el artículo existe
     const [articuloExist] = await pool.query(
       'SELECT * FROM Articulos WHERE IdArticulo = ?', [id]
     ) as [any[], any];
@@ -328,6 +328,7 @@ export async function PUT(req: NextRequest) {
       return new Response('Artículo no encontrado', { status: 404 });
     }
 
+    // Verifica que la categoría existe si se está actualizando
     if (IdCategoria) {
       const [categoriaExist] = await pool.query(
         'SELECT * FROM Categorias WHERE IdCategoria = ?', [IdCategoria]
@@ -337,15 +338,20 @@ export async function PUT(req: NextRequest) {
       }
     }
 
+    // Construcción dinámica del UPDATE
     let query = 'UPDATE Articulos SET ';
-    const params = [];
-    const updates = [];
+    const params: any[] = [];
+    const updates: string[] = [];
 
-    if (Titulo) { updates.push('Titulo = ?'); params.push(Titulo.trim()); }
-    if (Resumen) { updates.push('Resumen = ?'); params.push(Resumen.trim()); }
-    if (Contenido) { updates.push('Contenido = ?'); params.push(Contenido.trim()); }
-    if (IdCategoria) { updates.push('IdCategoria = ?'); params.push(IdCategoria); }
+    if (Titulo)       { updates.push('Titulo = ?');        params.push(Titulo.trim()); }
+    if (Resumen)      { updates.push('Resumen = ?');       params.push(Resumen.trim()); }
+    if (Contenido)    { updates.push('Contenido = ?');     params.push(Contenido.trim()); }
+    if (IdCategoria)  { updates.push('IdCategoria = ?');   params.push(IdCategoria); }
     if (Estatus !== undefined) { updates.push('Estatus = ?'); params.push(Estatus); }
+    if (Comentario !== undefined) { 
+      updates.push('Comentario = ?'); 
+      params.push(Comentario.trim()); 
+    }
 
     if (updates.length === 0) {
       return new Response('No hay datos para actualizar', { status: 400 });
