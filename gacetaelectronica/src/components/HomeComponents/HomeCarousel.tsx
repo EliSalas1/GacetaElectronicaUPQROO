@@ -18,13 +18,14 @@ interface Usuario {
   idUsuarios: number;
   Nombre: string;
   Apellido?: string;
-
 }
 
 function getDriveImageUrl(driveUrl: string): string | null {
   const regex = /\/d\/([a-zA-Z0-9_-]+)/;
   const match = driveUrl.match(regex);
-  return match ? `https://drive.google.com/uc?export=preview&id=${match[1]}` : null;
+  return match
+    ? `https://drive.google.com/uc?export=preview&id=${match[1]}`
+    : null;
 }
 
 export default function HomeCarousel() {
@@ -40,31 +41,44 @@ export default function HomeCarousel() {
       "Convocatoria abierta para que estudiantes y docentes participen en la Gaceta Universitaria UPQROO.",
     createdAt: new Date().toLocaleDateString(),
     author: "Gaceta Electrónica",
-    imagenUrl: getDriveImageUrl("https://drive.google.com/file/d/1Ssyr7tHtrzwc7Mb88Kg_iVSlxp_1y0IW/view?usp=sharing"),
+    imagenUrl: getDriveImageUrl(
+      "https://drive.google.com/file/d/1Ssyr7tHtrzwc7Mb88Kg_iVSlxp_1y0IW/view?usp=sharing"
+    ),
   };
 
   useEffect(() => {
     async function fetchArticlesAndAuthorsAndImages() {
       try {
         setLoading(true);
-        const res = await fetch('/api/articulos?limit=4');
-        if (!res.ok) throw new Error('Error al obtener artículos');
+        // Ahora no usa cache para que siempre traiga datos frescos
+        const res = await fetch("/api/articulosPublicados?limit=4", {
+          cache: "no-store",
+        });
+        if (!res.ok) throw new Error("Error al obtener artículos");
         const data: Article[] = await res.json();
 
         const articlesWithDetails = await Promise.all(
           data.map(async (article) => {
-            const resUsers = await fetch(`/api/articuloUsuario?articuloId=${article.id}`);
-            if (!resUsers.ok) throw new Error('Error al obtener autores');
+            const resUsers = await fetch(
+              `/api/articuloUsuario?articuloId=${article.id}`
+            );
+            if (!resUsers.ok) throw new Error("Error al obtener autores");
             const users: Usuario[] = await resUsers.json();
-            const authorName = users.length > 0
-              ? `${users[0].Nombre} ${users[0].Apellido ?? ''}`.trim()
-              : "Sin autor";
+            const authorName =
+              users.length > 0
+                ? `${users[0].Nombre} ${users[0].Apellido ?? ""}`.trim()
+                : "Sin autor";
 
-            const resRecursos = await fetch(`/api/recursos?articuloId=${article.id}`);
+            const resRecursos = await fetch(
+              `/api/recursos?articuloId=${article.id}`
+            );
             const recursos = resRecursos.ok ? await resRecursos.json() : [];
-            const imagenUrl = Array.isArray(recursos) && recursos.length > 0
-              ? getDriveImageUrl(recursos[0].Ruta || recursos[0].ruta || recursos[0].url || "")
-              : null;
+            const imagenUrl =
+              Array.isArray(recursos) && recursos.length > 0
+                ? getDriveImageUrl(
+                    recursos[0].Ruta || recursos[0].ruta || recursos[0].url || ""
+                  )
+                : null;
 
             return {
               ...article,
@@ -87,10 +101,9 @@ export default function HomeCarousel() {
   useEffect(() => {
     if (articles.length === 0) return;
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => {
-        if (prev === allSlides.length - 1) return 0;
-        return prev + 1;
-      });
+      setCurrentSlide((prev) =>
+        prev === allSlides.length - 1 ? 0 : prev + 1
+      );
     }, 7000);
     return () => clearInterval(interval);
   }, [articles]);
@@ -109,7 +122,9 @@ export default function HomeCarousel() {
             className="flex transition-transform duration-500 ease-in-out w-full"
             style={{
               width: `${allSlides.length * 100}%`,
-              transform: `translateX(-${currentSlide * (100 / allSlides.length)}%)`,
+              transform: `translateX(-${
+                currentSlide * (100 / allSlides.length)
+              }%)`,
             }}
           >
             {allSlides.map((item, index) => (
@@ -123,7 +138,9 @@ export default function HomeCarousel() {
                     {item.category}
                   </span>
                   <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
-                  <p className="text-gray-600 text-sm mb-2 line-clamp-3">{item.resumen}</p>
+                  <p className="text-gray-600 text-sm mb-2 line-clamp-3">
+                    {item.resumen}
+                  </p>
                   <div className="text-xs text-gray-500 mb-3">
                     A. {item.author} • {item.createdAt}
                   </div>
@@ -160,10 +177,11 @@ export default function HomeCarousel() {
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${currentSlide === index
-              ? "bg-orange-500 scale-105"
-              : "bg-gray-400 hover:bg-gray-500"
-              }`}
+            className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+              currentSlide === index
+                ? "bg-orange-500 scale-105"
+                : "bg-gray-400 hover:bg-gray-500"
+            }`}
             aria-label={`Ir a la noticia ${index + 1}`}
           />
         ))}
