@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,14 +8,14 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 import { Plus, Pencil, Trash, Check } from "lucide-react";
 import { toast } from "sonner";
@@ -26,6 +26,30 @@ export default function NuevoUsuariosDialog() {
   const [usuarios, setUsuarios] = useState<UserInterface[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Estado local para los roles editados
+  const [roles, setRoles] = useState<{ [key: number]: string }>({});
+
+  const handleDelete = async (id: number) => {
+    const usuario = usuarios.find((u) => u.idUsuarios === id);
+    if (!usuario) return;
+
+    if (!confirm(`¿Estás seguro de eliminar al usuario ${usuario.Nombre}?`))
+      return;
+
+    try {
+      const res = await fetch(`/api/usuarios?id=${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error(await res.text());
+
+      toast.success(`Usuario ${usuario.Nombre} eliminado`);
+      setUsuarios((prev) => prev.filter((u) => u.idUsuarios !== id));
+    } catch (err: any) {
+      toast.error("Error al eliminar usuario: " + err.message);
+    }
+  };
+
   const fetchUsuarios = async () => {
     try {
       setLoading(true);
@@ -33,7 +57,7 @@ export default function NuevoUsuariosDialog() {
       if (!res.ok) throw new Error("Error al obtener usuarios");
 
       const data: UserInterface[] = await res.json();
-      const soloUsuarios = data.filter(u => u.Rol === "Usuario");
+      const soloUsuarios = data.filter((u) => u.Rol === "Usuario");
       setUsuarios(soloUsuarios);
     } catch {
       toast.error("No se pudieron cargar los usuarios");
@@ -43,44 +67,46 @@ export default function NuevoUsuariosDialog() {
   };
 
   useEffect(() => {
-    if (isDialogOpen) {
-      fetchUsuarios();
-    }
+    if (isDialogOpen) fetchUsuarios();
   }, [isDialogOpen]);
 
   const handleUpdateRolLocal = (id: number, newRol: string) => {
-    setUsuarios(prev =>
-      prev.map(u => (u.idUsuarios === id ? { ...u, Rol: newRol } : u))
-    );
-  };
-
-  const handleDelete = (id: number) => {
-    setUsuarios(prev => prev.filter(u => u.idUsuarios !== id));
-  };
-
-  const handleEdit = (id: number) => {
-    const usuario = usuarios.find(u => u.idUsuarios === id);
-    if (usuario) {
-      alert(`Editar usuario: ${usuario.Nombre}`);
-    }
+    setRoles((prev) => ({
+      ...prev,
+      [id]: newRol,
+    }));
   };
 
   const handleAccept = async (id: number) => {
-    const usuario = usuarios.find(u => u.idUsuarios === id);
-    if (usuario) {
-      try {
-        const res = await fetch(`/api/usuarios?id=${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...usuario, Rol: usuario.Rol }),
-        });
+    const usuario = usuarios.find((u) => u.idUsuarios === id);
+    const nuevoRol = roles[id];
 
-        if (!res.ok) throw new Error(await res.text());
-        toast.success(`Rol actualizado para ${usuario.Nombre}`);
-        setUsuarios(prev => prev.filter(u => u.idUsuarios !== id));
-      } catch (err: any) {
-        toast.error("Error al actualizar usuario: " + err.message);
-      }
+    if (!usuario || !nuevoRol) {
+      toast.error("Usuario o rol inválido.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/usuarios?id=${usuario.idUsuarios}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          Nombre: usuario.Nombre,
+          Apellido: usuario.Apellido,
+          Correo: usuario.Correo,
+          Rol: nuevoRol,
+          Estado: usuario.Estado,
+          // No se envía la contraseña (el backend ya no la requiere)
+        }),
+      });
+
+      if (!res.ok) throw new Error(await res.text());
+
+      toast.success(`Rol actualizado para ${usuario.Nombre}`);
+      // Remueve al usuario de la tabla ya que cambió de rol
+      setUsuarios((prev) => prev.filter((u) => u.idUsuarios !== id));
+    } catch (err: any) {
+      toast.error("Error al actualizar usuario: " + err.message);
     }
   };
 
@@ -95,7 +121,10 @@ export default function NuevoUsuariosDialog() {
       <DialogContent className="!max-w-none !w-2xl">
         <DialogHeader>
           <DialogTitle>Usuarios</DialogTitle>
-          <DialogDescription>Lista de usuarios con rol Usuario</DialogDescription>
+          <DialogDescription>
+            Lista de usuarios con rol <strong>Usuario</strong> para reasignar
+            rol.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="overflow-x-auto w-full flex justify-center">
@@ -104,7 +133,7 @@ export default function NuevoUsuariosDialog() {
               <tr>
                 <th className="p-2 border-b">Nombre</th>
                 <th className="p-2 border-b">Email</th>
-                <th className="p-2 border-b">Rol</th>
+                <th className="p-2 border-b">Nuevo Rol</th>
                 <th className="p-2 border-b">Acciones</th>
               </tr>
             </thead>
@@ -128,11 +157,13 @@ export default function NuevoUsuariosDialog() {
                     <td className="p-2 border-b">{usuario.Correo}</td>
                     <td className="p-2 border-b">
                       <Select
-                        value={usuario.Rol}
-                        onValueChange={(val) => handleUpdateRolLocal(usuario.idUsuarios, val)}
+                        value={roles[usuario.idUsuarios] || ""}
+                        onValueChange={(val) =>
+                          handleUpdateRolLocal(usuario.idUsuarios, val)
+                        }
                       >
                         <SelectTrigger className="w-40">
-                          <SelectValue />
+                          <SelectValue placeholder="Selecciona un rol" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Autor">Autor</SelectItem>
@@ -141,15 +172,20 @@ export default function NuevoUsuariosDialog() {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="p-2 border-b space-x-2">
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(usuario.idUsuarios)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleDelete(usuario.idUsuarios)}>
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" onClick={() => handleAccept(usuario.idUsuarios)}>
+                    <td className="p-2 border-b">
+                      <Button
+                        size="sm"
+                        onClick={() => handleAccept(usuario.idUsuarios)}
+                        disabled={!roles[usuario.idUsuarios]}
+                      >
                         <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDelete(usuario.idUsuarios)}
+                      >
+                        <Trash className="h-4 w-4" />
                       </Button>
                     </td>
                   </tr>

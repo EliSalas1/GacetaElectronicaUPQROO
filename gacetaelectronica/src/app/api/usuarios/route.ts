@@ -75,31 +75,45 @@ export async function PUT(req: NextRequest) {
     const id = req.nextUrl.searchParams.get('id');
     const { Nombre, Apellido, Correo, Rol, Estado, Contraseña } = await req.json();
 
-    if (!id || isNaN(Number(id)) || !Nombre || !Apellido || !Correo || !Rol || Estado === undefined || !Contraseña) {
-      return new Response('ID válido y todos los campos son requeridos', { status: 400 });
+    if (!id || isNaN(Number(id)) || !Nombre || !Apellido || !Correo || !Rol || Estado === undefined) {
+      return new Response('ID válido y campos requeridos (excepto contraseña)', { status: 400 });
     }
 
     const pool = await getConnection();
 
+    // Verifica que el usuario exista
     const [user] = await pool.query('SELECT * FROM Usuarios WHERE idUsuarios = ?', [id]) as [any[], any];
     if (user.length === 0) {
       return new Response('Usuario no encontrado', { status: 404 });
     }
 
+    // Verifica que no haya otro usuario con el mismo correo
     const [duplicate] = await pool.query(
       'SELECT * FROM Usuarios WHERE Correo = ? AND idUsuarios != ?',
       [Correo.trim(), id]
     ) as [any[], any];
+
     if (duplicate.length > 0) {
       return new Response('Ya existe otro usuario con ese correo', { status: 409 });
     }
 
-    await pool.query(
-      `UPDATE Usuarios
-       SET Nombre = ?, Apellido = ?, Correo = ?, Rol = ?, Estado = ?, Contraseña = ?
-       WHERE idUsuarios = ?`,
-      [Nombre.trim(), Apellido.trim(), Correo.trim(), Rol.trim(), Estado, Contraseña.trim(), id]
-    );
+    let query = `
+      UPDATE Usuarios
+      SET Nombre = ?, Apellido = ?, Correo = ?, Rol = ?, Estado = ?
+    `;
+    const params = [Nombre.trim(), Apellido.trim(), Correo.trim(), Rol.trim(), Estado];
+
+    if (Contraseña && Contraseña.trim()) {
+      // Hashear si se proporciona nueva contraseña
+      const hashedPassword = await bcrypt.hash(Contraseña.trim(), 10);
+      query += `, Contraseña = ?`;
+      params.push(hashedPassword);
+    }
+
+    query += ` WHERE idUsuarios = ?`;
+    params.push(id);
+
+    await pool.query(query, params);
 
     return Response.json({ message: 'Usuario actualizado correctamente' });
   } catch (err) {
@@ -108,26 +122,45 @@ export async function PUT(req: NextRequest) {
   }
 }
 
+
 // ✅ DELETE - Eliminar usuario
 export async function DELETE(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get('id');
+    console.log("ID recibido en DELETE:", id);
+
     if (!id || isNaN(Number(id))) {
       return new Response('ID válido requerido para eliminar usuario', { status: 400 });
     }
 
     const pool = await getConnection();
 
-    const [user] = await pool.query('SELECT * FROM Usuarios WHERE idUsuarios = ?', [id]) as [any[], any];
+    // Verificar existencia del usuario
+    const [user] = await pool.query(
+      'SELECT * FROM Usuarios WHERE idUsuarios = ?',
+      [id]
+    ) as [any[], any];
+
     if (user.length === 0) {
       return new Response('Usuario no encontrado', { status: 404 });
     }
 
-    await pool.query('DELETE FROM Usuarios WHERE idUsuarios = ?', [id]);
+    // Eliminar registros relacionados en UsuarioLogro
+    await pool.query(
+      'DELETE FROM UsuarioLogro WHERE Usuarios_idUsuarios = ?',
+      [id]
+    );
 
-    return Response.json({ message: 'Usuario eliminado correctamente' });
-  } catch (err) {
-    console.error('Error en DELETE usuarios:', err);
-    return new Response('Error al eliminar usuario', { status: 500 });
+    // Luego eliminar el usuario
+    await pool.query(
+      'DELETE FROM Usuarios WHERE idUsuarios = ?',
+      [id]
+    );
+
+    return Response.json({ message: 'Usuario eliminado correctamente (y sus relaciones)' });
+
+  } catch (err: any) {
+    console.error('Error en DELETE usuarios:', err.message);
+    return new Response(`Error al eliminar usuario: ${err.message}`, { status: 500 });
   }
 }
