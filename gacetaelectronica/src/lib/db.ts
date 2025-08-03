@@ -8,6 +8,7 @@ declare global {
   var _tunnelEstablished: boolean | null;
 }
 
+
 let sshProcess: ChildProcess | null = global._sshProcess || null;
 let tunnelEstablished: boolean = global._tunnelEstablished || false;
 
@@ -20,6 +21,7 @@ const dbConfig = {
   waitForConnections: true,
   connectionLimit: 10, // usa un número razonable
   queueLimit: 0,
+  
 };
 
 // Abrir túnel SSH

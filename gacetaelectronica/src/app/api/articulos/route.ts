@@ -40,8 +40,9 @@ export async function GET(req: NextRequest) {
   DATE_FORMAT(a.FechaRevision, '%Y-%m-%d') AS reviewedAt,
   a.Comentario AS comment,
   CASE a.Estatus
+    WHEN 0 THEN 'pending'
     WHEN 1 THEN 'published'
-    WHEN 2 THEN 'pending'
+    WHEN 2 THEN 'rejected'
     ELSE 'unknown'
   END AS status,
   COALESCE(c.Nombre, 'Sin Categoría') AS Categoria,
@@ -61,7 +62,7 @@ LEFT JOIN Etiquetas e ON ae.Etiquetas_IdEtiqueta = e.IdEtiqueta
 
 LEFT JOIN Recursos r ON a.idArticulo = r.Articulos_idArticulo
 
-WHERE a.idArticulo = ?
+WHERE a.idArticulo = ? AND a.Estatus = 1
 GROUP BY a.idArticulo
 `,
         [id]
@@ -74,40 +75,50 @@ GROUP BY a.idArticulo
       return Response.json(rows[0]);
     }
 
-    // Si no hay ID, hacer consulta paginada
+    // Si no hay ID, hacer consulta paginada o completa
+    const limit = req.nextUrl.searchParams.get('limit');
+    const offset = req.nextUrl.searchParams.get('offset');
 
-    const limit = parseInt(req.nextUrl.searchParams.get('limit') || '10');
-    const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0');
+    let query = `
+      SELECT 
+        a.IdArticulo AS id,
+        a.Titulo AS title,
+        a.Resumen AS resumen,
+        DATE_FORMAT(a.FechaCreacion, '%Y-%m-%d') AS createdAt,
+        CASE a.Estatus
+          WHEN 0 THEN 'pending'
+          WHEN 1 THEN 'published'
+          WHEN 2 THEN 'rejected'
+          ELSE 'unknown'
+        END AS status,
+        COALESCE(c.Nombre, 'Sin Categoría') AS category,
+        COALESCE(u.Nombre, 'Sin autor') AS author
+      FROM Articulos a
+      LEFT JOIN Categorias c ON a.IdCategoria = c.IdCategoria
+      LEFT JOIN (
+        SELECT DISTINCT Articulos_idArticulo, Usuarios_idUsuarios
+        FROM ArticuloUsuario
+        LIMIT 1
+      ) au ON a.IdArticulo = au.Articulos_idArticulo
+      LEFT JOIN Usuarios u ON au.Usuarios_idUsuarios = u.idUsuarios
+      ORDER BY a.FechaCreacion DESC
+    `;
 
-    if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
-      return new Response('Parámetros de paginación inválidos', { status: 400 });
+    let params: any[] = [];
+
+    if (limit && offset) {
+      const limitNum = parseInt(limit);
+      const offsetNum = parseInt(offset);
+      
+      if (isNaN(limitNum) || isNaN(offsetNum) || limitNum < 0 || offsetNum < 0) {
+        return new Response('Parámetros de paginación inválidos', { status: 400 });
+      }
+      
+      query += ' LIMIT ? OFFSET ?';
+      params = [limitNum, offsetNum];
     }
 
-    const [rows] = await pool.query(
-      `SELECT 
-     a.IdArticulo AS id,
-     a.Titulo AS title,
-     a.Resumen AS resumen,  -- ✅ NUEVO CAMPO
-     DATE_FORMAT(a.FechaCreacion, '%Y-%m-%d') AS createdAt,
-     CASE a.Estatus
-       WHEN 1 THEN 'published'
-       WHEN 2 THEN 'pending'
-       ELSE 'unknown'
-     END AS status,
-     COALESCE(c.Nombre, 'Sin Categoría') AS category,
-     COALESCE(u.Nombre, 'Sin autor') AS author
-   FROM Articulos a
-   LEFT JOIN Categorias c ON a.IdCategoria = c.IdCategoria
-   LEFT JOIN (
-     SELECT DISTINCT Articulos_idArticulo, Usuarios_idUsuarios
-     FROM ArticuloUsuario
-     LIMIT 1
-   ) au ON a.IdArticulo = au.Articulos_idArticulo
-   LEFT JOIN Usuarios u ON au.Usuarios_idUsuarios = u.idUsuarios
-   ORDER BY a.FechaCreacion DESC
-   LIMIT ? OFFSET ?`,
-      [limit, offset]
-    );
+    const [rows] = await pool.query(query, params);
 
     return Response.json(rows);
   } catch (err) {
@@ -149,7 +160,7 @@ export async function POST(req: NextRequest) {
     // Inserta el nuevo artículo
     const [result] = await pool.query(
       `INSERT INTO Articulos (Titulo, Resumen, Contenido, IdCategoria, FechaCreacion, Estatus)
-       VALUES (?, ?, ?, ?, NOW(), 1)`,
+       VALUES (?, ?, ?, ?, NOW(), 0)`,
       [Titulo.trim(), Resumen.trim(), Contenido.trim(), IdCategoria]
     );
 
@@ -202,7 +213,7 @@ async function createArticleWithRelations(body: any) {
     // Inserta el nuevo artículo
     const [result] = await connection.query(
       `INSERT INTO Articulos (Titulo, Resumen, Contenido, IdCategoria, FechaCreacion, Estatus)
-       VALUES (?, ?, ?, ?, NOW(), 1)`,
+       VALUES (?, ?, ?, ?, NOW(), 0)`,
       [Titulo.trim(), Resumen.trim(), Contenido.trim(), IdCategoria]
     );
 
@@ -301,19 +312,16 @@ async function createArticleWithRelations(body: any) {
   }
 }
 
-// ✅ PUT: Actualizar artículo por ID
 export async function PUT(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get('id');
     const body = await req.json();
-    
-    // Verificar si es una actualización completa con recursos y etiquetas
+
     if (body.recursos || body.etiquetas) {
       return await updateArticleWithRelations(id || '', body);
     }
-    
-    // Actualización simple de artículo
-    const { Titulo, Resumen, Contenido, IdCategoria, Estatus } = body;
+
+    const { Titulo, Resumen, Contenido, IdCategoria, Estatus, Comentario, FechaRevision } = body;
 
     if (!id || isNaN(Number(id))) {
       return new Response('ID válido requerido', { status: 400 });
@@ -338,14 +346,16 @@ export async function PUT(req: NextRequest) {
     }
 
     let query = 'UPDATE Articulos SET ';
-    const params = [];
-    const updates = [];
+    const params: any[] = [];
+    const updates: string[] = [];
 
     if (Titulo) { updates.push('Titulo = ?'); params.push(Titulo.trim()); }
     if (Resumen) { updates.push('Resumen = ?'); params.push(Resumen.trim()); }
     if (Contenido) { updates.push('Contenido = ?'); params.push(Contenido.trim()); }
     if (IdCategoria) { updates.push('IdCategoria = ?'); params.push(IdCategoria); }
     if (Estatus !== undefined) { updates.push('Estatus = ?'); params.push(Estatus); }
+    if (Comentario !== undefined) { updates.push('Comentario = ?'); params.push(Comentario.trim()); }
+    if (FechaRevision !== undefined) { updates.push('FechaRevision = NOW()'); }
 
     if (updates.length === 0) {
       return new Response('No hay datos para actualizar', { status: 400 });

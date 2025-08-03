@@ -2,23 +2,35 @@ import { NextRequest } from 'next/server';
 import getConnection from '@/lib/db';
 
 // ✅ GET: Obtener todos los eventos o uno por ID
+// GET: Obtener eventos con paginación
 export async function GET(req: NextRequest) {
   try {
     const pool = await getConnection();
-    const id = req.nextUrl.searchParams.get('id');
+    
+    // Parámetros de paginación opcionales
+    const limit = req.nextUrl.searchParams.get('limit');
+    const offset = req.nextUrl.searchParams.get('offset');
 
-    if (id) {
-      const [rows] = await pool.query('SELECT * FROM Evento WHERE IdEvento = ?', [id]) as [any[], any];
-      if (rows.length === 0) {
-        return new Response('Evento no encontrado', { status: 404 });
+    let query = 'SELECT * FROM Evento';
+    let params: any[] = [];
+
+    if (limit && offset) {
+      const limitNum = parseInt(limit);
+      const offsetNum = parseInt(offset);
+      
+      if (isNaN(limitNum) || isNaN(offsetNum) || limitNum < 0 || offsetNum < 0) {
+        return new Response('Parámetros de paginación inválidos', { status: 400 });
       }
-      return Response.json(rows[0]);
-    } else {
-      const [rows] = await pool.query('SELECT * FROM Evento') as [any[], any];
-      return Response.json(rows);
+      
+      query += ' LIMIT ? OFFSET ?';
+      params = [limitNum, offsetNum];
     }
+    
+    const [rows] = await pool.query(query, params) as [any[], any];
+    
+    return Response.json(rows);
   } catch (err) {
-    console.error('Error en GET eventos:', err);
+    console.error('Error al obtener eventos:', err);
     return new Response('Error al obtener eventos', { status: 500 });
   }
 }
@@ -57,7 +69,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ✅ PUT: Actualizar evento por ID
 export async function PUT(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get('id');
@@ -69,11 +80,13 @@ export async function PUT(req: NextRequest) {
 
     const pool = await getConnection();
 
+    // Verificar si el evento existe
     const [exists] = await pool.query('SELECT * FROM Evento WHERE IdEvento = ?', [id]) as [any[], any];
     if (exists.length === 0) {
       return new Response('Evento no encontrado', { status: 404 });
     }
 
+    // Verificar si el nombre ya está registrado
     const [duplicate] = await pool.query(
       'SELECT * FROM Evento WHERE Nombre = ? AND IdEvento != ?',
       [nombre.trim(), id]
@@ -82,6 +95,7 @@ export async function PUT(req: NextRequest) {
       return new Response('Ya existe otro evento con ese nombre', { status: 409 });
     }
 
+    // Actualizar el evento
     await pool.query(
       `UPDATE Evento
        SET Nombre = ?, DesCorta = ?, DesLarga = ?, Fecha = ?, Hora = ?, Lugar = ?
@@ -91,10 +105,11 @@ export async function PUT(req: NextRequest) {
 
     return Response.json({ message: 'Evento actualizado' });
   } catch (err) {
-    console.error('Error en PUT eventos:', err);
+    console.error('Error al actualizar evento:', err);
     return new Response('Error al actualizar evento', { status: 500 });
   }
 }
+
 
 // ✅ DELETE: Eliminar evento por ID
 export async function DELETE(req: NextRequest) {
@@ -105,11 +120,17 @@ export async function DELETE(req: NextRequest) {
     }
 
     const pool = await getConnection();
+
+    // Eliminar las filas relacionadas en UsuarioEvento
+    await pool.query('DELETE FROM UsuarioEvento WHERE Evento_IdEvento = ?', [id]);
+
+    // Verificar si el evento existe
     const [exists] = await pool.query('SELECT * FROM Evento WHERE IdEvento = ?', [id]) as [any[], any];
     if (exists.length === 0) {
       return new Response('Evento no encontrado', { status: 404 });
     }
 
+    // Eliminar el evento
     await pool.query('DELETE FROM Evento WHERE IdEvento = ?', [id]);
 
     return Response.json({ message: 'Evento eliminado' });

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import ArticleCard from "@/components/CategoriasComponents/articleCards";
 
 const categoryTitles = {
-  ciencia: "Ciencia y Tecnología",
+  ciencia: "Ciencia y Tecnologías",
   humanidades: "Humanidades",
   social: "Social y Política",
   logros: "Logros",
