@@ -217,46 +217,41 @@ export default function ArticleEditor({ editMode = false, articleData, onArticle
   }
 
   const handleSubmitForReview = async () => {
-    try {
-      // Validar que se hayan completado los campos requeridos
-      if (!title.trim()) {
-        toast.error("El título es requerido")
-        return
-      }
-
-      if (!summary.trim()) {
-        toast.error("El resumen es requerido")
-        return
-      }
-
-      if (!content.trim()) {
-        toast.error("El contenido es requerido")
-        return
-      }
-
-      if (!category) {
-        toast.error("Debes seleccionar una categoría")
-        return
-      }
-
-      // Validar que la categoría existe
-      const selectedCategory = categories.find(cat => cat.IdCategoria.toString() === category)
-      if (!selectedCategory) {
-        toast.error("Categoría inválida seleccionada")
-        return
-      }
-
-      // Validar que se haya agregado al menos 1 recurso de Google Drive
-      if (googleDriveResources.length === 0) {
-        toast.error("Debes agregar al menos 1 recurso de Google Drive", {
-          description: "Haz clic en 'Agregar Recursos de Google Drive' para añadir imágenes, videos o documentos"
-        })
-        return
-      }
-
-      // Mostrar loading
-      toast.loading(editMode ? "Actualizando artículo..." : "Enviando artículo...")
-
+    // Validar campos antes de enviar
+    if (!title.trim()) {
+      toast.error("El título es requerido")
+      return
+    }
+  
+    if (!summary.trim()) {
+      toast.error("El resumen es requerido")
+      return
+    }
+  
+    if (!content.trim()) {
+      toast.error("El contenido es requerido")
+      return
+    }
+  
+    if (!category) {
+      toast.error("Debes seleccionar una categoría")
+      return
+    }
+  
+    const selectedCategory = categories.find(cat => cat.IdCategoria.toString() === category)
+    if (!selectedCategory) {
+      toast.error("Categoría inválida seleccionada")
+      return
+    }
+  
+    if (googleDriveResources.length === 0) {
+      toast.error("Debes agregar al menos 1 recurso de Google Drive", {
+        description: "Haz clic en 'Agregar Recursos de Google Drive' para añadir imágenes, videos o documentos"
+      })
+      return
+    }
+  
+    await toast.promise(async () => {
       // Preparar datos del artículo
       const articuloData = {
         Titulo: title.trim(),
@@ -265,94 +260,70 @@ export default function ArticleEditor({ editMode = false, articleData, onArticle
         IdCategoria: parseInt(category),
         usuarioId: userInfo?.id
       }
-
-      // Preparar recursos de Google Drive si existen
-      const recursos = googleDriveResources.length > 0 ? 
-        googleDriveResources.map(resource => ({
-          idRecurso: resource.idRecurso,
-          nombre: resource.nombre,
-          ruta: resource.ruta,
-        })) : undefined
-
-      // Preparar etiquetas si existen
+  
+      const recursos = googleDriveResources.map(resource => ({
+        idRecurso: resource.idRecurso,
+        nombre: resource.nombre,
+        ruta: resource.ruta,
+      }))
+  
       let etiquetas = undefined
       if (tags.length > 0) {
         try {
-          console.log('Etiquetas seleccionadas:', tags)
-          // Obtener IDs de etiquetas por nombre
           const etiquetasResponse = await fetch('/api/etiquetas')
           if (etiquetasResponse.ok) {
             const etiquetasDisponibles = await etiquetasResponse.json()
-            console.log('Etiquetas disponibles en BD:', etiquetasDisponibles)
-            
-            // Mapear nombres de etiquetas a IDs
             const etiquetaIds = tags.map(tagName => {
-              const etiqueta = etiquetasDisponibles.find((e: any) => 
+              const etiqueta = etiquetasDisponibles.find((e: any) =>
                 e.Nombre.toLowerCase() === tagName.toLowerCase()
               )
-              console.log(`Buscando etiqueta "${tagName}":`, etiqueta)
               return etiqueta ? etiqueta.IdEtiqueta : null
             }).filter(id => id !== null)
-
-            console.log('IDs de etiquetas encontrados:', etiquetaIds)
-            if (etiquetaIds.length > 0) {
-              etiquetas = etiquetaIds
-            }
+            if (etiquetaIds.length > 0) etiquetas = etiquetaIds
           }
         } catch (error) {
           console.error("Error al obtener etiquetas:", error)
-          // Continuamos sin etiquetas
         }
       }
-
+  
       const requestBody = {
         ...articuloData,
         recursos,
         etiquetas
       }
-      console.log('Enviando datos al servidor:', requestBody)
-
+  
       let response
       if (editMode && articleData) {
-        // Actualizar artículo existente
         response = await fetch(`/api/articulos?id=${articleData.IdArticulo}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestBody),
         })
       } else {
-        // Crear nuevo artículo
         response = await fetch('/api/articulos', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestBody),
         })
       }
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        toast.error(`Error al ${editMode ? 'actualizar' : 'enviar'} artículo: ${errorData.message || 'Error desconocido'}`)
-        return
-      }
-
+  
       const result = await response.json()
-      console.log(editMode ? "Artículo actualizado correctamente:" : "Artículo enviado correctamente:", result)
-
+  
+      if (!response.ok) {
+        throw new Error(result.message || "Error desconocido")
+      }
+  
+      // Mostrar toast final según el modo
       toast.success(editMode ? "Artículo actualizado correctamente" : "Artículo enviado correctamente", {
         description: editMode 
           ? `Tu artículo ha sido actualizado${result.recursosGuardados ? ` con ${result.recursosGuardados} recursos` : ''}${result.etiquetasGuardadas ? ` y ${result.etiquetasGuardadas} etiquetas` : ''}`
-          : `Tu artículo ha sido enviado para revisión${result.recursosGuardados ? ` con ${result.recursosGuardados} recursos` : ''}${result.etiquetasGuardadas ? ` y ${result.etiquetasGuardadas} etiquetas` : ''}`,
+          : `Tu artículo ha sido enviado para revisión${result.recursosGuardados ? ` con ${result.recursosGuardados} recursos` : ''}${result.etiquetasGuardadas ? ` y ${result.etiquetasGuardadas} etiquetas` : ''}`
       })
-
-      // Si estamos en modo edición, llamar al callback para regresar a "Mis artículos"
+  
+      // Limpiar formulario o ejecutar callback
       if (editMode && onArticleUpdated) {
         onArticleUpdated()
       } else {
-        // Limpiar el formulario solo si no estamos en modo edición
         setTitle("")
         setSummary("")
         setContent("")
@@ -360,12 +331,14 @@ export default function ArticleEditor({ editMode = false, articleData, onArticle
         setTags([])
         setGoogleDriveResources([])
       }
-
-    } catch (error) {
-      toast.error(`Error al ${editMode ? 'actualizar' : 'enviar'} el artículo`)
-      console.error("Error:", error)
-    }
+  
+    }, {
+      loading: editMode ? "Actualizando artículo..." : "Enviando artículo...",
+      success: false, // para evitar duplicar mensaje si usamos toast.success() nosotros mismos
+      error: (err: any) => `Error al ${editMode ? 'actualizar' : 'enviar'} artículo: ${err.message}`
+    })
   }
+  
 
   const handleSummaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value

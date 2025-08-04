@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
     WHEN 2 THEN 'rejected'
     ELSE 'unknown'
   END AS status,
+  a.IdCategoria AS IdCategoria,
   COALESCE(c.Nombre, 'Sin Categoría') AS Categoria,
   COALESCE(u.Nombre, 'Sin autor') AS Autor,
   GROUP_CONCAT(DISTINCT e.Nombre) AS Etiqueta,
@@ -62,7 +63,7 @@ LEFT JOIN Etiquetas e ON ae.Etiquetas_IdEtiqueta = e.IdEtiqueta
 
 LEFT JOIN Recursos r ON a.idArticulo = r.Articulos_idArticulo
 
-WHERE a.idArticulo = ? AND a.Estatus = 1
+WHERE a.idArticulo = ?
 GROUP BY a.idArticulo
 `,
         [id]
