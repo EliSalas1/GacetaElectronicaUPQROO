@@ -29,21 +29,21 @@ export async function getArticulos(filters?: {
   
   let query = `
     SELECT 
-      a.IdArticulo AS id,
-      a.Titulo AS titulo,
-      a.Resumen AS resumen,
-      a.Contenido AS contenido,
-      a.FechaCreacion AS fecha_creacion,
-      a.Estatus AS estado,
-      c.IdCategoria AS categoria_id,
-      c.Nombre AS categoria_nombre,
-      u.IdUsuarios AS autor_id,
-      CONCAT(u.Nombre, ' ', u.Apellido) AS autor_nombre
-    FROM Articulos a
-    LEFT JOIN Categorias c ON a.IdCategoria = c.IdCategoria
-    LEFT JOIN ArticuloUsuario au ON a.IdArticulo = au.Articulos_idArticulo
-    LEFT JOIN Usuarios u ON au.Usuarios_idUsuarios = u.IdUsuarios
-    WHERE 1=1
+    a.IdArticulo AS id,
+    a.Titulo AS titulo,
+    a.Resumen AS resumen,
+    a.Contenido AS contenido,
+    a.FechaCreacion AS fecha_creacion,
+    a.Estatus AS estado,
+    c.IdCategoria AS categoria_id,
+    c.Nombre AS categoria_nombre,
+    u.IdUsuarios AS autor_id,
+    CONCAT(u.Nombre, ' ', u.Apellido) AS autor_nombre
+  FROM Articulos a
+  LEFT JOIN Categorias c ON a.IdCategoria = c.IdCategoria
+  LEFT JOIN ArticuloUsuario au ON a.IdArticulo = au.Articulos_idArticulo
+  LEFT JOIN Usuarios u ON au.Usuarios_idUsuarios = u.IdUsuarios
+  WHERE a.Estatus = 1
   `;
 
   const params: any[] = [];
