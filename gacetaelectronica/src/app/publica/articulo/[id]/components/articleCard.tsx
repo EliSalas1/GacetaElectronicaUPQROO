@@ -1,21 +1,40 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
 import { FiUser, FiCalendar, FiTag } from "react-icons/fi";
 import Image from "next/image";
 
 interface ArticleCardProps {
   article: any;
 }
+
 function getDriveImageUrl(driveUrl: string): string | null {
   const regex = /\/d\/([a-zA-Z0-9_-]+)/;
   const match = driveUrl.match(regex);
-  if (match && match[1]) {
-    return `https://drive.google.com/uc?export=view&id=${match[1]}`;
-  }
-  return null;
+  return match
+    ? `https://drive.google.com/uc?export=view&id=${match[1]}`
+    : null;
 }
 
 const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
-  const urlDirecta = article.Recursos ? getDriveImageUrl(article.Recursos) ?? article.Recursos : null;
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  let imageUrls: string[] = [];
+  if (Array.isArray(article.Recursos)) {
+    imageUrls = article.Recursos.map(getDriveImageUrl).filter(Boolean) as string[];
+  } else if (typeof article.Recursos === "string") {
+    const posibles = article.Recursos.split(",").map((s: string) => s.trim());
+    imageUrls = posibles.map(getDriveImageUrl).filter(Boolean) as string[];
+  }
+
+  useEffect(() => {
+    if (imageUrls.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % imageUrls.length);
+      }, 6000);
+      return () => clearInterval(interval);
+    }
+  }, [imageUrls]);
+
   return (
     <div className="bg-white rounded-2xl shadow-md p-8 max-w-4xl w-full mx-auto">
       {/* Categoría */}
@@ -34,7 +53,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
           {article.Categoria || "Sin categoría"}
         </span>
       </div>
-      
+
       {/* Título */}
       <h1
         className="mb-2"
@@ -94,48 +113,47 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
         ))}
       </div>
 
-      <div
-  className="w-full h-[276px] bg-gradient-to-b from-gray-100 to-gray-200 rounded-lg overflow-hidden mb-8 relative flex items-center justify-center"
->
-  {urlDirecta ? (
-    <Image
-      src={urlDirecta}
-      alt="Imagen del artículo"
-      fill
-      className="object-contain"
-      sizes="(max-width: 768px) 100vw, 800px"
-      style={{
-        backgroundColor: "#ffffffff", // color base similar a la imagen
-        padding: "0.5rem",
-        objectPosition: "center",
-      }}
-    />
-  ) : (
-    <Image
-      src="https://dummyimage.com/800x276/f97316/ffffff.png&text=Imagen+no+disponible"
-      alt="Imagen no disponible"
-      fill
-      className="object-contain"
-      sizes="(max-width: 768px) 100vw, 800px"
-    />
-  )}
-</div>
+      {/* Carrusel limpio sin botones */}
+      <div className="w-full h-[276px] bg-gray-100 rounded-xl overflow-hidden mb-4 relative flex items-center justify-center">
+        <Image
+          src={imageUrls[currentImageIndex] || "https://dummyimage.com/800x276/f97316/ffffff.png&text=Imagen+no+disponible"}
+          alt={`Imagen ${currentImageIndex + 1}`}
+          fill
+          className="object-contain transition-all duration-300"
+          sizes="(max-width: 768px) 100vw, 800px"
+          style={{ padding: "0.5rem", objectPosition: "center" }}
+        />
+      </div>
 
-      
+      {/* Dots indicadores */}
+      {imageUrls.length > 1 && (
+        <div className="flex justify-center mb-8 gap-2">
+          {imageUrls.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentImageIndex(index)}
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                currentImageIndex === index
+                  ? "bg-orange-500 scale-110"
+                  : "bg-gray-400 hover:bg-gray-500"
+              }`}
+              aria-label={`Imagen ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Contenido principal */}
       <div
-  className="text-gray-700 leading-relaxed space-y-4 text-justify"
-  style={{
-    fontFamily: "Inter, sans-serif",
-    fontWeight: 400,
-    fontSize: 16,
-    whiteSpace: "pre-line",
-    textAlign: "justify",
-  }}
->
-
+        className="text-gray-700 leading-relaxed space-y-4 text-justify"
+        style={{
+          fontFamily: "Inter, sans-serif",
+          fontWeight: 400,
+          fontSize: 16,
+          whiteSpace: "pre-line",
+        }}
+      >
         {article.Contenido || "No hay contenido disponible"}
-
       </div>
     </div>
   );
