@@ -37,7 +37,7 @@ export default function PrivateHeader() {
               <button className="flex items-center gap-2 group transition-all duration-200 rounded-full border-2 border-white p-1 hover:bg-white">
                 <Avatar className="h-8 w-8">
                   <AvatarImage
-                    src={user.image || "/placeholder.svg"}
+                    src={"/placeholder.svg"}
                     alt={user.name || user.email || "U"}
                   />
                   <AvatarFallback className="bg-white text-[#FF6400]">

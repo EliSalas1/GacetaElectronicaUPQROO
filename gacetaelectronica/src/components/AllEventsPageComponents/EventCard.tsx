@@ -1,10 +1,10 @@
 // components/HomeComponents/EventCard.tsx
 "use client";
 
-import { useState } from "react";
+
 import { CalendarDays, Clock, MapPin } from "lucide-react";
 import { Event } from "@/entities/user";
-import EventModal from "@/components/HomeComponents/EventModal";
+
 
 interface EventCardProps {
   event: Event;
@@ -12,7 +12,7 @@ interface EventCardProps {
 }
 
 export default function EventCard({ event, onClick }: EventCardProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  
 
   return (
     <>

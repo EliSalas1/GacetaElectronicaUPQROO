@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash, Check } from "lucide-react";
+import { Plus, Trash, Check } from "lucide-react";
 import { toast } from "sonner";
 import { UserInterface } from "@/entities/user";
 
@@ -113,8 +113,11 @@ export default function NuevoUsuariosDialog() {
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
+        <Button
+          variant="outline"
+          className="bg-white text-[#4C0000] border border-[#4C0000] hover:bg-[#4C0000] hover:text-white transition flex items-center gap-2 cursor-pointer"
+            >
+          <Plus className="h-4 w-4" />
           Nuevo Usuario
         </Button>
       </DialogTrigger>

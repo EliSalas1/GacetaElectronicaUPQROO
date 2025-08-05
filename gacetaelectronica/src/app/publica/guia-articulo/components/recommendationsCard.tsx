@@ -1,12 +1,8 @@
-import { ThumbsUp } from "lucide-react";
 
 export default function RecommendationsCard() {
   return (
     <section className="bg-white border rounded-xl p-6 mt-6">
       <h2 className="text-lg font-semibold text-left text-red-800 mb-4 flex items-center gap-2">
-        <span className="inline-block bg-blue-100 text-blue-600 rounded-full w-6 h-6 text-sm flex items-center justify-center font-bold">
-          4
-        </span>
         Recomendaciones adicionales
       </h2>
 

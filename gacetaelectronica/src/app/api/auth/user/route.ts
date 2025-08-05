@@ -1,9 +1,9 @@
-import { NextRequest } from 'next/server';
+
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../[...nextauth]/route'; // Asegúrate de tener la configuración de NextAuth correcta
+import { authOptions } from '../[...nextauth]/options'; // Actualizado para importar desde options
 import getConnection from '@/lib/db';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     

@@ -1,5 +1,5 @@
-// src/app/api/auth/[...nextauth]/route.ts
-import NextAuth, { NextAuthOptions } from "next-auth";
+// src/app/api/auth/[...nextauth]/options.ts
+import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import getConnection from "@/lib/db";
@@ -95,7 +95,6 @@ export const authOptions: NextAuthOptions = {
       }
 
       // 2) Si tenemos email y no tenemos role, lo traemos de la BD
-
       if (token.email && !token.role) {
         try {
           const pool = await getConnection();
@@ -110,20 +109,6 @@ export const authOptions: NextAuthOptions = {
           console.error("JWT callback DB error:", e);
         }
       }
-      // if (token.email && !token.role) {
-      //   try {
-      //     const pool = await getConnection();
-      //     const [rows] = await pool.query<{ Rol: string }[]>(
-      //       "SELECT Rol FROM Usuarios WHERE Correo = ?",
-      //       [token.email]
-      //     );
-      //     if (rows.length > 0) {
-      //       token.role = rows[0].Rol;
-      //     }
-      //   } catch (e) {
-      //     console.error("JWT callback DB error:", e);
-      //   }
-      // }
 
       console.log("JWT callback → token.role:", token.role);
       return token;
@@ -142,6 +127,3 @@ export const authOptions: NextAuthOptions = {
     },
   },
 };
-
-const handler = NextAuth(authOptions);
-export { handler as GET, handler as POST };

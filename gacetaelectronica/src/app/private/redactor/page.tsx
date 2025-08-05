@@ -89,11 +89,6 @@ export default function Page() {
     setActiveTab("new-article");
   };
 
-  const handleClearEditMode = () => {
-    setEditMode(false);
-    setArticleData(null);
-    localStorage.removeItem("editArticleData");
-  };
 
   const handleArticleUpdated = () => {
     setEditMode(false);

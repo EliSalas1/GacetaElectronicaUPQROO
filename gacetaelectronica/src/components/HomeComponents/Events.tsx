@@ -86,7 +86,7 @@ export default function Events() {
 
       {/* Eventos */}
       {!loading && !error && (
-        <div className="space-y-6">
+        <div className="max-h-[750px] overflow-y-auto space-y-6 pr-1 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
           {eventos.map((event, index) => (
             <div key={index} className="bg-white rounded-lg shadow-md p-4">
               <h3 className="font-bold mb-2">{event.titulo}</h3>

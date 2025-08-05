@@ -112,20 +112,21 @@ export default function ArticleOverview() {
       })
     : [];
 
-  const handleSave = async (updatedArticle: ArticleInterface) => {
+      const handleSave = async (updatedArticle: ArticleInterface) => {
     if (!updatedArticle?.id || !updatedArticle?.title || !updatedArticle?.status) {
       alert("Faltan campos requeridos");
       return;
     }
 
     try {
-      const res = await fetch(`/api/articulos?id=${updatedArticle.id}`, {
+      const res = await fetch(`/api/articulos?id=${updatedArticle.id}`, 
+        {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           Titulo: updatedArticle.title,
           Resumen: updatedArticle.resumen,
-          Estatus: updatedArticle.status === "published" ? 1 : updatedArticle.status === "rejected" ? 2 : 0,
+          Estatus: updatedArticle.status === "published" ? 1 : updatedArticle.status === "pending" ? 0 : 2,
           IdCategoria: 1,
         }),
       });
@@ -169,61 +170,57 @@ export default function ArticleOverview() {
   return (
     <main className="flex flex-col gap-6">
       <Card>
-        <CardHeader className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
-          <div>
-            <CardTitle>Todos los Artículos</CardTitle>
-            <CardDescription>
-              Vista general de todos los artículos en el sistema
-            </CardDescription>
-          </div>
+        <CardHeader className="flex justify-between items-start flex-col md:flex-row gap-4">
+         
+          <div className="flex flex-col gap-1">
+  <CardTitle>Gestión de Artículos</CardTitle>
+  <CardDescription>Administra los textos de los autores</CardDescription>
+            </div>
 
-          <div className="flex gap-2 w-full md:w-auto">
-            <Input
-              className="w-full md:w-64 pl-10"
-              placeholder="Buscar..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <Select
-              value={filterBy}
-              onValueChange={(value) => {
-                setFilterBy(value);
-                setFilterValue("");
-              }}
-            >
-              <SelectTrigger className="w-40">
-                <Filter className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Filtrar por" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="category">Categoría</SelectItem>
-                <SelectItem value="status">Estado</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filterValue} onValueChange={setFilterValue}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Filtrar valor" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {filterBy === "status" &&
-                  ["published", "pending", "rejected"].map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                {filterBy === "category" && Array.isArray(articles) &&
-                  Array.from(new Set(articles.map((article) => article.category))).map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+              <Input
+                className="md:w-64"
+                placeholder="Buscar..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <Select value={filterBy} onValueChange={(value) => { setFilterBy(value); setFilterValue(""); }}>
+                <SelectTrigger className="w-full md:w-40">
+                  <Filter className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Filtrar por" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="category">Categoría</SelectItem>
+                  <SelectItem value="status">Estado</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterValue} onValueChange={setFilterValue}>
+                <SelectTrigger className="w-full md:w-40">
+                  <SelectValue placeholder="Filtrar valor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {filterBy === "status" &&
+                    ["published", "pending", "rejected"].map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  {filterBy === "category" && Array.isArray(articles) &&
+                    Array.from(new Set(articles.map((article) => article.category))).map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+
         </CardHeader>
 
         <CardContent>
+          <div style={{ maxHeight: "400px", overflowY: "auto" }}>
           <Table>
             <TableHeader>
               <TableRow>
@@ -276,6 +273,7 @@ export default function ArticleOverview() {
               )}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
 
@@ -286,7 +284,11 @@ export default function ArticleOverview() {
           if (!value) setSelectedArticle(null);
         }}
         article={selectedArticle}
-        onSave={handleSave}
+        onSave={(updatedArticle: Partial<ArticleInterface>) => {
+          if (updatedArticle.id) {
+            handleSave(updatedArticle as ArticleInterface);
+          }
+        }}
       />
 
       <DeleteArticleDialog

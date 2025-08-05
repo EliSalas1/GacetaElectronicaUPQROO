@@ -51,7 +51,7 @@ function getDriveImageUrl(driveUrl: string): string | null {
 export default function NoticesList() {
   const [notices, setNotices] = useState<Articulo[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchArticles = async () => {

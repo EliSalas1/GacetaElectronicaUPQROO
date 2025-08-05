@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation"; // ✅ import correcto
+import { useRouter, useParams } from "next/navigation"; 
 import ArticleCard from "./articleCard";
 import { getArticleById } from "../services/article.service";
 
@@ -12,7 +12,8 @@ export default function ArticleContainer() {
 
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  // Remove error state since it's not being used in the UI
+  const [, setError] = useState("");
 
   useEffect(() => {
     if (!id) return;

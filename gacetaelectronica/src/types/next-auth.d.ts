@@ -1,5 +1,5 @@
-import NextAuth, { DefaultSession, DefaultUser } from "next-auth";
 
+// Eliminar la importación no utilizada
 declare module "next-auth" {
   interface Session {
     accessToken?: string;
@@ -25,3 +25,6 @@ declare module "next-auth" {
     Correo?: string;
   }
 }
+
+// Añadir esta importación si DefaultUser se sigue utilizando
+import { DefaultUser } from "next-auth";

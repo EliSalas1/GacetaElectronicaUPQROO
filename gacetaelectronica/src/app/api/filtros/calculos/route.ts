@@ -1,8 +1,8 @@
 // src/app/api/resumen/articulos/route.ts
-import { NextRequest } from 'next/server';
+
 import getConnection from '@/lib/db';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const pool = await getConnection();
 

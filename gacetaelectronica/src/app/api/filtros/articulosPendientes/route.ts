@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
     const tipo = req.nextUrl.searchParams.get("tipo");
 
     let query = `
-      SELECT a.idArticulo, a.Titulo, a.Resumen, a.Comentario, a.Estatus, a.FechaCreacion, c.Nombre AS categoria
+      SELECT a.idArticulo, a.Titulo, a.Resumen, a.Contenido, a.Comentario, a.Estatus, a.FechaCreacion, c.Nombre AS categoria
       FROM Articulos a
       LEFT JOIN Categorias c ON a.idCategoria = c.idCategoria
     `;

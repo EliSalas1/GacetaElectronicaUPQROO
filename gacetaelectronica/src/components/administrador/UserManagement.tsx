@@ -163,13 +163,13 @@ export default function UserManagement() {
                 getFilterValues={() => []}
               />
               <NuevoUsuariosDialog
-                onCreate={handleCreateUser}
-                initialUsuarios={usuarios.filter((u) => u.Rol === "Usuario")}
+                
               />
             </div>
           </div>
         </CardHeader>
         <CardContent>
+            <div style={{ maxHeight: "400px", overflowY: "auto" }}>
           <Table>
             <TableHeader>
               <TableRow>
@@ -235,6 +235,7 @@ export default function UserManagement() {
               )}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
 

@@ -21,7 +21,7 @@ import { toast } from "sonner";
 interface Articulo {
   idArticulo: number; Titulo: string; categoria: string;
   FechaCreacion: string; FechaRevision?: string;
-  Estatus: number; Comentario?: string; Resumen?: string;
+  Estatus: number; Comentario?: string; Resumen?: string; Contenido?: string;
 }
 interface Usuario { idUsuarios: number; Nombre: string; }
 const ITEMS_PER_PAGE = 10;
@@ -77,7 +77,7 @@ export default function PendientesTab() {
     }), [articulos, searchTerm, filterType, filterCategoria, filterAutor, filterDateFrom, filterDateTo, autoresMap]
   );
 
-  const totalPages = Math.ceil(filteredArticulos.length / ITEMS_PER_PAGE);
+ 
   const currentItems = filteredArticulos.slice((currentPage-1)*ITEMS_PER_PAGE, currentPage*ITEMS_PER_PAGE);
   useEffect(() => setCurrentPage(1), [searchTerm, filterType, filterCategoria, filterAutor, filterDateFrom, filterDateTo]);
 
@@ -117,13 +117,17 @@ export default function PendientesTab() {
   };
 
   const handleViewArticle = (art:Articulo) => {
+    console.log("🧪 Artículo completo:", art);
     setSelectedArticle({
+      
       title: art.Titulo,
       author: autoresMap[art.idArticulo] ?? "Desconocido",
       category: art.categoria,
       status: art.Estatus === 1 ? "Publicado" : art.Estatus === 0 ? "Pendiente" : "Rechazado",
       createdAt: new Date(art.FechaCreacion).toLocaleDateString("es-ES"),
       resumen: art.Resumen ?? "Sin resumen disponible",
+      contenido: art.Contenido ?? "Sin contenido disponible",
+
     });
     setViewDialogOpen(true);
   };

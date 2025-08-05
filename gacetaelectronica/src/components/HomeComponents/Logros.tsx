@@ -12,7 +12,7 @@ const años = ["2023", "2024", "2024", "2024"];
 export default function Logros() {
   const [logros, setLogros] = useState<LogroUs[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchLogros = async () => {
