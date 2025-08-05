@@ -6,6 +6,7 @@ export interface ArticleInterface {
   status: "published" | "pending" | "unknown";
   category: string;
   author: string;
+  contenido: string;
 }
 
 export enum Categoria {

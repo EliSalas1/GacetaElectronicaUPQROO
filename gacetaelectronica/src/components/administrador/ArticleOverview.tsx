@@ -112,14 +112,15 @@ export default function ArticleOverview() {
       })
     : [];
 
-  const handleSave = async (updatedArticle: ArticleInterface) => {
+      const handleSave = async (updatedArticle: ArticleInterface) => {
     if (!updatedArticle?.id || !updatedArticle?.title || !updatedArticle?.status) {
       alert("Faltan campos requeridos");
       return;
     }
 
     try {
-      const res = await fetch(`/api/articulos?id=${updatedArticle.id}`, {
+      const res = await fetch(`/api/articulos?id=${updatedArticle.id}`, 
+        {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

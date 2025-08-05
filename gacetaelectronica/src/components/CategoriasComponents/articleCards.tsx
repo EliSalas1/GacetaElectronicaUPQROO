@@ -13,6 +13,9 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 
 // Función que determina el color según la etiqueta
+
+
+
 function getTagColor(tag: string): string {
   const normalizedTag = tag.trim().normalize()
 
@@ -34,6 +37,19 @@ function getTagColor(tag: string): string {
     default:
       return "bg-gray-200 text-gray-700 border-gray-300"
   }
+}
+
+function getDriveImageUrl(driveUrl?: string): string | null {
+  if (!driveUrl || typeof driveUrl !== "string") return null;
+
+  const regex = /\/d\/([a-zA-Z0-9_-]+)/;
+  const match = driveUrl.match(regex);
+
+  if (match && match[1]) {
+    return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+  }
+
+  return null;
 }
 
 export default function ArticleCard({ article }: { article: any }) {
@@ -59,46 +75,55 @@ export default function ArticleCard({ article }: { article: any }) {
 
   return (
     <Link href={`/publica/articulo/${article.id}`}>
-      <Card className="h-full flex flex-col justify-between hover:shadow-lg transition-shadow bg-neutral-50 border-neutral-200 hover:border-orange-500 cursor-pointer">
-        <div className="relative">
-          <Image
-            src={article.image || "/placeholder.svg"}
-            alt={article.title}
-            width={300}
-            height={200}
-            className="w-full h-48 object-cover rounded-t-lg"
-          />
+  <Card className="h-full flex flex-col justify-between hover:shadow-lg transition-shadow bg-neutral-50 border-neutral-200 hover:border-orange-500 cursor-pointer">
+    <div className="relative w-full h-[350px] bg-neutral-300 overflow-hidden rounded-t-lg">
+  <Image
+    src={
+      getDriveImageUrl(article.Recursos) ||
+      article.image ||
+      "/placeholder.svg"
+    }
+    alt={article.title}
+    fill
+    className="object-cover"
+    sizes="(max-width: 768px) 100vw, 300px"
+    style={{
+      objectPosition: "center",
+      backgroundColor: "#f3f4f6",
+    }}
+  />
+</div>
+
+
+    <CardHeader>
+      <div className="flex flex-wrap gap-2 mb-2 items-center justify-between">
+        <div className="flex flex-wrap gap-2">
+          {Array.isArray(article.etiquetas) && article.etiquetas.length > 0 ? (
+            article.etiquetas.map((etiqueta: string, idx: number) => (
+              <Badge
+                key={idx}
+                className={`${getTagColor(etiqueta)} border`}
+              >
+                {etiqueta}
+              </Badge>
+            ))
+          ) : (
+            <Badge className="bg-gray-100 text-gray-800 border-gray-200 border">
+              Sin etiqueta
+            </Badge>
+          )}
         </div>
+        <span className="text-sm text-neutral-500">{article.date}</span>
+      </div>
+      <CardTitle className="text-lg text-accent-900">{article.title}</CardTitle>
+      <CardDescription className="text-sm text-neutral-600">Por {author}</CardDescription>
+    </CardHeader>
 
-        <CardHeader>
-          <div className="flex flex-wrap gap-2 mb-2 items-center justify-between">
-            {/* Etiquetas */}
-            <div className="flex flex-wrap gap-2">
-              {Array.isArray(article.etiquetas) && article.etiquetas.length > 0 ? (
-                article.etiquetas.map((etiqueta: string, idx: number) => (
-                  <Badge
-                    key={idx}
-                    className={`${getTagColor(etiqueta)} border`}
-                  >
-                    {etiqueta}
-                  </Badge>
-                ))
-              ) : (
-                <Badge className="bg-gray-100 text-gray-800 border-gray-200 border">
-                  Sin etiqueta
-                </Badge>
-              )}
-            </div>
-            <span className="text-sm text-neutral-500">{article.date}</span>
-          </div>
-          <CardTitle className="text-lg text-accent-900">{article.title}</CardTitle>
-          <CardDescription className="text-sm text-neutral-600">Por {author}</CardDescription>
-        </CardHeader>
+    <CardContent className="mt-auto">
+      <p className="text-neutral-700 line-clamp-3">{article.summary}</p>
+    </CardContent>
+  </Card>
+</Link>
 
-        <CardContent className="mt-auto">
-          <p className="text-neutral-700 line-clamp-3">{article.summary}</p>
-        </CardContent>
-      </Card>
-    </Link>
   )
 }
