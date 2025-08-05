@@ -125,7 +125,7 @@ export default function ArticleOverview() {
         body: JSON.stringify({
           Titulo: updatedArticle.title,
           Resumen: updatedArticle.resumen,
-          Estatus: updatedArticle.status === "published" ? 1 : updatedArticle.status === "rejected" ? 2 : 0,
+          Estatus: updatedArticle.status === "published" ? 1 : updatedArticle.status === "pending" ? 0 : 2,
           IdCategoria: 1,
         }),
       });
@@ -286,7 +286,11 @@ export default function ArticleOverview() {
           if (!value) setSelectedArticle(null);
         }}
         article={selectedArticle}
-        onSave={handleSave}
+        onSave={(updatedArticle: Partial<ArticleInterface>) => {
+          if (updatedArticle.id) {
+            handleSave(updatedArticle as ArticleInterface);
+          }
+        }}
       />
 
       <DeleteArticleDialog

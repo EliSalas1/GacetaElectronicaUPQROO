@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { X, Upload, Send, Link } from "lucide-react"
+import {Send, Link } from "lucide-react"
 import GoogleDriveResourceDialog from "./GoogleDriveResourceDialog"
 import ResourcePreview from "./ResourcePreview"
 import { useSessionUser } from "@/hooks/useSessionUser"
@@ -38,7 +38,6 @@ export default function ArticleEditor({ editMode = false, articleData, onArticle
   const [content, setContent] = useState("")
   const [category, setCategory] = useState("")
   const [tags, setTags] = useState<string[]>([])
-  const [newTag, setNewTag] = useState("")
   const [files, setFiles] = useState<string[]>([])
   const [googleDriveResources, setGoogleDriveResources] = useState<Array<{
     idRecurso: string
@@ -199,10 +198,6 @@ export default function ArticleEditor({ editMode = false, articleData, onArticle
       description: `${randomFile} se ha subido correctamente`,
     })
   }*/
-
-  const removeFile = (index: number) => {
-    setFiles(files.filter((_, i) => i !== index))
-  }
 
   const handleGoogleDriveResourcesAdded = (resources: Array<{
     idRecurso: string

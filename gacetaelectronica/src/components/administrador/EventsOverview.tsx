@@ -22,7 +22,7 @@ export default function EventOverview() {
   const [events, setEvents] = useState<EventInterface[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [page, setPage] = useState(0);
+  const [page] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,6 +47,7 @@ export default function EventOverview() {
         setEvents(mapped);
         const totalEvents = await fetch("/api/eventos/count");
         const total = await totalEvents.json();
+        totalPages
         setTotalPages(Math.ceil(total / 15));
       } catch (err) {
         console.error("Error al cargar eventos:", err);

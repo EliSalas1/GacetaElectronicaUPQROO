@@ -163,8 +163,7 @@ export default function UserManagement() {
                 getFilterValues={() => []}
               />
               <NuevoUsuariosDialog
-                onCreate={handleCreateUser}
-                initialUsuarios={usuarios.filter((u) => u.Rol === "Usuario")}
+                
               />
             </div>
           </div>

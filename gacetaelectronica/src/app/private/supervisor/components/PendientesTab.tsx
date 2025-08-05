@@ -77,7 +77,7 @@ export default function PendientesTab() {
     }), [articulos, searchTerm, filterType, filterCategoria, filterAutor, filterDateFrom, filterDateTo, autoresMap]
   );
 
-  const totalPages = Math.ceil(filteredArticulos.length / ITEMS_PER_PAGE);
+ 
   const currentItems = filteredArticulos.slice((currentPage-1)*ITEMS_PER_PAGE, currentPage*ITEMS_PER_PAGE);
   useEffect(() => setCurrentPage(1), [searchTerm, filterType, filterCategoria, filterAutor, filterDateFrom, filterDateTo]);
 

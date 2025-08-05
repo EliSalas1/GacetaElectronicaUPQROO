@@ -49,10 +49,6 @@ export default function AuthForm({ type = "login" }: Props) {
   };
 
   // Función para manejar el inicio de sesión con Google
-  const handleGoogleSignIn = () => {
-    signIn("google"); // Usamos la autenticación de Google con NextAuth
-  };
-
   const handleLogin = async (e: React.FormEvent) => {
   e.preventDefault();
 

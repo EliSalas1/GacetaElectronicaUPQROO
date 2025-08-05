@@ -1,30 +1,10 @@
 import { NextRequest } from 'next/server';
 import getConnection from '@/lib/db';
-import Articulo from '@/app/publica/articulo/[id]/page';
 
-interface Articulo {
-  IdArticulo: number;
-  Titulo: string;
-  Resumen: string;
-  Contenido: string;
-  Estatus: number;
-  FechaCreacion: string;
-  FechaRevision?: string;
-  Comentario?: string;
-  IdCategoria: number;
-  IdAutor: number;
-  IdRevisor?: number;
-  Categoria?: any;
-  Autor?: any;
-  Revisor?: any;
-  Etiquetas?: any[];
-  Recursos?: any[];
-}
+
 export async function GET(req: NextRequest) {
   try {
     const pool = await getConnection();
-
-    const include = req.nextUrl.searchParams.get('include');
 
     const idParam = req.nextUrl.searchParams.get('id');
     const id = idParam ? parseInt(idParam) : null;

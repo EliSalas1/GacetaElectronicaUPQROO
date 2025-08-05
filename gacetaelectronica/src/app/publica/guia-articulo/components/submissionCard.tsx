@@ -1,4 +1,3 @@
-import { Send } from "lucide-react";
 
 export default function SubmissionCard() {
   return (

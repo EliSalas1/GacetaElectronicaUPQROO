@@ -50,7 +50,7 @@ export default function GoogleDriveResourceDialog({ onResourcesAdded, trigger }:
       return
     }
     // Generar nombre automático
-    const autoName = currentResource.nombre.charAt(0).toUpperCase() + currentResource.nombre.slice(1)
+    
     const newResource: GoogleDriveResource = {
       idRecurso: Date.now().toString(),
       nombre: currentResource.nombre,

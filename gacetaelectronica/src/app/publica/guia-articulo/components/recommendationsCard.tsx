@@ -1,4 +1,3 @@
-import { ThumbsUp } from "lucide-react";
 
 export default function RecommendationsCard() {
   return (

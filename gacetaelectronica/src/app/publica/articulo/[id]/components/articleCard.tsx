@@ -128,6 +128,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
           fontFamily: "Inter, sans-serif",
           fontWeight: 400,
           fontSize: 14,
+          whiteSpace: "pre_line",
         }}
       >
         {article.Contenido || "No hay contenido disponible"}

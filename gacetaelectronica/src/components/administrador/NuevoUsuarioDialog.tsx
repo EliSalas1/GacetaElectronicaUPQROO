@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash, Check } from "lucide-react";
+import { Plus, Trash, Check } from "lucide-react";
 import { toast } from "sonner";
 import { UserInterface } from "@/entities/user";
 

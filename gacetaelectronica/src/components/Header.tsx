@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogOut, LayoutDashboard, Menu, X } from "lucide-react";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 
 export default function Header() {
   const { data: session, status } = useSession();
@@ -23,14 +23,11 @@ export default function Header() {
     ? {
         name: session.user.name,
         email: session.user.email,
-        image: session.user.image,
         role: session.user.role,
       }
     : null;
 
-  const handleLogin = () => {
-    signIn("google");
-  };
+
 
   const handleLogout = () => {
     signOut();
@@ -115,7 +112,7 @@ export default function Header() {
                     <button className="flex items-center gap-2 group transition-all duration-200 rounded-full border-2 border-white p-1 hover:bg-white">
                       <Avatar className="h-8 w-8">
                         <AvatarImage
-                          src={user.image || "/placeholder.svg"}
+                          src={"/placeholder.svg"}
                           alt={user.name || user.email || "U"}
                         />
                         <AvatarFallback>
@@ -258,7 +255,7 @@ export default function Header() {
                     <div className="flex items-center gap-3 px-4 py-3 bg-orange-500 rounded-md">
                       <Avatar className="h-8 w-8">
                         <AvatarImage
-                          src={user?.image || "/placeholder.svg"}
+                          src={ "/placeholder.svg"}
                           alt={user?.name || user?.email || "U"}
                         />
                         <AvatarFallback className="bg-white text-[#FF6400]">
