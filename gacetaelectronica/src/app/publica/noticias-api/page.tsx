@@ -1,7 +1,7 @@
 'use client';
 
-import FeaturedNotices from '@/components/HomeComponents/FeaturedNotices';
-import AllNotices from '@/components/HomeComponents/AllNotices';
+// import FeaturedNotices from '@/components/HomeComponents/FeaturedNotices';
+// import AllNotices from '@/components/HomeComponents/AllNotices';
 
 export default function NoticiasApiPage() {
   return (
@@ -17,12 +17,12 @@ export default function NoticiasApiPage() {
         {/* Artículos Destacados */}
         <section>
           <h2 className="text-2xl font-bold mb-6">Artículos Destacados</h2>
-          <FeaturedNotices />
+          {/* <FeaturedNotices /> */}
         </section>
 
         {/* Todos los Artículos */}
         <section>
-          <AllNotices limit={12} />
+          {/* <AllNotices limit={12} /> */}
         </section>
       </div>
     </div>

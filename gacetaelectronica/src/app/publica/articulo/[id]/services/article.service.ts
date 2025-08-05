@@ -1,5 +1,12 @@
 // src/services/article.service.ts
 
+//
+// export async function getArticlePreviewById(id: number) {
+//   const res = await fetch(`/api/articulos/admin?id=${id}`);
+//   if (!res.ok) throw new Error(await res.text());
+//   return res.json();
+// }
+
 
 // 2. Obtener un artículo por ID (GET)
 export async function getArticleById(id: number) {

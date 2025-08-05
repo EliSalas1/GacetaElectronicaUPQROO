@@ -93,43 +93,47 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
           </span>
         ))}
       </div>
-      <div
-      className="rounded-lg mb-8 flex items-center justify-center bg-gray-200 overflow-hidden"
-      style={{
-        width: "100%",
-        minHeight: 200,
-        maxHeight: 276,
-        aspectRatio: "800/276",
-      }}
-    >
-        {urlDirecta ? (
-  <Image
-  src={urlDirecta}
-  alt="Imagen del artículo"
-  width={800}
-  height={276}
-  style={{ objectFit: "cover", maxWidth: "100%", height: "auto" }}
-/>
 
-) : (
-  <Image
-    src="https://dummyimage.com/800x276/f97316/ffffff.png&text=Imagen+no+disponible"
-    alt="Imagen no disponible"
-    fill
-    style={{ objectFit: "cover" }}
-    sizes="100vw"
-  />
-        )}
-    </div>
+      <div
+  className="w-full h-[276px] bg-gradient-to-b from-gray-100 to-gray-200 rounded-lg overflow-hidden mb-8 relative flex items-center justify-center"
+>
+  {urlDirecta ? (
+    <Image
+      src={urlDirecta}
+      alt="Imagen del artículo"
+      fill
+      className="object-contain"
+      sizes="(max-width: 768px) 100vw, 800px"
+      style={{
+        backgroundColor: "#ffffffff", // color base similar a la imagen
+        padding: "0.5rem",
+        objectPosition: "center",
+      }}
+    />
+  ) : (
+    <Image
+      src="https://dummyimage.com/800x276/f97316/ffffff.png&text=Imagen+no+disponible"
+      alt="Imagen no disponible"
+      fill
+      className="object-contain"
+      sizes="(max-width: 768px) 100vw, 800px"
+    />
+  )}
+</div>
+
+      
       {/* Contenido principal */}
       <div
-        className="text-gray-700 leading-relaxed space-y-4"
-        style={{
-          fontFamily: "Inter, sans-serif",
-          fontWeight: 400,
-          fontSize: 14,
-        }}
-      >
+  className="text-gray-700 leading-relaxed space-y-4 text-justify"
+  style={{
+    fontFamily: "Inter, sans-serif",
+    fontWeight: 400,
+    fontSize: 16,
+    whiteSpace: "pre-line",
+    textAlign: "justify",
+  }}
+>
+
         {article.Contenido || "No hay contenido disponible"}
 
       </div>
