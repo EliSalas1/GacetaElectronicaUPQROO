@@ -1,30 +1,10 @@
 import { NextRequest } from 'next/server';
 import getConnection from '@/lib/db';
-import Articulo from '@/app/publica/articulo/[id]/page';
 
-interface Articulo {
-  IdArticulo: number;
-  Titulo: string;
-  Resumen: string;
-  Contenido: string;
-  Estatus: number;
-  FechaCreacion: string;
-  FechaRevision?: string;
-  Comentario?: string;
-  IdCategoria: number;
-  IdAutor: number;
-  IdRevisor?: number;
-  Categoria?: any;
-  Autor?: any;
-  Revisor?: any;
-  Etiquetas?: any[];
-  Recursos?: any[];
-}
+
 export async function GET(req: NextRequest) {
   try {
     const pool = await getConnection();
-
-    const include = req.nextUrl.searchParams.get('include');
 
     const idParam = req.nextUrl.searchParams.get('id');
     const id = idParam ? parseInt(idParam) : null;
@@ -45,6 +25,7 @@ export async function GET(req: NextRequest) {
     WHEN 2 THEN 'rejected'
     ELSE 'unknown'
   END AS status,
+  a.IdCategoria AS IdCategoria,
   COALESCE(c.Nombre, 'Sin Categoría') AS Categoria,
   COALESCE(u.Nombre, 'Sin autor') AS Autor,
   GROUP_CONCAT(DISTINCT e.Nombre) AS Etiqueta,
@@ -62,7 +43,7 @@ LEFT JOIN Etiquetas e ON ae.Etiquetas_IdEtiqueta = e.IdEtiqueta
 
 LEFT JOIN Recursos r ON a.idArticulo = r.Articulos_idArticulo
 
-WHERE a.idArticulo = ? AND a.Estatus = 1
+WHERE a.idArticulo = ?
 GROUP BY a.idArticulo
 `,
         [id]

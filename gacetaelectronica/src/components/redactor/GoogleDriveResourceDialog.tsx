@@ -50,7 +50,7 @@ export default function GoogleDriveResourceDialog({ onResourcesAdded, trigger }:
       return
     }
     // Generar nombre automático
-    const autoName = currentResource.nombre.charAt(0).toUpperCase() + currentResource.nombre.slice(1)
+    
     const newResource: GoogleDriveResource = {
       idRecurso: Date.now().toString(),
       nombre: currentResource.nombre,
@@ -165,11 +165,13 @@ export default function GoogleDriveResourceDialog({ onResourcesAdded, trigger }:
                 <br />• https://docs.google.com/spreadsheets/d/[ID]/edit
               </p>
             </div>
-
-            <Button onClick={handleAddResource} className="w-full">
-              <Link className="mr-2 h-4 w-4" />
-              Agregar Recurso
-            </Button>
+              <Button
+                onClick={handleAddResource}
+                  className="w-full bg-[#F3E9E9] text-[#4C0000] hover:bg-[#E6C6D6] rounded-xl font-medium transition cursor-pointer"
+              >
+                <Link className="mr-2 h-4 w-4" />
+                Agregar Recurso
+              </Button>
           </div>
 
           {/* Lista de recursos agregados */}
@@ -197,10 +199,10 @@ export default function GoogleDriveResourceDialog({ onResourcesAdded, trigger }:
 
           {/* Botones de acción */}
           <div className="flex gap-2 pt-4">
-            <Button onClick={handleAccept} className="flex-1">
+            <Button onClick={handleAccept}   className="flex-1 bg-white text-[#4C0000] border border-[#4C0000] hover:bg-[#4C0000] hover:text-white transition cursor-pointer">
               Aceptar
             </Button>
-            <Button variant="outline" onClick={() => setIsOpen(false)} className="flex-1">
+            <Button variant="outline" onClick={() => setIsOpen(false)}   className="flex-1 hover:bg-gray-200 cursor-pointer transition">
               Cancelar
             </Button>
           </div>

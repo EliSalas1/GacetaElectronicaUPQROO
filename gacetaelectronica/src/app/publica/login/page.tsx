@@ -7,7 +7,7 @@ import AuthForm from "@/components/Sign-in-up/AuthForm";
 import SidePanel from "@/components/Sign-in-up/SidePanel";
 
 export default function LoginPage() {
-  const { data: session, status } = useSession(); // Usa useSession para obtener la sesión
+  const { status } = useSession(); // Usa useSession para obtener la sesión
   const { userInfo, loading } = useSessionUser(); // Usamos el hook para obtener la info del usuario
 
   if (status === "authenticated" && !loading) {

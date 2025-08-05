@@ -145,14 +145,17 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
 
       {/* Contenido principal */}
       <div
-        className="text-gray-700 leading-relaxed space-y-4 text-justify"
-        style={{
-          fontFamily: "Inter, sans-serif",
-          fontWeight: 400,
-          fontSize: 16,
-          whiteSpace: "pre-line",
-        }}
-      >
+
+  className="text-gray-700 leading-relaxed space-y-4 text-justify"
+  style={{
+    fontFamily: "Inter, sans-serif",
+    fontWeight: 400,
+    fontSize: 16,
+    whiteSpace: "pre-line",
+    textAlign: "justify",
+  }}
+>
+
         {article.Contenido || "No hay contenido disponible"}
       </div>
     </div>

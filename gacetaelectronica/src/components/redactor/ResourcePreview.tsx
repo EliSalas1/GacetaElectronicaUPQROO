@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { X, Play, FileText, Image, Video, File } from "lucide-react"
+import { X, FileText, Image, Video, File } from "lucide-react"
 
 interface ResourcePreviewProps {
   resource: {
@@ -33,49 +33,7 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
   }
 
   // Función para generar la URL de vista previa de Google Drive
-  const getPreviewUrl = (ruta: string, tipo: string) => {
-    // Extraer el ID del archivo de diferentes formatos de URL de Google Drive
-    let fileId = null
-    
-    // Patrón para URLs de archivos de Google Drive
-    const fileIdMatch = ruta.match(/\/d\/([a-zA-Z0-9_-]+)/)
-    if (fileIdMatch) {
-      fileId = fileIdMatch[1]
-    } else {
-      // Patrón para URLs con parámetro id
-      const idMatch = ruta.match(/[?&]id=([a-zA-Z0-9_-]+)/)
-      if (idMatch) {
-        fileId = idMatch[1]
-      }
-    }
-
-    if (!fileId) return null
-
-    switch (tipo) {
-      case 'imagen':
-        // Para imágenes, usar múltiples formatos de URL
-        return {
-          direct: `https://drive.google.com/uc?export=view&id=${fileId}`,
-          download: `https://drive.google.com/uc?export=download&id=${fileId}`,
-          thumbnail: `https://drive.google.com/thumbnail?id=${fileId}&sz=w400-h300`
-        }
-      case 'video':
-        // Para videos, usar múltiples formatos de URL
-        return {
-          direct: `https://drive.google.com/uc?export=view&id=${fileId}`,
-          download: `https://drive.google.com/uc?export=download&id=${fileId}`,
-          thumbnail: `https://drive.google.com/thumbnail?id=${fileId}&sz=w400-h300`
-        }
-      case 'pdf':
-        // Para PDFs, usar la URL de vista previa de Google Docs
-        return {
-          viewer: `https://docs.google.com/viewer?url=https://drive.google.com/uc?export=download&id=${fileId}&embedded=true`,
-          download: `https://drive.google.com/uc?export=download&id=${fileId}`
-        }
-      default:
-        return null
-    }
-  }
+ 
 
   //const previewUrls = getPreviewUrl(resource.ruta, resource.nombre)
 

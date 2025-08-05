@@ -12,7 +12,8 @@ export default function ArticleContainer() {
 
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  // Remove error state since it's not being used in the UI
+  const [, setError] = useState("");
 
   useEffect(() => {
     if (!id) return;

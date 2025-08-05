@@ -20,11 +20,12 @@ export function DeleteEventDialog({ open, onOpenChange, event, onConfirm }: Prop
       await onConfirm(event.id); // Pasar el id del evento
 
       // Mostrar mensaje de éxito
-      toast.success("Evento eliminado correctamente");
+      alert("Evento eliminado correctamente");
       onOpenChange(false); // Cerrar el modal de eliminación
     } catch (err: any) {
       console.error(err);
-      toast.error("Error al eliminar el evento");
+      // Mostrar mensaje de error
+      alert("Error al eliminar el evento");
     }
   };
 
@@ -35,7 +36,7 @@ export function DeleteEventDialog({ open, onOpenChange, event, onConfirm }: Prop
           <DialogTitle>¿Eliminar evento?</DialogTitle>
         </DialogHeader>
         <p>
-          ¿Estás seguro de que deseas eliminar el evento <strong>&quot;{event.Nombre}&quot;</strong>? Esta acción no se puede deshacer.
+          ¿Estás seguro de que deseas eliminar el evento <strong>&quot;{event.title}&quot;</strong>? Esta acción no se puede deshacer.
         </p>
         <DialogFooter>
           <Button variant="secondary" onClick={() => onOpenChange(false)}>Cancelar</Button>

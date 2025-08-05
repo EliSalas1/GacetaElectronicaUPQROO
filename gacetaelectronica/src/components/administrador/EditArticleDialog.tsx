@@ -46,7 +46,7 @@ export function EditArticleDialog({ open, onOpenChange, article, onSave }: Props
       id: article.id,
       title,
       category,
-      status,
+      status: status as "published" | "pending" | "unknown",
     });
     onOpenChange(false);
   };

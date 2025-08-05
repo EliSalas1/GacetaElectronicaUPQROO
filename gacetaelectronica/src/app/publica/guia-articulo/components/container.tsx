@@ -17,7 +17,6 @@ export const GuiaArticulosContainer: FC = () => {
       </p>
 
       <SimpleCard
-        number="0"
         title="Bienvenidos a la Gaceta Universitaria"
         text={
           <p>
@@ -29,7 +28,6 @@ export const GuiaArticulosContainer: FC = () => {
       <ContributionsCard />
 
       <SimpleCard
-        number="2"
         title="Pautas generales de redacción"
         text={
           <>
@@ -56,7 +54,6 @@ export const GuiaArticulosContainer: FC = () => {
       />
 
       <SimpleCard
-        number="3"
         title="Estructura por tipo de texto"
         text={
           <>
@@ -68,8 +65,9 @@ export const GuiaArticulosContainer: FC = () => {
       <RecommendationsCard />
 
       <SubmissionCard />
-
-      <InvitationCard />
+        <div style={{ marginTop: "32px" }}>
+          <InvitationCard />
+        </div>
     </div>
   )
 }

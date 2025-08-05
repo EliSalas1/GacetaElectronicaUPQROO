@@ -17,6 +17,7 @@ export default function NoticiasApiPage() {
         {/* Artículos Destacados */}
         <section>
           <h2 className="text-2xl font-bold mb-6">Artículos Destacados</h2>
+
           {/* <FeaturedNotices /> */}
         </section>
 
