@@ -169,6 +169,7 @@ export default function UserManagement() {
           </div>
         </CardHeader>
         <CardContent>
+            <div style={{ maxHeight: "400px", overflowY: "auto" }}>
           <Table>
             <TableHeader>
               <TableRow>
@@ -234,6 +235,7 @@ export default function UserManagement() {
               )}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
 

@@ -4,30 +4,30 @@ export const HEADER_OPTIONS_BY_ROLE: Record<string, Record<string, string>[]> = 
     href: "/",
   },{
     label: "Categorías",
-    href: "/categorias",
+    href: "/publica/categorias",
   }, {
     label: "Panel de Administración",
-    href: "/administrador",
+    href: "/private/administrador",
   }],
   Redactor: [{
     label: "Inicio",
     href: "/",
   },{
     label: "Categorías",
-    href: "/categorias",
+    href: "/publica/categorias",
   }, {
     label: "Panel de Redactor",
-    href: "/redactor",
+    href: "/private/redactor",
   }],
   Supervisor: [{
     label: "Inicio",
     href: "/",
   },{
     label: "Categorías",
-    href: "/categorias",
+    href: "/publica/categorias",
   }, {
     label: "Panel de Supervisor",
-    href: "/supervisor",
+    href: "/private/supervisor",
   }],
 }
 

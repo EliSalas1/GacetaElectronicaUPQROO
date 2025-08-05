@@ -143,18 +143,7 @@ export default function Header() {
                               <span>Panel de Admin</span>
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href="/private/supervisor" className="flex items-center gap-2 hover:text-[#FF6400]">
-                              <LayoutDashboard className="h-4 w-4" />
-                              <span>Panel de Supervisor</span>
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href="/private/redactor" className="flex items-center gap-2 hover:text-[#FF6400]">
-                              <LayoutDashboard className="h-4 w-4" />
-                              <span>Panel de Redactor</span>
-                            </Link>
-                          </DropdownMenuItem>
+                          
                         </>
                       )}
 
@@ -278,22 +267,7 @@ export default function Header() {
                       <LayoutDashboard className="h-4 w-4" />
                       <span>Panel de Admin</span>
                     </Link>
-                    <Link
-                      href="/private/supervisor"
-                      className="flex items-center gap-2 px-4 py-3 hover:bg-orange-500 rounded-md transition-colors duration-200"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                    <LayoutDashboard className="h-4 w-4" />
-                    <span>Panel de Supervisor</span>
-                    </Link>
-                    <Link
-                      href="/private/redactor"
-                      className="flex items-center gap-2 px-4 py-3 hover:bg-orange-500 rounded-md transition-colors duration-200"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                    <LayoutDashboard className="h-4 w-4" />
-                    <span>Panel de Redactor</span>
-                    </Link>
+                    
                     </>
                   )}
 

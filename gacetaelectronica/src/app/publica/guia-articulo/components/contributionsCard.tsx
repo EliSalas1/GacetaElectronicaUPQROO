@@ -43,9 +43,6 @@ export default function ContributionsCard() {
   return (
     <section className="bg-white border rounded-xl p-6 mb-6 shadow-sm">
       <div className="flex items-start gap-2 mb-4">
-        <span className="inline-block bg-blue-100 text-blue-600 rounded-full w-6 h-6 text-sm flex items-center justify-center font-bold">
-          1
-        </span>
         <h2 className="text-lg font-semibold text-[#4C0000]">Tipos de contribuciones aceptadas</h2>
       </div>
       <p className="text-sm text-gray-700 mb-6">

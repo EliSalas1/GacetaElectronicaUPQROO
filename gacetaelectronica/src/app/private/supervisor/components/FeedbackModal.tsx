@@ -69,7 +69,7 @@ export default function FeedbackModal({
             </DialogTitle>
           </div>
           <DialogDescription className="text-sm sm:text-base">
-            Proporciona feedback constructivo para ayudar al autor a mejorar su artículo.
+            Proporciona una retroalimentación constructiva para ayudar al autor a mejorar su artículo.
           </DialogDescription>
         </DialogHeader>
 
@@ -106,10 +106,19 @@ export default function FeedbackModal({
         </div>
 
         <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3">
-          <Button variant="outline" onClick={handleClose} disabled={isSubmitting} className="w-full sm:w-auto">
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            disabled={isSubmitting}
+            className="w-full sm:w-auto border-gray-400 text-gray-700 hover:bg-gray-200 transition-colors duration-200 cursor-pointer"
+          >
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting || !feedback.trim()} className="w-full sm:w-auto">
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting || !feedback.trim()}
+            className="w-full sm:w-auto bg-[var(--color-vino)] text-white border border-[var(--color-vino)] hover:bg-white hover:text-[var(--color-vino)] transition-colors duration-200 cursor-pointer"
+          >
             {isSubmitting ? (
               <>
                 <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -118,10 +127,11 @@ export default function FeedbackModal({
             ) : (
               <>
                 <Send className="mr-2 h-4 w-4" />
-                Enviar Feedback
+                Enviar Retroalimentación
               </>
             )}
           </Button>
+
         </DialogFooter>
       </DialogContent>
     </Dialog>

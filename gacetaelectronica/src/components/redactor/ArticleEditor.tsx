@@ -424,7 +424,7 @@ export default function ArticleEditor({ editMode = false, articleData, onArticle
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {availableTags.map((tag) => (
                     <div key={tag} className="flex items-center space-x-2">
-                      <Checkbox
+                     <Checkbox
                         id={tag}
                         checked={tags.includes(tag)}
                         onCheckedChange={(checked) => {
@@ -438,6 +438,7 @@ export default function ArticleEditor({ editMode = false, articleData, onArticle
                             setTags((prev) => prev.filter((t) => t !== tag))
                           }
                         }}
+                        className="data-[state=checked]:bg-[#FF6400] data-[state=checked]:text-white data-[state=checked]:border-transparent"
                       />
                       <Label htmlFor={tag} className="capitalize">{tag}</Label>
                     </div>
@@ -503,13 +504,16 @@ export default function ArticleEditor({ editMode = false, articleData, onArticle
         </div>
 
         <div className="flex gap-4 pt-4">
-          <Button 
+          <Button
             onClick={handleSubmitForReview}
             disabled={googleDriveResources.length === 0}
-            className={googleDriveResources.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}
+            className={`w-full sm:w-auto bg-[#4C0000] text-white border border-[#4C0000] hover:bg-white hover:text-[#4C0000] transition ${
+              googleDriveResources.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             <Send className="mr-2 h-4 w-4" />
             {editMode ? 'Actualizar Artículo' : 'Enviar a Revisión'}
+
             {googleDriveResources.length === 0 && (
               <span className="ml-2 text-xs"></span>
             )}
