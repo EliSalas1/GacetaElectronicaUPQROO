@@ -1,4 +1,3 @@
-// src/app/api/auth/[...nextauth]/options.ts
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -78,8 +77,32 @@ export const authOptions: NextAuthOptions = {
     /** Limita el dominio de Google también */
     async signIn({ user }) {
       if (user.email && user.email.endsWith("@upqroo.edu.mx")) {
-        return true;
+        // Verificar si el usuario ya existe en la base de datos
+        const pool = await getConnection();
+        const [existingUser] = await pool.query<UsuarioRow[]>(
+          "SELECT * FROM Usuarios WHERE Correo = ?",
+          [user.email]
+        );
+
+        if (existingUser.length === 0) {
+          // Si el usuario no existe, insertarlo en la base de datos
+          try {
+            const firstName = user.name?.split(' ')[0] || "";
+            const lastName = user.name?.split(' ')[1] || "";
+            const [result] = await pool.query(
+              "INSERT INTO Usuarios (Nombre, Apellido, Correo, Rol, Estado, Contraseña, FechaCreacion) VALUES (?, ?, ?, ?, ?, NULL, NOW())",
+              [firstName, lastName, user.email, "usuario", 1]
+            );
+            console.log(`Nuevo usuario insertado con id: ${(result as any).insertId}`);
+          } catch (error) {
+            console.error("Error al insertar usuario:", error);
+            return "/publica/unauthorized";  // Retornar a la página de acceso no autorizado si hay error
+          }
+        }
+
+        return true;  // Permitir el acceso
       }
+
       return "/publica/unauthorized";
     },
 
@@ -88,13 +111,11 @@ export const authOptions: NextAuthOptions = {
      * tanto para Google (no trae role) como para Credentials 
      */
     async jwt({ token, user }) {
-      // 1) Si viene de Credentials, `authorize` devolvió un objeto con `id` y `email`
       if (user) {
         token.id    = user.id as number;
         token.email = user.email as string;
       }
 
-      // 2) Si tenemos email y no tenemos role, lo traemos de la BD
       if (token.email && !token.role) {
         try {
           const pool = await getConnection();
@@ -114,9 +135,6 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
 
-    /**
-     * Exponemos `role` en la sesión del cliente
-     */
     async session({ session, token }) {
       if (session.user) {
         session.user.id   = token.id as number;
