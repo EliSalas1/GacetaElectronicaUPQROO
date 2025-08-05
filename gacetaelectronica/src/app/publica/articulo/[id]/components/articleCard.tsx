@@ -133,7 +133,6 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
     textAlign: "justify",
   }}
 >
-
         {article.Contenido || "No hay contenido disponible"}
 
       </div>

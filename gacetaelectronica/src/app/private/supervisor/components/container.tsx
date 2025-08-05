@@ -53,8 +53,6 @@ export const SupervisorContainer: FC<SupervisorContainerProps> = () => {
   };
 
   // Hooks de filtrado para cada tabla
-  const pendientesFilter = useTableFilter(articulosPendientesDummyData, pendientesFilterConfig);
-  const historialFilter = useTableFilter(historialDummyData, historialFilterConfig);
 
   const handleViewArticle = (articleId: number) => {
     // Aquí se implementará la navegación al artículo específico
@@ -100,7 +98,7 @@ export const SupervisorContainer: FC<SupervisorContainerProps> = () => {
           
           <TabsContent value="pendientes" className="mt-4 sm:mt-6">
             <PendientesTab 
-              onViewArticle={handleViewArticle}
+              //onViewArticle={handleViewArticle}
               // filterState={pendientesFilter}
               // filterConfig={pendientesFilterConfig}
             />

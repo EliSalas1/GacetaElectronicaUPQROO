@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, FileText, Settings, Plus } from "lucide-react";
 import { Spinner } from "@/components/Spinner";
-import { useFetch } from "@/hooks/useFetch";
 import UserManagement from "@/components/administrador/UserManagement";
 import ArticleOverview from "@/components/administrador/ArticleOverview";
 import EventOverview from "@/components/administrador/EventsOverview";

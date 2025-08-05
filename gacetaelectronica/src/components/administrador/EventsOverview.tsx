@@ -22,7 +22,7 @@ export default function EventOverview() {
   const [events, setEvents] = useState<EventInterface[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [page, setPage] = useState(0);
+  const [page] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,6 +47,7 @@ export default function EventOverview() {
         setEvents(mapped);
         const totalEvents = await fetch("/api/eventos/count");
         const total = await totalEvents.json();
+        totalPages
         setTotalPages(Math.ceil(total / 15));
       } catch (err) {
         console.error("Error al cargar eventos:", err);
@@ -138,12 +139,12 @@ export default function EventOverview() {
     <>
       <Card>
         <CardHeader className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
-          <div>
-            <CardTitle>Todos los Eventos</CardTitle>
+            <div className="flex flex-col gap-1">
+            <CardTitle>Gestión de Eventos</CardTitle>
             <CardDescription>Vista general de los eventos registrados</CardDescription>
-          </div>
+            </div>
 
-          <div className="flex gap-2 w-full md:w-auto">
+            <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
             <div className="relative w-full md:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
@@ -187,6 +188,7 @@ export default function EventOverview() {
               </TableCell>
             </TableRow>
           ) : (
+            <div style={{ maxHeight: "400px", overflowY: "auto" }}>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -223,6 +225,7 @@ export default function EventOverview() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

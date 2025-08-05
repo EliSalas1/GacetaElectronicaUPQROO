@@ -97,12 +97,12 @@ export default function SearchBar() {
               </div>
             )}
           </div>
-          <button
+          {/* <button
             type="submit"
             className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-md"
           >
             Buscar
-          </button>
+          </button> */}
         </form>
       </div>
     </section>

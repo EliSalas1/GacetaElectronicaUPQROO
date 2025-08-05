@@ -106,7 +106,7 @@ export default function MyArticles({ onEditArticle }: MyArticlesProps) {
             IdCategoria:   raw.IdCategoria || 0,
             Categoria:     { 
               IdCategoria: raw.IdCategoria || 0,
-              Nombre: raw.category || raw.Categoria || 'Sin categoría' 
+              Nombre: raw.Categoria || raw.category || 'Sin categoría' 
             }
           }
           return mapped
@@ -254,16 +254,16 @@ export default function MyArticles({ onEditArticle }: MyArticlesProps) {
                     <Button variant="ghost" size="sm" onClick={() => handleViewArticle(art)}>
                       <Eye className="h-4 w-4" />
                     </Button>
-                    {(art.Estatus === 1 || art.Estatus === 2) && (
-                      <>
-                        <Button variant="ghost" size="sm" onClick={() => handleAction("Editar", art.Titulo, art)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteArticle(art.IdArticulo)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </>
+                    {/* Editar solo para artículos rechazados (estado 2) */}
+                    {art.Estatus === 2 && (
+                      <Button variant="ghost" size="sm" onClick={() => handleAction("Editar", art.Titulo, art)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
                     )}
+                    {/* Eliminar para todos los estados */}
+                    <Button variant="ghost" size="sm" onClick={() => handleDeleteArticle(art.IdArticulo)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>

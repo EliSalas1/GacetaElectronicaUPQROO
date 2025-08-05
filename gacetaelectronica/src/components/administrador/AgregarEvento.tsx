@@ -20,6 +20,7 @@ import {
   CardTitle,
   CardContent,
   CardFooter,
+  CardDescription,
 } from '@/components/ui/card'
 import { CirclePlus, PencilIcon } from 'lucide-react'
 import { toast } from 'sonner'
@@ -67,8 +68,6 @@ export default function AgregarEvento() {
 
       const json = await res.json()
       toast.success(json.message || 'Evento creado correctamente')
-
-      // Resetear formulario
       form.reset()
       setLongDescription('')
     } catch (err: any) {
@@ -80,10 +79,16 @@ export default function AgregarEvento() {
   }
 
   return (
-    <Card className="w-full max-w-full mx-auto p-6">
+    <Card className="w-full max-w-4xl mx-auto p-6 shadow-sm">
       <CardHeader>
-        <CardTitle className="text-2xl font-semibold">Agregar nuevo evento</CardTitle>
+        <div className="flex flex-col gap-1">
+          <CardTitle className="text-xl font-bold">Agregar nuevo evento</CardTitle>
+          <CardDescription className="text-sm text-muted-foreground">
+            Completa el formulario para registrar un nuevo evento en el sistema
+          </CardDescription>
+        </div>
       </CardHeader>
+
       <CardContent>
         <form id="form-evento" onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -131,10 +136,18 @@ export default function AgregarEvento() {
 
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button type="button" variant="outline" className="w-full py-3 mt-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full py-3 mt-4 text-gray-600 border border-gray-600 hover:bg-gray-300 hover:text-black cursor-pointer transition"
+              >
                 <PencilIcon className="mr-2 h-4 w-4" />
                 Agregar descripción larga
               </Button>
+
+
+
+
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -151,7 +164,13 @@ export default function AgregarEvento() {
                 className="w-full p-3"
               />
               <DialogFooter>
-                <Button onClick={() => setOpen(false)}>Guardar</Button>
+                <Button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="bg-white text-[#4C0000] border border-[#4C0000] hover:bg-[#4C0000] hover:text-white cursor-pointer transition"
+                >
+                  Guardar
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -161,12 +180,13 @@ export default function AgregarEvento() {
           <p className="text-sm text-red-500 mt-4">{error}</p>
         )}
       </CardContent>
+
       <CardFooter>
         <Button
           type="submit"
           form="form-evento"
           disabled={loading}
-          className="w-full py-3 mt-4"
+          className="w-full py-3 mt-4 bg-white text-[#4C0000] border border-[#4C0000] hover:bg-[#4C0000] hover:text-white transition  cursor-pointer"
         >
           <CirclePlus className="mr-2" />
           {loading ? 'Creando...' : 'Crear Evento'}
