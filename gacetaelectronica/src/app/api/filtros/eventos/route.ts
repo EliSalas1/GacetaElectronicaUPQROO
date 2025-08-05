@@ -22,4 +22,4 @@ export async function GET(req: NextRequest) {
     return new Response('Error al buscar eventos', { status: 500 });
   }
 }
-// 🧪 Endpoint: http://localhost:3000/api/filtros/eventos?nombre=Lanzamiento
+// 🧪 Endpoint: http://localhost:4000/api/filtros/eventos?nombre=Lanzamiento

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 // Configuración base para Google OAuth (sin googleapis por ahora)
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/drive/callback'
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:4000/api/drive/callback'
 
 export async function GET() {
   try {

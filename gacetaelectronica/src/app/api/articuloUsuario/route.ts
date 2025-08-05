@@ -39,8 +39,8 @@ export async function GET(req: NextRequest) {
     return new Response('Error en ArticuloUsuario', { status: 500 });
   }
 }
-//Endpoint usuarios segun articulo http://localhost:3000/api/articuloUsuario/?articuloId=1
-//Endpoint articulos segun usuario http://localhost:3000/api/articuloUsuario/?usuarioId=5
+//Endpoint usuarios segun articulo http://localhost:4000/api/articuloUsuario/?articuloId=1
+//Endpoint articulos segun usuario http://localhost:4000/api/articuloUsuario/?usuarioId=5
 
 
 // ✅ Crear nueva relación entre artículo y usuario (POST)
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
 }
 /*
 🧪 Endpoint:
-POST http://localhost:3000/api/articuloUsuario
+POST http://localhost:4000/api/articuloUsuario
 
 📦 Body JSON de ejemplo:
 {

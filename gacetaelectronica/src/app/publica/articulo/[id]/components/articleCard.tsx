@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { FiUser, FiCalendar, FiTag } from "react-icons/fi";
 import Image from "next/image";
-
+import { useMemo } from "react";
 interface ArticleCardProps {
   article: any;
 }
@@ -18,13 +18,23 @@ function getDriveImageUrl(driveUrl: string): string | null {
 const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  let imageUrls: string[] = [];
+  // let imageUrls: string[] = []; cambie esto para los warnings
+  // if (Array.isArray(article.Recursos)) {
+  //   imageUrls = article.Recursos.map(getDriveImageUrl).filter(Boolean) as string[];
+  // } else if (typeof article.Recursos === "string") {
+  //   const posibles = article.Recursos.split(",").map((s: string) => s.trim());
+  //   imageUrls = posibles.map(getDriveImageUrl).filter(Boolean) as string[];
+  // }
+
+  const imageUrls = useMemo(() => {
   if (Array.isArray(article.Recursos)) {
-    imageUrls = article.Recursos.map(getDriveImageUrl).filter(Boolean) as string[];
+    return article.Recursos.map(getDriveImageUrl).filter(Boolean) as string[];
   } else if (typeof article.Recursos === "string") {
     const posibles = article.Recursos.split(",").map((s: string) => s.trim());
-    imageUrls = posibles.map(getDriveImageUrl).filter(Boolean) as string[];
+    return posibles.map(getDriveImageUrl).filter(Boolean) as string[];
   }
+  return [];
+}, [article.Recursos]);
 
   useEffect(() => {
     if (imageUrls.length > 1) {

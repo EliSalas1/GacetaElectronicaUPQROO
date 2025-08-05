@@ -8,14 +8,14 @@ Agrega estas variables a tu archivo `.env.local`:
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID=1039047457855-0pdqq9ae39sa4421h6936vge0gmtu6dt.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=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
-GOOGLE_REDIRECT_URI=http://localhost:3000/api/drive/callback
+GOOGLE_REDIRECT_URI=http://localhost:4000/api/drive/callback
 
 # Google Drive API Token (opcional - se genera automáticamente)
 GOOGLE_ACCESS_TOKEN=your_access_token_here
 
 # NextAuth Configuration
 NEXTAUTH_SECRET=your-nextauth-secret-key-here
-NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_URL=http://localhost:4000
 ```
 
 ## Configuración en Google Cloud Console
@@ -31,8 +31,8 @@ NEXTAUTH_URL=http://localhost:3000
    - Ve a "APIs y servicios" > "Credenciales"
    - Haz clic en "Crear credenciales" > "ID de cliente de OAuth 2.0"
    - Configura las URLs autorizadas:
-     - `http://localhost:3000`
-     - `http://localhost:3000/api/drive/callback`
+     - `http://localhost:4000`
+     - `http://localhost:4000/api/drive/callback`
 
 ## APIs Implementadas
 

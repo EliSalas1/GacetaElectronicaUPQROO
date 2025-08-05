@@ -40,8 +40,8 @@ export async function GET(req: NextRequest) {
 }
 /*
 🧪 Endpoints de prueba:
-GET de eventos segun usuario http://localhost:3000/api/usuarioEvento?usuarioId=1
-GET usuarios segun evento http://localhost:3000/api/usuarioEvento?eventoId=2
+GET de eventos segun usuario http://localhost:4000/api/usuarioEvento?usuarioId=1
+GET usuarios segun evento http://localhost:4000/api/usuarioEvento?eventoId=2
 */
 
 // ✅ Crear relación Usuario - Evento
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
 
 /*
 🧪 POST Endpoint:
-http://localhost:3000/api/usuarioEvento
+http://localhost:4000/api/usuarioEvento
 
 📦 JSON Body Ejemplo 1:
 {

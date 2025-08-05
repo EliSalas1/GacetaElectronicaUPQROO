@@ -13,7 +13,7 @@ export default function ResumenTab() {
   useEffect(() => {
     const fetchResumen = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/filtros/calculos")
+        const res = await fetch("http://localhost:4000/api/filtros/calculos")
         if (!res.ok) throw new Error("Error al obtener resumen")
         const data = await res.json()
         setResumen(data)

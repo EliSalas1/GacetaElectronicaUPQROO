@@ -39,8 +39,8 @@ export async function GET(req: NextRequest) {
   }
 }
 /*
-GET etiquetas segun articulo http://localhost:3000/api/articuloEtiqueta?articuloId=1
-GET articulos segun etiqueta http://localhost:3000/api/articuloEtiqueta?etiquetaId=2
+GET etiquetas segun articulo http://localhost:4000/api/articuloEtiqueta?articuloId=1
+GET articulos segun etiqueta http://localhost:4000/api/articuloEtiqueta?etiquetaId=2
 */
 
 // ✅ Crear relación Artículo-Etiqueta con múltiples inserciones
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
 
 /*
 🧪 POST Endpoint:
-http://localhost:3000/api/articuloEtiqueta
+http://localhost:4000/api/articuloEtiqueta
 
 📦 Body JSON de ejemplo:
 {

@@ -40,8 +40,8 @@ export async function GET(req: NextRequest) {
 }
 
 /*
-GET de logros segun usuario http://localhost:3000/api/usuarioLogro?usuarioId=1
-GET de usuarios segun logros http://localhost:3000/api/usuarioLogro?logroId=2
+GET de logros segun usuario http://localhost:4000/api/usuarioLogro?usuarioId=1
+GET de usuarios segun logros http://localhost:4000/api/usuarioLogro?logroId=2
 */
 
 // ✅ Crear relación Usuario - Logro
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
 
 /*
 🧪 POST Endpoint:
-http://localhost:3000/api/usuarioLogro
+http://localhost:4000/api/usuarioLogro
 
 📦 JSON Body Ejemplo 1:
 {

@@ -31,5 +31,5 @@ export async function GET(req: NextRequest) {
     return new Response('Error al obtener artículos', { status: 500 });
   }
 }
-// http://localhost:3000/api/filtros/articulosPendientes?tipo=pendientes
-// http://localhost:3000/api/filtros/articulosPendientes?tipo=Otros
+// http://localhost:4000/api/filtros/articulosPendientes?tipo=pendientes
+// http://localhost:4000/api/filtros/articulosPendientes?tipo=Otros

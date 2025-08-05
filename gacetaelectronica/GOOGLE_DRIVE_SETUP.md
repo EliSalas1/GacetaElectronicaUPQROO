@@ -8,11 +8,11 @@ Crea un archivo `.env.local` en la raíz del proyecto con las siguientes variabl
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID=1039047457855-0pdqq9ae39sa4421h6936vge0gmtu6dt.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=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
-GOOGLE_REDIRECT_URI=http://localhost:3000/api/drive/callback
+GOOGLE_REDIRECT_URI=http://localhost:4000/api/drive/callback
 
 # NextAuth Configuration
 NEXTAUTH_SECRET=43p9f8hmUPnANbHE1d%0fWaJXyM8
-NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_URL=http://localhost:4000
 ```
 
 ## Funcionalidades Implementadas

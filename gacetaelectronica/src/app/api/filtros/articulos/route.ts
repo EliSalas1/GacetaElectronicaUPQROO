@@ -27,4 +27,4 @@ export async function GET(req: NextRequest) {
   }
 }
 // 🧪 Endpoint:
-//  http://localhost:3000/api/filtros/articulos?titulo=Tecnología
+//  http://localhost:4000/api/filtros/articulos?titulo=Tecnología
