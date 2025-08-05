@@ -22,7 +22,7 @@ export default function HomePage() {
       <section className="bg-gray-100 py-8">
         <div className="max-w-5xl mx-auto px-2 text-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Articulos Destacados
+            Artículos Destacados
           </h1>
           <p className="text-gray-600 max-w-xl mx-auto text-sm">
             Descubre los eventos y noticias más importantes de nuestra
@@ -45,7 +45,7 @@ export default function HomePage() {
             <div className="lg:col-span-2">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-3xl font-bold text-gray-800">
-                  Últimos Articulos
+                  Últimos Artículos
                 </h2>
 
                 {/* Botón opcional para ver todas las noticias */}

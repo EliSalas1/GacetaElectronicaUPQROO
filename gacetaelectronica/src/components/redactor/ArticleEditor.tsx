@@ -346,6 +346,9 @@ export default function ArticleEditor({ editMode = false, articleData, onArticle
     }
   }
 
+  console.log("Recursos actuales:", googleDriveResources);
+
+
 
   return (
     <Card>
@@ -470,7 +473,7 @@ export default function ArticleEditor({ editMode = false, articleData, onArticle
                 }
               />
               <p className="mt-2 text-sm text-gray-600">
-                Agrega links de archivos de Google Drive (Imagen, Video, PDF)
+                Agrega links de archivos de Google Drive (Imagen)
               </p>
               {googleDriveResources.length === 0 && (
                 <p className="mt-2 text-sm text-red-600 font-medium">
@@ -482,7 +485,7 @@ export default function ArticleEditor({ editMode = false, articleData, onArticle
             {/* Mostrar recursos de Google Drive agregados con vista previa */}
             {googleDriveResources.length > 0 ? (
               <div className="space-y-4">
-                <Label>Recursos de Google Drive agregados ({googleDriveResources.length}):</Label>
+                <Label>Recursos de Google Drive agregados ({googleDriveResources.length}):</Label>   
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {googleDriveResources.map((resource) => (
                     <ResourcePreview

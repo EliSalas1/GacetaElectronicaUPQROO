@@ -111,7 +111,7 @@ export default function GoogleDriveResourceDialog({ onResourcesAdded, trigger }:
         <DialogHeader>
           <DialogTitle>Agregar Recursos de Google Drive</DialogTitle>
           <DialogDescription>
-            Agrega links de archivos de Google Drive para tu artículo. Solo se permiten archivos de tipo Imagen, Video y PDF.
+            Agrega links de archivos de Google Drive para tu artículo. Solo se permiten archivos de tipo Imagen.
           </DialogDescription>
         </DialogHeader>
 
@@ -122,8 +122,10 @@ export default function GoogleDriveResourceDialog({ onResourcesAdded, trigger }:
             <div className="p-3 bg-gray-50 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
-                  <strong className="text-orange-600">Documentos:</strong>
-                  <p className="text-gray-600">PDF</p>
+                  <strong className="text-orange-600">Imagenes:</strong>
+                  <p className="text-gray-600">Tipo .png</p>
+                  <p className="text-gray-600">Tipo .jpg</p>
+                  <p className="text-gray-600">Tipo .web</p>
                 </div>
               </div>
             </div>

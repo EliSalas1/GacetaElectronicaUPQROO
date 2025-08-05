@@ -28,6 +28,9 @@ export default function NuevoUsuariosDialog() {
 
   // Estado local para los roles editados
   const [roles, setRoles] = useState<{ [key: number]: string }>({});
+  // Nuevo estado para confirmar rol Admin
+  const [showAdminConfirm, setShowAdminConfirm] = useState(false);
+  const [adminTargetUserId, setAdminTargetUserId] = useState<number | null>(null);
 
   const handleDelete = async (id: number) => {
     const usuario = usuarios.find((u) => u.idUsuarios === id);
@@ -70,13 +73,29 @@ export default function NuevoUsuariosDialog() {
     if (isDialogOpen) fetchUsuarios();
   }, [isDialogOpen]);
 
+    useEffect(() => {
+    if (isDialogOpen) fetchUsuarios();
+  }, [isDialogOpen]);
+
   const handleUpdateRolLocal = (id: number, newRol: string) => {
+    if (newRol === "Admin") {
+      setAdminTargetUserId(id);
+      setShowAdminConfirm(true);
+      return;
+    }
+
     setRoles((prev) => ({
       ...prev,
       [id]: newRol,
     }));
   };
 
+  // const handleUpdateRolLocal = (id: number, newRol: string) => {
+  //   setRoles((prev) => ({
+  //     ...prev,
+  //     [id]: newRol,
+  //   }));
+  // };
   const handleAccept = async (id: number) => {
     const usuario = usuarios.find((u) => u.idUsuarios === id);
     const nuevoRol = roles[id];
@@ -111,7 +130,61 @@ export default function NuevoUsuariosDialog() {
   };
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+
+        <>
+      {showAdminConfirm && (
+       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm pointer-events-none">
+  <div className="bg-white rounded-xl p-6 shadow-2xl w-[340px] border border-yellow-400 z-[9999] pointer-events-auto">
+
+            <div className="text-center">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-yellow-100 flex items-center justify-center">
+                <span className="text-2xl text-yellow-500">⚠️</span>
+              </div>
+              <h2 className="text-lg font-bold text-gray-900 mb-1">
+                ¿Asignar rol de Administrador?
+              </h2>
+              <p className="text-sm text-gray-700 mb-4">
+                Este rol tiene acceso completo al sistema.<br />¿Estás seguro?
+              </p>
+              <div className="flex justify-center gap-3">
+                <button
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
+                  onClick={() => {
+                    setShowAdminConfirm(false);
+                    setAdminTargetUserId(null);
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
+                  onClick={() => {
+                    if (adminTargetUserId !== null) {
+                      setRoles((prev) => ({
+                        ...prev,
+                        [adminTargetUserId]: "Admin",
+                      }));
+                    }
+                    setShowAdminConfirm(false);
+                    setAdminTargetUserId(null);
+                  }}
+                >
+                  Aceptar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+    {/* <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}> */}
+    <Dialog open={isDialogOpen} onOpenChange={(open) => {
+  // Si se está mostrando el modal de advertencia, NO cierres el principal
+  if (!showAdminConfirm) {
+    setIsDialogOpen(open);
+  }
+}}>
+
       <DialogTrigger asChild>
         <Button
           variant="outline"
@@ -199,5 +272,6 @@ export default function NuevoUsuariosDialog() {
         </div>
       </DialogContent>
     </Dialog>
+      </>
   );
 }
