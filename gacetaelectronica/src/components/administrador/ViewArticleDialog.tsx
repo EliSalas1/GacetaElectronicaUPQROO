@@ -10,14 +10,18 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ArticleInterface } from "@/entities/article";
+import { ResourceInterface } from "@/entities/resources";
+
 
 type Props = {
   open: boolean;
   onOpenChange: (value: boolean) => void;
   article: Partial<ArticleInterface> | null;
+  resources: ResourceInterface[]; // O usa un tipo mejor si lo tienes, como ResourceInterface[]
+  loadingResources: boolean;
 };
 
-export function ViewArticleDialog({ open, onOpenChange, article }: Props) {
+export function ViewArticleDialog({ open, onOpenChange, article, resources, loadingResources }: Props) {
   if (!article) return null;
 
   return (
@@ -51,13 +55,42 @@ export function ViewArticleDialog({ open, onOpenChange, article }: Props) {
             <p className="text-sm text-justify">{article.resumen}</p>
           </section>
 
-          {/* 🔹 Contenido */}
+
+        </div>
+        <div className="space-y-4 mt-4">
+          {/* 🔹 Contenido completo */}
           <section>
             <h3 className="font-semibold text-lg mb-2 text-orange-800">Contenido Completo</h3>
-            <div className="text-sm whitespace-pre-line text-justify leading-relaxed">
-              {article.contenido ?? "Sin contenido disponible"}
-            </div>
+            {article?.contenido ? (
+              <div
+                className="prose max-w-none text-sm"
+                style={{ whiteSpace: "pre-line", textAlign: "justify" }}
+                dangerouslySetInnerHTML={{ __html: article.contenido }}
+              />
+            ) : (
+              <p className="text-sm text-gray-500">Sin contenido disponible</p>
+            )}
           </section>
+
+          {/* Recursos asociados */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800">Recursos vinculados</h3>
+            {loadingResources ? (
+              <p className="text-gray-500 text-sm">Cargando recursos...</p>
+            ) : resources?.length === 0 ? (
+              <p className="text-sm text-gray-500">Sin recursos asociados.</p>
+            ) : (
+              <ul className="list-disc list-inside space-y-1 text-sm text-blue-600">
+                {resources.map((resource) => (
+                  <li key={resource.idRecurso}>
+                    <a href={resource.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                      {resource.nombre || resource.url}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         <DialogFooter>
