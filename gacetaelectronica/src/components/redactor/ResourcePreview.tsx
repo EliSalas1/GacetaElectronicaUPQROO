@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { X, FileText, Image, Video, File } from "lucide-react"
+import { X, FileText, Image as IconImage, Video, File } from "lucide-react"
 
+// import { X, FileText, Image, Video, File } from "lucide-react"
+import NextImage from "next/image"
 interface ResourcePreviewProps {
   resource: {
     idRecurso: string
@@ -22,7 +24,7 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
   const getIcon = (tipo: string) => {
     switch (tipo) {
       case 'imagen':
-        return <Image className="w-8 h-8 text-blue-500" />
+        return <IconImage  className="w-8 h-8 text-blue-500" />
       case 'video':
         return <Video className="w-8 h-8 text-red-500" />
       case 'pdf':
@@ -129,7 +131,7 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
             <div className="w-full h-full flex flex-col items-center justify-center space-y-2">
               <div className="text-center">
                 {resource.nombre === 'imagen' ? (
-                  <Image className="w-12 h-12 text-blue-500 mx-auto mb-2" />
+                  <IconImage  className="w-12 h-12 text-blue-500 mx-auto mb-2" />
                 ) : resource.nombre === 'video' ? (
                   <Video className="w-12 h-12 text-red-500 mx-auto mb-2" />
                 ) : (
@@ -149,14 +151,14 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
             // Se debe mostrar el recurso en el preview
           ) : fileInfo && resource.nombre === 'imagen' && fileInfo.previewUrls.thumbnail ? (
             <div className="relative w-full h-full">
-              <img
+              <NextImage
                 src={fileInfo.previewUrls.thumbnail}
-                alt={fileInfo.metadata.name || resource.nombre}
-                className="w-full h-full object-cover rounded-lg"
-                onError={() => {
-                  setError('No se pudo cargar la imagen')
-                }}
+                alt={`Vista previa de ${fileInfo.metadata.name || resource.nombre}`}
+                fill
+                style={{ objectFit: "cover" }}
+                className="rounded-lg"
               />
+
             </div>
           ) : fileInfo && resource.nombre === 'video' && fileInfo.previewUrls.direct ? (
             <div className="relative w-full h-full">
@@ -187,7 +189,7 @@ export default function ResourcePreview({ resource, onRemove }: ResourcePreviewP
             <div className="w-full h-full flex flex-col items-center justify-center space-y-2">
               <div className="text-center">
                 {resource.nombre === 'imagen' ? (
-                  <Image className="w-12 h-12 text-blue-500 mx-auto mb-2" />
+                  <IconImage  className="w-12 h-12 text-blue-500 mx-auto mb-2" />
                 ) : resource.nombre === 'video' ? (
                   <Video className="w-12 h-12 text-red-500 mx-auto mb-2" />
                 ) : (

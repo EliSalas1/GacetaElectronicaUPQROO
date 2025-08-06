@@ -49,7 +49,7 @@ export default function LoginPage() {
                 </h2>
                 <div className="border-2 w-10 inline-block mb-2" style={{ borderColor: "var(--color-naranja)" }}></div>
                 <p className="text-gray-400 my-3">Rol: {userInfo?.role}</p>
-                <p className="text-green-500 mt-2">
+                <p className="mt-2" style={{ color: "var(--color-naranja)" }}>
                   Redirigiendo al home en <span className="font-bold">{counter}</span>...
                 </p>
                 <button 

@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import Image from "next/image"
 
 
 export default function TestPreview() {
@@ -82,17 +83,19 @@ export default function TestPreview() {
         {previewUrl && (
           <div className="mt-4">
             <Label>Vista Previa:</Label>
-            <div className="w-full h-48 bg-gray-100 rounded border">
+            <div className="relative w-full h-48 bg-gray-100 rounded border">
               {tipo === 'imagen' ? (
-                <img 
-                  src={previewUrl} 
-                  alt="Preview" 
-                  className="w-full h-full object-cover rounded"
-                  onError={(e) => {
-                    console.error('Error loading image:', e)
-                    e.currentTarget.style.display = 'none'
+                <Image 
+                  src={previewUrl}
+                  alt="Vista previa de imagen"
+                  fill
+                  style={{ objectFit: "cover" }}
+                  className="rounded"
+                  onError={() => {
+                  console.error('Error loading image')
                   }}
                 />
+
               ) : (
                 <video 
                   src={previewUrl} 
