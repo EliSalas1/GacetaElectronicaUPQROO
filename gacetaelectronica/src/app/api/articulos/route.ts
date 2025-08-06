@@ -43,7 +43,8 @@ LEFT JOIN Etiquetas e ON ae.Etiquetas_IdEtiqueta = e.IdEtiqueta
 
 LEFT JOIN Recursos r ON a.idArticulo = r.Articulos_idArticulo
 
-WHERE a.idArticulo = ?
+WHERE a.idArticulo = ? AND a.Estatus = 1
+
 GROUP BY a.idArticulo
 `,
         [id]
