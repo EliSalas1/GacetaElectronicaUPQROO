@@ -32,15 +32,17 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [searchValue, setSearchValue] = useState("");
   const [filteredData, setFilteredData] = useState<UserInterface[]>([]);
+  const [filterBy, setFilterBy] = useState<string>("Rol");
+  const [filterValue, setFilterValue] = useState<string>("all");
   const [selectedUser, setSelectedUser] = useState<UserInterface | null>(null);
   const [isDialogUserOpen, setIsDialogUserOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  // ✅ Obtener usuarios desde API (ruta corregida)
+  // Obtener usuarios desde API
   const fetchUsuarios = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/usuarios"); // 👈 Asegúrate que tu handler esté aquí
+      const res = await fetch("/api/usuarios");
       if (!res.ok) throw new Error("Error al cargar usuarios");
       const data: UserInterface[] = await res.json();
       setUsuarios(data);
@@ -57,15 +59,22 @@ export default function UserManagement() {
   }, []);
 
   useEffect(() => {
-    const result = usuarios
-      .filter((u) => ["Admin", "Autor", "Revisor"].includes(u.Rol))
-      .filter(
-        (u) =>
-          u.Nombre.toLowerCase().includes(searchValue.toLowerCase()) ||
-          u.Correo.toLowerCase().includes(searchValue.toLowerCase())
-      );
+    let result = usuarios.filter(
+      (u) =>
+        u.Nombre.toLowerCase().includes(searchValue.toLowerCase()) ||
+        u.Correo.toLowerCase().includes(searchValue.toLowerCase())
+    );
+
+    if (filterBy === "Rol" && filterValue !== "all") {
+      result = result.filter((u) => u.Rol === filterValue);
+    }
+    if (filterBy === "Estado" && filterValue !== "all") {
+      const isActive = filterValue === "Activo";
+      result = result.filter((u) => Boolean(u.Estado) === isActive);
+    }
+
     setFilteredData(result);
-  }, [searchValue, usuarios]);
+  }, [searchValue, filterBy, filterValue, usuarios]);
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -140,6 +149,21 @@ export default function UserManagement() {
     }
   };
 
+  const availableFields = [
+    { label: "Rol", value: "Rol" },
+    { label: "Estado", value: "Estado" },
+  ];
+
+  const getFilterValues = (field: string): string[] => {
+    if (field === "Rol") {
+      return Array.from(new Set(usuarios.map((u) => u.Rol)));
+    }
+    if (field === "Estado") {
+      return ["Activo", "Inactivo"];
+    }
+    return [];
+  };
+
   return (
     <>
       <Card>
@@ -155,86 +179,80 @@ export default function UserManagement() {
               <FilterSearchBar
                 searchValue={searchValue}
                 onSearchChange={setSearchValue}
-                filterBy={""}
-                onFilterByChange={() => {}}
-                filterValue={""}
-                onFilterValueChange={() => {}}
-                availableFields={[]}
-                getFilterValues={() => []}
+                filterBy={filterBy}
+                onFilterByChange={setFilterBy}
+                filterValue={filterValue}
+                onFilterValueChange={setFilterValue}
+                availableFields={availableFields}
+                getFilterValues={getFilterValues}
               />
-              <NuevoUsuariosDialog
-                
-              />
+              <NuevoUsuariosDialog />
             </div>
           </div>
         </CardHeader>
         <CardContent>
-            <div style={{ maxHeight: "400px", overflowY: "auto" }}>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Fecha de Creación</TableHead>
-                <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
+          <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center">
-                    <Spinner />
-                  </TableCell>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Rol</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Fecha de Creación</TableHead>
+                  <TableHead>Acciones</TableHead>
                 </TableRow>
-              ) : filteredData.length > 0 ? (
-                filteredData.map((user) => (
-                  <TableRow key={user.idUsuarios}>
-                    <TableCell>{user.Nombre}</TableCell>
-                    <TableCell>{user.Correo}</TableCell>
-                    <TableCell>{getRoleBadge(user.Rol)}</TableCell>
-                    <TableCell>
-                      {getStatusBadge(Boolean(user.Estado))}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(user.FechaCreacion).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setIsDialogUserOpen(true);
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setIsDeleteOpen(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center">
+                      <Spinner />
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center">
-                    No hay usuarios encontrados.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                ) : filteredData.length > 0 ? (
+                  filteredData.map((user) => (
+                    <TableRow key={user.idUsuarios}>
+                      <TableCell>{user.Nombre}</TableCell>
+                      <TableCell>{user.Correo}</TableCell>
+                      <TableCell>{getRoleBadge(user.Rol)}</TableCell>
+                      <TableCell>{getStatusBadge(Boolean(user.Estado))}</TableCell>
+                      <TableCell>{new Date(user.FechaCreacion).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setIsDialogUserOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setIsDeleteOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center">
+                      No hay usuarios encontrados.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

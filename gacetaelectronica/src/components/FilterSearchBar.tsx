@@ -17,8 +17,8 @@ interface FilterSearchBarProps {
   onFilterByChange: (value: string) => void
   filterValue: string
   onFilterValueChange: (value: string) => void
-  availableFields: { label: string, value: string }[]
-  getFilterValues: (field: string) => string[]
+  availableFields: { label: string, value: string }[] 
+  getFilterValues: (field: string) => string[] 
   searchPlaceholder?: string
 }
 
@@ -61,7 +61,7 @@ export default function FilterSearchBar({
         value={filterBy}
         onValueChange={(val) => {
           onFilterByChange(val)
-          onFilterValueChange("all")
+          onFilterValueChange("all") 
         }}
       >
         <SelectTrigger className="w-40">
@@ -94,4 +94,3 @@ export default function FilterSearchBar({
     </div>
   )
 }
-

@@ -135,6 +135,9 @@ export async function DELETE(req: NextRequest) {
 
     const pool = await getConnection();
 
+    // Iniciar transacción
+    await pool.query('START TRANSACTION');
+
     // Verificar existencia del usuario
     const [user] = await pool.query(
       'SELECT * FROM Usuarios WHERE idUsuarios = ?',
@@ -142,24 +145,42 @@ export async function DELETE(req: NextRequest) {
     ) as [any[], any];
 
     if (user.length === 0) {
+      await pool.query('ROLLBACK');
       return new Response('Usuario no encontrado', { status: 404 });
     }
 
-    // Eliminar registros relacionados en UsuarioLogro
+    // Eliminar relaciones del usuario en las tablas relacionadas
+    await pool.query(
+      'DELETE FROM UsuarioEvento WHERE Usuarios_idUsuarios = ?',
+      [id]
+    );
+
     await pool.query(
       'DELETE FROM UsuarioLogro WHERE Usuarios_idUsuarios = ?',
       [id]
     );
 
-    // Luego eliminar el usuario
+    // No eliminamos los artículos, solo las relaciones
+    await pool.query(
+      'DELETE FROM ArticuloUsuario WHERE Usuarios_idUsuarios = ?',
+      [id]
+    );
+
+    // Finalmente, eliminar el usuario
     await pool.query(
       'DELETE FROM Usuarios WHERE idUsuarios = ?',
       [id]
     );
 
+    // Confirmar transacción
+    await pool.query('COMMIT');
+
     return Response.json({ message: 'Usuario eliminado correctamente (y sus relaciones)' });
 
   } catch (err: any) {
+    // En caso de error, hacer rollback
+    const pool = await getConnection();
+    await pool.query('ROLLBACK');
     console.error('Error en DELETE usuarios:', err.message);
     return new Response(`Error al eliminar usuario: ${err.message}`, { status: 500 });
   }
