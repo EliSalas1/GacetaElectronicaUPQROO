@@ -57,7 +57,7 @@ export default function EventOverview() {
     };
 
     fetchEvents();
-  }, [page]);
+}, [page, totalPages]);
 
   const filteredEvents = events.filter((event) => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase());

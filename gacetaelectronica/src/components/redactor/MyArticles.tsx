@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback  } from "react"
 import { toast } from "sonner"
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle
@@ -72,59 +72,59 @@ export default function MyArticles({ onEditArticle }: MyArticlesProps) {
   const [selectedArticleResources, setSelectedArticleResources] = useState<any[]>([])
   const [loadingResources, setLoadingResources] = useState(false)
 
-  const loadUserArticles = async () => {
-    if (!userInfo?.id) {
-      setError('No se pudo identificar al usuario')
-      setLoading(false)
-      return
-    }
-    try {
-      setLoading(true)
-      setError(null)
-      const userId = userInfo.id
-      const resp = await fetch(`/api/articuloUsuario?usuarioId=${userId}`)
-      if (!resp.ok) throw new Error('Error al cargar los artículos')
-      const userArticles = await resp.json()
-
-      const detailed = await Promise.all(
-        userArticles.map(async (a: any) => {
-          const articleId = a.IdArticulo || a.idArticulo
-          if (!articleId) return null
-          const r = await fetch(`/api/articulos?id=${articleId}&include=categoria`)
-          if (!r.ok) return null
-          const raw = await r.json()
-          // mapeo de campos
-          const mapped: Articulo = {
-            IdArticulo:    articleId,
-            Titulo:        raw.Titulo,
-            Resumen:       raw.Resumen,
-            Contenido:     raw.Contenido,
-            FechaCreacion: raw.createdAt,
-            FechaRevision: raw.reviewedAt,
-            Comentario:    raw.comment,
-            Estatus:       ({ published: 1, pending: 0, rejected: 2, unknown: 0 } as any)[raw.status] ?? 0,
-            IdCategoria:   raw.IdCategoria || 0,
-            Categoria:     { 
-              IdCategoria: raw.IdCategoria || 0,
-              Nombre: raw.Categoria || raw.category || 'Sin categoría' 
-            }
-          }
-          return mapped
-        })
-      )
-
-      setArticles(detailed.filter((x): x is Articulo => x !== null))
-    } catch (err) {
-      console.error(err)
-      setError('Error al cargar los artículos')
-    } finally {
-      setLoading(false)
-    }
+const loadUserArticles = useCallback(async () => {
+  if (!userInfo?.id) {
+    setError('No se pudo identificar al usuario')
+    setLoading(false)
+    return
   }
+  try {
+    setLoading(true)
+    setError(null)
+    const userId = userInfo.id
+    const resp = await fetch(`/api/articuloUsuario?usuarioId=${userId}`)
+    if (!resp.ok) throw new Error('Error al cargar los artículos')
+    const userArticles = await resp.json()
+
+    const detailed = await Promise.all(
+      userArticles.map(async (a: any) => {
+        const articleId = a.IdArticulo || a.idArticulo
+        if (!articleId) return null
+        const r = await fetch(`/api/articulos?id=${articleId}&include=categoria`)
+        if (!r.ok) return null
+        const raw = await r.json()
+        const mapped: Articulo = {
+          IdArticulo: articleId,
+          Titulo: raw.Titulo,
+          Resumen: raw.Resumen,
+          Contenido: raw.Contenido,
+          FechaCreacion: raw.createdAt,
+          FechaRevision: raw.reviewedAt,
+          Comentario: raw.comment,
+          Estatus: ({ published: 1, pending: 0, rejected: 2, unknown: 0 } as any)[raw.status] ?? 0,
+          IdCategoria: raw.IdCategoria || 0,
+          Categoria: {
+            IdCategoria: raw.IdCategoria || 0,
+            Nombre: raw.Categoria || raw.category || 'Sin categoría'
+          }
+        }
+        return mapped
+      })
+    )
+
+    setArticles(detailed.filter((x): x is Articulo => x !== null))
+  } catch (err) {
+    console.error(err)
+    setError('Error al cargar los artículos')
+  } finally {
+    setLoading(false)
+  }
+}, [userInfo?.id])
+
 
   useEffect(() => {
     if (!userLoading && userInfo?.id) loadUserArticles()
-  }, [userLoading, userInfo?.id])
+}, [userLoading, userInfo?.id, loadUserArticles]);
 
   const handleViewArticle = async (article: Articulo) => {
     setSelectedArticle(article)
