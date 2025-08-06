@@ -176,7 +176,7 @@ const handleViewArticle = async (article: ArticleInterface) => {
   setViewOpen(true);
 
   try {
-    const res = await fetch(`http://localhost:4000/api/articulos?id=${article.id}`);
+    const res = await fetch(`/api/articulos?id=${article.id}`);
     const data = await res.json();
 
     // Procesar los recursos (vienen como string separados por coma)

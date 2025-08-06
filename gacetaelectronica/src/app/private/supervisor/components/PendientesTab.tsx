@@ -123,7 +123,8 @@ export default function PendientesTab() {
 
   try {
     // NUEVO: fetch desde API que devuelve todo
-    const res = await fetch(`http://localhost:4000/api/articulos?id=${art.idArticulo}`);
+    //CAMBIO AQUI
+    const res = await fetch(`/api/articulos?id=${art.idArticulo}`);
     const data = await res.json();
 
     // Asignar datos al modal
