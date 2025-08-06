@@ -52,7 +52,7 @@ export default function PendientesTab() {
 
         const autores = await Promise.all(data.map(async art => {
           try {
-            const r = await fetch(/api/articuloUsuario?articuloId=${art.idArticulo});
+            const r = await fetch(`/api/articuloUsuario?articuloId=${art.idArticulo}`);
             const u: Usuario[] = r.ok ? await r.json() : [];
             return [art.idArticulo, u[0]?.Nombre || "Desconocido"];
           } catch { return [art.idArticulo, "Desconocido"]; }
@@ -84,7 +84,7 @@ export default function PendientesTab() {
   useEffect(() => setCurrentPage(1), [searchTerm, filterType, filterCategoria, filterAutor, filterDateFrom, filterDateTo]);
 
   const updateArticulo = async (id: number, body: any, successMsg: string) => {
-    const res = await fetch(/api/articulos?id=${id}, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const res = await fetch(`/api/articulos?id=${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (!res.ok) return toast.error(await res.text());
     toast.success(successMsg);
     setArticulos(p => p.filter(a => a.idArticulo !== id));
@@ -93,14 +93,14 @@ export default function PendientesTab() {
   const handleRejectArticle = (art: Articulo) =>
     !art.Comentario?.trim()
       ? setFeedbackModal({ isOpen: true, articleId: art.idArticulo, articleTitle: art.Titulo, authorName: autoresMap[art.idArticulo] ?? "Desconocido" })
-      : updateArticulo(art.idArticulo, { Estatus: 2 }, Artículo "${art.Titulo}" rechazado correctamente);
+      : updateArticulo(art.idArticulo, { Estatus: 2 }, `Artículo "${art.Titulo}" rechazado correctamente`);
 
   const handleFeedbackSubmit = async (comment: string): Promise<void> => {
     const articulo = articulos.find(a => a.idArticulo === feedbackModal.articleId);
     const body: any = { Comentario: comment };
     if (articulo && !articulo.FechaRevision) body.FechaRevision = new Date().toISOString();
 
-    const res = await fetch(/api/articulos?id=${feedbackModal.articleId}, {
+    const res = await fetch(`/api/articulos?id=${feedbackModal.articleId}`, {
       method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
     });
     if (!res.ok) {
@@ -123,7 +123,7 @@ export default function PendientesTab() {
 
   try {
     // NUEVO: fetch desde API que devuelve todo
-    const res = await fetch(http://localhost:4000/api/articulos?id=${art.idArticulo});
+    const res = await fetch(`http://localhost:4000/api/articulos?id=${art.idArticulo}`);
     const data = await res.json();
 
     // Asignar datos al modal
@@ -147,7 +147,7 @@ export default function PendientesTab() {
     const parsedResources =
       data.Recursos?.split(",").map((url: string, i: number) => ({
         idRecurso: i + 1,
-        nombre: Recurso ${i + 1},
+        nombre: `Recurso ${i + 1}`,
         url: url.trim(),
         tipo: "otro",
         idArticulo: art.idArticulo,
@@ -234,7 +234,7 @@ export default function PendientesTab() {
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">
                         <Button variant="ghost" size="sm" onClick={() => handleViewArticle(art)} className="h-8 w-8 p-0"><Eye className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="sm" onClick={() => updateArticulo(art.idArticulo, { Estatus: 1 }, Artículo "${art.Titulo}" aprobado correctamente)} className="h-8 w-8 p-0 text-green-600"><Check className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => updateArticulo(art.idArticulo, { Estatus: 1 }, `Artículo "${art.Titulo}" aprobado correctamente`)} className="h-8 w-8 p-0 text-green-600"><Check className="h-4 w-4" /></Button>
                         <Button variant="ghost" size="sm" onClick={() => handleRejectArticle(art)} className="h-8 w-8 p-0 text-red-600"><X className="h-4 w-4" /></Button>
                       </div>
                     </TableCell>

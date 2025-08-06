@@ -13,7 +13,7 @@ export const GuiaArticulosContainer: FC = () => {
         Guía de Redacción para Autores
       </h1>
       <p className="text-sm text-center text-gray-600 mb-8">
-        Gaceta Universitaria J-UP
+        Gaceta Universitaria UPQROO
       </p>
 
       <SimpleCard

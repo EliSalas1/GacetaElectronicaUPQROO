@@ -50,7 +50,7 @@ export default function GoogleDriveResourceDialog({ onResourcesAdded, trigger }:
       return
     }
     // Generar nombre automático
-    
+    const autoName = currentResource.nombre.charAt(0).toUpperCase() + currentResource.nombre.slice(1)
     const newResource: GoogleDriveResource = {
       idRecurso: Date.now().toString(),
       nombre: currentResource.nombre,
@@ -122,8 +122,11 @@ export default function GoogleDriveResourceDialog({ onResourcesAdded, trigger }:
             <div className="p-3 bg-gray-50 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
-                  <strong className="text-orange-600">Documentos:</strong>
+                  <strong className="text-orange-600">Imagenes:</strong>
                   <p className="text-gray-600">PDF</p>
+                  <p className="text-gray-600">Tipo .png</p>
+                  <p className="text-gray-600">Tipo .jpg</p>
+                  <p className="text-gray-600">Tipo .web</p>
                 </div>
               </div>
             </div>

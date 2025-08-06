@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import {Send, Link } from "lucide-react"
+import { Send, Link } from "lucide-react"
 import GoogleDriveResourceDialog from "./GoogleDriveResourceDialog"
 import ResourcePreview from "./ResourcePreview"
 import { useSessionUser } from "@/hooks/useSessionUser"
@@ -470,7 +470,7 @@ export default function ArticleEditor({ editMode = false, articleData, onArticle
                 }
               />
               <p className="mt-2 text-sm text-gray-600">
-                Agrega links de archivos de Google Drive (Imagen, Video, PDF)
+                Agrega links de archivos de Google Drive (Imagen)
               </p>
               {googleDriveResources.length === 0 && (
                 <p className="mt-2 text-sm text-red-600 font-medium">
