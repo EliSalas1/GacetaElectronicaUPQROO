@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -44,44 +44,45 @@ export default function Page() {
     if (!userLoading && userInfo?.role !== "Autor") {
       router.push("/forbidden");
     }
-  }, [userLoading, userInfo?.role, status]);
+  }, [router, userLoading, userInfo?.role, status]);
 
-  const loadArticleStats = async () => {
-    if (!userInfo?.id) {
-      setLoading(false);
-      return;
-    }
+const loadArticleStats = useCallback(async () => {
+  if (!userInfo?.id) {
+    setLoading(false);
+    return;
+  }
 
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/articuloUsuario?usuarioId=${userInfo.id}`);
-      if (!response.ok) throw new Error("Error al cargar estadísticas");
+  try {
+    setLoading(true);
+    const response = await fetch(`/api/articuloUsuario?usuarioId=${userInfo.id}`);
+    if (!response.ok) throw new Error("Error al cargar estadísticas");
 
-      const userArticles = await response.json();
+    const userArticles = await response.json();
 
-      const articlesWithDetails = await Promise.all(
-        userArticles.map(async (article: any) => {
-          try {
-            const articleResponse = await fetch(`/api/articulos?id=${article.idArticulo}`);
-            return articleResponse.ok ? await articleResponse.json() : null;
-          } catch (error) {
-            console.error("Error al obtener detalles del artículo:", error);
-            return null;
-          }
-        })
-      );
+    const articlesWithDetails = await Promise.all(
+      userArticles.map(async (article: any) => {
+        try {
+          const articleResponse = await fetch(`/api/articulos?id=${article.idArticulo}`);
+          return articleResponse.ok ? await articleResponse.json() : null;
+        } catch (error) {
+          console.error("Error al obtener detalles del artículo:", error);
+          return null;
+        }
+      })
+    );
 
-      const validArticles = articlesWithDetails.filter((a) => a !== null);
-      const published = validArticles.filter((a: any) => a.status === 'published').length;
-      const pending = validArticles.filter((a: any) => a.status === 'pending').length;
+    const validArticles = articlesWithDetails.filter((a) => a !== null);
+    const published = validArticles.filter((a: any) => a.status === 'published').length;
+    const pending = validArticles.filter((a: any) => a.status === 'pending').length;
 
-      setStats({ published, pending });
-    } catch (error) {
-      console.error("Error al cargar estadísticas:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setStats({ published, pending });
+  } catch (error) {
+    console.error("Error al cargar estadísticas:", error);
+  } finally {
+    setLoading(false);
+  }
+}, [userInfo?.id]);
+
 
   const handleEditArticle = (article: ArticleData) => {
     setArticleData(article);
@@ -113,7 +114,7 @@ export default function Page() {
         localStorage.removeItem("editArticleData");
       }
     }
-  }, [userInfo?.id, userLoading]);
+}, [userInfo?.id, userLoading, loadArticleStats]);
 
   return (
     <div className="min-h-screen bg-gray-50">

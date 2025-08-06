@@ -1,17 +1,43 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { useSessionUser } from "@/hooks/useSessionUser"; // Asegúrate de que esta ruta es correcta
+import { useSessionUser } from "@/hooks/useSessionUser";
 import GoogleButton from "@/components/Sign-in-up/GoogleButton";
 import AuthForm from "@/components/Sign-in-up/AuthForm";
 import SidePanel from "@/components/Sign-in-up/SidePanel";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const { status } = useSession(); // Usa useSession para obtener la sesión
-  const { userInfo, loading } = useSessionUser(); // Usamos el hook para obtener la info del usuario
+  const { status } = useSession();
+  const { userInfo, loading } = useSessionUser();
+  const router = useRouter();
+  const [counter, setCounter] = useState(3);
+
+  useEffect(() => {
+    if (status === "authenticated" && !loading) {
+      const interval = setInterval(() => {
+        setCounter((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval); // detener el intervalo si llega a 0
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      const timeout = setTimeout(() => {
+        router.push("/");
+      }, 3000);
+
+      return () => {
+        clearInterval(interval);
+        clearTimeout(timeout);
+      };
+    }
+  }, [status, loading, router]);
 
   if (status === "authenticated" && !loading) {
-    // Si el usuario está logueado, muestra el nombre y un botón para cerrar sesión
     return (
       <div className="flex flex-col items-center justify-center min-h-screen py-2" style={{ backgroundColor: "var(--color-fondo)" }}>
         <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
@@ -22,7 +48,10 @@ export default function LoginPage() {
                   Bienvenido, {userInfo?.name}
                 </h2>
                 <div className="border-2 w-10 inline-block mb-2" style={{ borderColor: "var(--color-naranja)" }}></div>
-                <p className="text-gray-400 my-3">Rol: {userInfo?.role}</p> {/* Muestra el rol del usuario */}
+                <p className="text-gray-400 my-3">Rol: {userInfo?.role}</p>
+                <p className="text-green-500 mt-2">
+                  Redirigiendo al home en <span className="font-bold">{counter}</span>...
+                </p>
                 <button 
                   onClick={() => signOut()} 
                   className="mt-4 bg-red-500 text-white px-6 py-2 rounded-md hover:bg-red-600 transition duration-200"
@@ -38,7 +67,6 @@ export default function LoginPage() {
     );
   }
 
-  // Si el usuario no está logueado, muestra el formulario de inicio de sesión
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2" style={{ backgroundColor: "var(--color-fondo)" }}>
       <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">

@@ -19,9 +19,15 @@ import {
 import { toast } from "sonner";
 
 interface Articulo {
-  idArticulo: number; Titulo: string; categoria: string;
-  FechaCreacion: string; FechaRevision?: string;
-  Estatus: number; Comentario?: string; Resumen?: string; Contenido?: string;
+  idArticulo: number; 
+  Titulo: string; 
+  categoria: string;
+  FechaCreacion: string; 
+  FechaRevision?: string;
+  Estatus: number; 
+  Comentario?: string; 
+  Resumen?: string; 
+  Contenido?: string;
 }
 interface Usuario { idUsuarios: number; Nombre: string; }
 const ITEMS_PER_PAGE = 10;
@@ -77,26 +83,35 @@ export default function PendientesTab() {
     }), [articulos, searchTerm, filterType, filterCategoria, filterAutor, filterDateFrom, filterDateTo, autoresMap]
   );
 
- 
   const currentItems = filteredArticulos.slice((currentPage-1)*ITEMS_PER_PAGE, currentPage*ITEMS_PER_PAGE);
   useEffect(() => setCurrentPage(1), [searchTerm, filterType, filterCategoria, filterAutor, filterDateFrom, filterDateTo]);
 
   const updateArticulo = async (id:number, body:any, successMsg:string) => {
-    const res = await fetch(`/api/articulos?id=${id}`, { method: "PUT", headers: {"Content-Type":"application/json"}, body: JSON.stringify(body) });
+    const res = await fetch(`/api/articulos?id=${id}`, { 
+      method: "PUT", 
+      headers: {"Content-Type":"application/json"}, 
+      body: JSON.stringify(body) 
+    });
     if (!res.ok) return toast.error(await res.text());
     toast.success(successMsg);
     setArticulos(p => p.filter(a => a.idArticulo !== id));
   };
 
   const handleRejectArticle = (art:Articulo) =>
-    !art.Comentario?.trim()
-      ? setFeedbackModal({ isOpen:true, articleId:art.idArticulo, articleTitle:art.Titulo, authorName:autoresMap[art.idArticulo] ?? "Desconocido" })
-      : updateArticulo(art.idArticulo,{Estatus:2},`Artículo "${art.Titulo}" rechazado correctamente`);
+    setFeedbackModal({ 
+      isOpen:true, 
+      articleId:art.idArticulo, 
+      articleTitle:art.Titulo, 
+      authorName:autoresMap[art.idArticulo] ?? "Desconocido" 
+    });
 
   const handleFeedbackSubmit = async (comment:string): Promise<void> => {
     const articulo = articulos.find(a => a.idArticulo === feedbackModal.articleId);
-    const body:any = { Comentario: comment };
-    if (articulo && !articulo.FechaRevision) body.FechaRevision = new Date().toISOString();
+    const body:any = { 
+      Comentario: comment,
+      Estatus: 2,
+      FechaRevision: articulo?.FechaRevision || new Date().toISOString()
+    };
 
     const res = await fetch(`/api/articulos?id=${feedbackModal.articleId}`, {
       method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)
@@ -105,11 +120,11 @@ export default function PendientesTab() {
       toast.error(await res.text());
       return;
     }
-    toast.success("Comentario agregado y fecha de revisión actualizada");
+    toast.success("Comentario agregado, fecha de revisión y estatus actualizados");
     setArticulos(prev =>
       prev.map(a =>
         a.idArticulo === feedbackModal.articleId
-          ? { ...a, Comentario: comment, FechaRevision: body.FechaRevision || a.FechaRevision }
+          ? { ...a, Comentario: comment, FechaRevision: body.FechaRevision, Estatus: 2 }
           : a
       )
     );
@@ -117,9 +132,7 @@ export default function PendientesTab() {
   };
 
   const handleViewArticle = (art:Articulo) => {
-    console.log("🧪 Artículo completo:", art);
     setSelectedArticle({
-      
       title: art.Titulo,
       author: autoresMap[art.idArticulo] ?? "Desconocido",
       category: art.categoria,
@@ -127,7 +140,6 @@ export default function PendientesTab() {
       createdAt: new Date(art.FechaCreacion).toLocaleDateString("es-ES"),
       resumen: art.Resumen ?? "Sin resumen disponible",
       contenido: art.Contenido ?? "Sin contenido disponible",
-
     });
     setViewDialogOpen(true);
   };
@@ -153,7 +165,9 @@ export default function PendientesTab() {
                   <Select value={filterType} onValueChange={v=>setFilterType(v as any)}>
                     <SelectTrigger className="w-40 flex items-center gap-2"><FunnelIcon className="w-4 h-4" /><SelectValue placeholder="Filtro" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="categoria">Categoría</SelectItem><SelectItem value="autor">Autor</SelectItem><SelectItem value="fecha">Fecha de Envío</SelectItem>
+                      <SelectItem value="categoria">Categoría</SelectItem>
+                      <SelectItem value="autor">Autor</SelectItem>
+                      <SelectItem value="fecha">Fecha de Envío</SelectItem>
                     </SelectContent>
                   </Select>
                   {filterType==="categoria" && (
