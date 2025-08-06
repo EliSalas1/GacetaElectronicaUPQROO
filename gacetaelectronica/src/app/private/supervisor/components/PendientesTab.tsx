@@ -33,12 +33,14 @@ export default function PendientesTab() {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState<"categoria"|"autor"|"fecha">("categoria");
+  const [filterType, setFilterType] = useState<"categoria" | "autor" | "fecha">("categoria");
   const [filterCategoria, setFilterCategoria] = useState("all");
   const [filterAutor, setFilterAutor] = useState("all");
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [resources, setResources] = useState([]);
+  const [loadingResources, setLoadingResources] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -77,29 +79,29 @@ export default function PendientesTab() {
     }), [articulos, searchTerm, filterType, filterCategoria, filterAutor, filterDateFrom, filterDateTo, autoresMap]
   );
 
- 
-  const currentItems = filteredArticulos.slice((currentPage-1)*ITEMS_PER_PAGE, currentPage*ITEMS_PER_PAGE);
+
+  const currentItems = filteredArticulos.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
   useEffect(() => setCurrentPage(1), [searchTerm, filterType, filterCategoria, filterAutor, filterDateFrom, filterDateTo]);
 
-  const updateArticulo = async (id:number, body:any, successMsg:string) => {
-    const res = await fetch(`/api/articulos?id=${id}`, { method: "PUT", headers: {"Content-Type":"application/json"}, body: JSON.stringify(body) });
+  const updateArticulo = async (id: number, body: any, successMsg: string) => {
+    const res = await fetch(`/api/articulos?id=${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (!res.ok) return toast.error(await res.text());
     toast.success(successMsg);
     setArticulos(p => p.filter(a => a.idArticulo !== id));
   };
 
-  const handleRejectArticle = (art:Articulo) =>
+  const handleRejectArticle = (art: Articulo) =>
     !art.Comentario?.trim()
-      ? setFeedbackModal({ isOpen:true, articleId:art.idArticulo, articleTitle:art.Titulo, authorName:autoresMap[art.idArticulo] ?? "Desconocido" })
-      : updateArticulo(art.idArticulo,{Estatus:2},`Artículo "${art.Titulo}" rechazado correctamente`);
+      ? setFeedbackModal({ isOpen: true, articleId: art.idArticulo, articleTitle: art.Titulo, authorName: autoresMap[art.idArticulo] ?? "Desconocido" })
+      : updateArticulo(art.idArticulo, { Estatus: 2 }, `Artículo "${art.Titulo}" rechazado correctamente`);
 
-  const handleFeedbackSubmit = async (comment:string): Promise<void> => {
+  const handleFeedbackSubmit = async (comment: string): Promise<void> => {
     const articulo = articulos.find(a => a.idArticulo === feedbackModal.articleId);
-    const body:any = { Comentario: comment };
+    const body: any = { Comentario: comment };
     if (articulo && !articulo.FechaRevision) body.FechaRevision = new Date().toISOString();
 
     const res = await fetch(`/api/articulos?id=${feedbackModal.articleId}`, {
-      method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)
+      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
     });
     if (!res.ok) {
       toast.error(await res.text());
@@ -113,24 +115,56 @@ export default function PendientesTab() {
           : a
       )
     );
-    setFeedbackModal({ isOpen:false, articleId:0, articleTitle:"", authorName:"" });
+    setFeedbackModal({ isOpen: false, articleId: 0, articleTitle: "", authorName: "" });
   };
 
-  const handleViewArticle = (art:Articulo) => {
-    console.log("🧪 Artículo completo:", art);
+  const handleViewArticle = async (art: Articulo) => {
+  setLoadingResources(true);
+
+  try {
+    // NUEVO: fetch desde API que devuelve todo
+    const res = await fetch(`http://localhost:4000/api/articulos?id=${art.idArticulo}`);
+    const data = await res.json();
+
+    // Asignar datos al modal
     setSelectedArticle({
-      
-      title: art.Titulo,
+      title: data.Titulo,
       author: autoresMap[art.idArticulo] ?? "Desconocido",
-      category: art.categoria,
-      status: art.Estatus === 1 ? "Publicado" : art.Estatus === 0 ? "Pendiente" : "Rechazado",
-      createdAt: new Date(art.FechaCreacion).toLocaleDateString("es-ES"),
-      resumen: art.Resumen ?? "Sin resumen disponible",
-      contenido: art.Contenido ?? "Sin contenido disponible",
-
+      category: data.Categoria,
+      status:
+        data.status === "published"
+          ? "Publicado"
+          : data.status === "pending"
+          ? "Pendiente"
+          : "Rechazado",
+      createdAt: new Date(data.createdAt).toLocaleDateString("es-ES"),
+      resumen: data.Resumen,
+      contenido: data.Contenido,
+      id: art.idArticulo,
     });
-    setViewDialogOpen(true);
-  };
+
+    // Procesar recursos desde el string
+    const parsedResources =
+      data.Recursos?.split(",").map((url: string, i: number) => ({
+        idRecurso: i + 1,
+        nombre: `Recurso ${i + 1}`,
+        url: url.trim(),
+        tipo: "otro",
+        idArticulo: art.idArticulo,
+      })) ?? [];
+
+    setResources(parsedResources);
+  } catch (err) {
+    console.error("Error al cargar datos del artículo", err);
+    setSelectedArticle(null);
+    setResources([]);
+  }
+
+  setLoadingResources(false);
+  setViewDialogOpen(true);
+};
+
+
 
   return (
     <>
@@ -148,30 +182,30 @@ export default function PendientesTab() {
             </div>
             <div className="flex flex-col gap-2 w-full sm:w-auto">
               <div className="flex gap-2">
-                <Input placeholder="Buscar título o autor" value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} className="w-full sm:w-72" />
+                <Input placeholder="Buscar título o autor" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full sm:w-72" />
                 <div className="relative flex flex-col items-end gap-2">
-                  <Select value={filterType} onValueChange={v=>setFilterType(v as any)}>
+                  <Select value={filterType} onValueChange={v => setFilterType(v as any)}>
                     <SelectTrigger className="w-40 flex items-center gap-2"><FunnelIcon className="w-4 h-4" /><SelectValue placeholder="Filtro" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="categoria">Categoría</SelectItem><SelectItem value="autor">Autor</SelectItem><SelectItem value="fecha">Fecha de Envío</SelectItem>
                     </SelectContent>
                   </Select>
-                  {filterType==="categoria" && (
+                  {filterType === "categoria" && (
                     <Select value={filterCategoria} onValueChange={setFilterCategoria}>
                       <SelectTrigger className="w-40"><SelectValue placeholder="Categoría" /></SelectTrigger>
-                      <SelectContent><SelectItem value="all">Todos</SelectItem>{categoriasUnicas.map(c=><SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                      <SelectContent><SelectItem value="all">Todos</SelectItem>{categoriasUnicas.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                     </Select>
                   )}
-                  {filterType==="autor" && (
+                  {filterType === "autor" && (
                     <Select value={filterAutor} onValueChange={setFilterAutor}>
                       <SelectTrigger className="w-40"><SelectValue placeholder="Autor" /></SelectTrigger>
-                      <SelectContent><SelectItem value="all">Todos</SelectItem>{autoresUnicos.map(a=><SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent>
+                      <SelectContent><SelectItem value="all">Todos</SelectItem>{autoresUnicos.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent>
                     </Select>
                   )}
-                  {filterType==="fecha" && (
+                  {filterType === "fecha" && (
                     <div className="absolute top-full right-0 mt-2 flex flex-col sm:flex-row gap-2 bg-white p-2 rounded-md shadow-md z-10">
-                      <Input type="date" value={filterDateFrom} onChange={e=>setFilterDateFrom(e.target.value)} className="w-40" />
-                      <Input type="date" value={filterDateTo} onChange={e=>setFilterDateTo(e.target.value)} className="w-40" />
+                      <Input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)} className="w-40" />
+                      <Input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)} className="w-40" />
                     </div>
                   )}
                 </div>
@@ -201,9 +235,9 @@ export default function PendientesTab() {
                     <TableCell className="hidden lg:table-cell text-sm">{new Date(art.FechaCreacion).toLocaleDateString("es-ES")}</TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">
-                        <Button variant="ghost" size="sm" onClick={()=>handleViewArticle(art)} className="h-8 w-8 p-0"><Eye className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="sm" onClick={()=>updateArticulo(art.idArticulo,{Estatus:1},`Artículo "${art.Titulo}" aprobado correctamente`)} className="h-8 w-8 p-0 text-green-600"><Check className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="sm" onClick={()=>handleRejectArticle(art)} className="h-8 w-8 p-0 text-red-600"><X className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleViewArticle(art)} className="h-8 w-8 p-0"><Eye className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => updateArticulo(art.idArticulo, { Estatus: 1 }, `Artículo "${art.Titulo}" aprobado correctamente`)} className="h-8 w-8 p-0 text-green-600"><Check className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleRejectArticle(art)} className="h-8 w-8 p-0 text-red-600"><X className="h-4 w-4" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -216,14 +250,21 @@ export default function PendientesTab() {
 
       <FeedbackModal
         isOpen={feedbackModal.isOpen}
-        onClose={()=>setFeedbackModal({isOpen:false, articleId:0, articleTitle:"", authorName:""})}
+        onClose={() => setFeedbackModal({ isOpen: false, articleId: 0, articleTitle: "", authorName: "" })}
         articleTitle={feedbackModal.articleTitle}
         authorName={feedbackModal.authorName}
         articleId={feedbackModal.articleId}
         onSubmit={handleFeedbackSubmit}
       />
 
-      <ViewArticleDialog open={viewDialogOpen} onOpenChange={setViewDialogOpen} article={selectedArticle} />
+      <ViewArticleDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        article={selectedArticle}
+        resources={resources}
+        loadingResources={loadingResources}
+      />
+
     </>
   );
 }

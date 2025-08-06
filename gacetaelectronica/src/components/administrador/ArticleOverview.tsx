@@ -52,6 +52,10 @@ const getStatusBadge = (status: string) => {
 
 export default function ArticleOverview() {
   const [selectedArticle, setSelectedArticle] = useState<ArticleInterface | null>(null);
+  
+  const [resources, setResources] = useState<any[]>([]);
+  const [loadingResources, setLoadingResources] = useState(false);
+
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
@@ -167,6 +171,49 @@ export default function ArticleOverview() {
     }
   };
 
+const handleViewArticle = async (article: ArticleInterface) => {
+  setLoadingResources(true);
+  setViewOpen(true);
+
+  try {
+    const res = await fetch(`http://localhost:4000/api/articulos?id=${article.id}`);
+    const data = await res.json();
+
+    // Procesar los recursos (vienen como string separados por coma)
+    const recursoArray = data.Recursos
+      ? data.Recursos.split(",").map((url: string, index: number) => ({
+          idRecurso: index + 1,
+          nombre: `Recurso ${index + 1}`,
+          url: url.trim(),
+          tipo: "link",
+          idArticulo: article.id,
+        }))
+      : [];
+
+    setResources(recursoArray);
+
+    setSelectedArticle({
+      id: article.id,
+      title: data.Titulo,
+      resumen: data.Resumen,
+      contenido: data.Contenido,
+      createdAt: data.createdAt,
+      category: data.Categoria?.trim() || article.category,
+      author: data.Autor || article.author,
+      status: data.status || article.status,
+    });
+  } catch (err) {
+    console.error("Error al obtener datos completos del artículo:", err);
+    setSelectedArticle(article); // fallback
+    setResources([]);
+  } finally {
+    setLoadingResources(false);
+  }
+};
+
+
+
+
   return (
     <main className="flex flex-col gap-6">
       <Card>
@@ -251,7 +298,9 @@ export default function ArticleOverview() {
                     <TableCell>{new Date(article.createdAt).toLocaleDateString("es-MX")}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setViewOpen(true); }} >
+                        {/* <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setViewOpen(true); }} > */}
+                        <Button variant="ghost" size="sm" onClick={() => handleViewArticle(article)}>
+
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setEditOpen(true); }} >
@@ -303,11 +352,16 @@ export default function ArticleOverview() {
 
       <ViewArticleDialog
         open={viewOpen}
-        onOpenChange={(value) => {
-          setViewOpen(value);
-          if (!value) setSelectedArticle(null);
-        }}
-        article={selectedArticle}
+  onOpenChange={(value) => {
+    setViewOpen(value);
+    if (!value) {
+      setSelectedArticle(null);
+      setResources([]);
+    }
+  }}
+  article={selectedArticle}
+  resources={resources}
+  loadingResources={loadingResources}
       />
     </main>
   );

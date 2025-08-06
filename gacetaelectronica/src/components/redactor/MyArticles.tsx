@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback  } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle
@@ -18,15 +18,15 @@ import FilterSearchBar from "@/components/FilterSearchBar"
 import { useSessionUser } from "@/hooks/useSessionUser"
 
 interface Articulo {
-  IdArticulo:    number
-  Titulo:        string
-  Resumen:       string
-  Contenido:     string
-  Estatus:       number
+  IdArticulo: number
+  Titulo: string
+  Resumen: string
+  Contenido: string
+  Estatus: number
   FechaCreacion: string
   FechaRevision?: string
-  Comentario?:   string
-  IdCategoria:   number
+  Comentario?: string
+  IdCategoria: number
   Categoria?: {
     IdCategoria: number
     Nombre: string
@@ -72,59 +72,59 @@ export default function MyArticles({ onEditArticle }: MyArticlesProps) {
   const [selectedArticleResources, setSelectedArticleResources] = useState<any[]>([])
   const [loadingResources, setLoadingResources] = useState(false)
 
-const loadUserArticles = useCallback(async () => {
-  if (!userInfo?.id) {
-    setError('No se pudo identificar al usuario')
-    setLoading(false)
-    return
-  }
-  try {
-    setLoading(true)
-    setError(null)
-    const userId = userInfo.id
-    const resp = await fetch(`/api/articuloUsuario?usuarioId=${userId}`)
-    if (!resp.ok) throw new Error('Error al cargar los artículos')
-    const userArticles = await resp.json()
+  const loadUserArticles = useCallback(async () => {
+    if (!userInfo?.id) {
+      setError('No se pudo identificar al usuario')
+      setLoading(false)
+      return
+    }
+    try {
+      setLoading(true)
+      setError(null)
+      const userId = userInfo.id
+      const resp = await fetch(`/api/articuloUsuario?usuarioId=${userId}`)
+      if (!resp.ok) throw new Error('Error al cargar los artículos')
+      const userArticles = await resp.json()
 
-    const detailed = await Promise.all(
-      userArticles.map(async (a: any) => {
-        const articleId = a.IdArticulo || a.idArticulo
-        if (!articleId) return null
-        const r = await fetch(`/api/articulos?id=${articleId}&include=categoria`)
-        if (!r.ok) return null
-        const raw = await r.json()
-        const mapped: Articulo = {
-          IdArticulo: articleId,
-          Titulo: raw.Titulo,
-          Resumen: raw.Resumen,
-          Contenido: raw.Contenido,
-          FechaCreacion: raw.createdAt,
-          FechaRevision: raw.reviewedAt,
-          Comentario: raw.comment,
-          Estatus: ({ published: 1, pending: 0, rejected: 2, unknown: 0 } as any)[raw.status] ?? 0,
-          IdCategoria: raw.IdCategoria || 0,
-          Categoria: {
+      const detailed = await Promise.all(
+        userArticles.map(async (a: any) => {
+          const articleId = a.IdArticulo || a.idArticulo
+          if (!articleId) return null
+          const r = await fetch(`/api/articulos?id=${articleId}&include=categoria`)
+          if (!r.ok) return null
+          const raw = await r.json()
+          const mapped: Articulo = {
+            IdArticulo: articleId,
+            Titulo: raw.Titulo,
+            Resumen: raw.Resumen,
+            Contenido: raw.Contenido,
+            FechaCreacion: raw.createdAt,
+            FechaRevision: raw.reviewedAt,
+            Comentario: raw.comment,
+            Estatus: ({ published: 1, pending: 0, rejected: 2, unknown: 0 } as any)[raw.status] ?? 0,
             IdCategoria: raw.IdCategoria || 0,
-            Nombre: raw.Categoria || raw.category || 'Sin categoría'
+            Categoria: {
+              IdCategoria: raw.IdCategoria || 0,
+              Nombre: raw.Categoria || raw.category || 'Sin categoría'
+            }
           }
-        }
-        return mapped
-      })
-    )
+          return mapped
+        })
+      )
 
-    setArticles(detailed.filter((x): x is Articulo => x !== null))
-  } catch (err) {
-    console.error(err)
-    setError('Error al cargar los artículos')
-  } finally {
-    setLoading(false)
-  }
-}, [userInfo?.id])
+      setArticles(detailed.filter((x): x is Articulo => x !== null))
+    } catch (err) {
+      console.error(err)
+      setError('Error al cargar los artículos')
+    } finally {
+      setLoading(false)
+    }
+  }, [userInfo?.id])
 
 
   useEffect(() => {
     if (!userLoading && userInfo?.id) loadUserArticles()
-}, [userLoading, userInfo?.id, loadUserArticles]);
+  }, [userLoading, userInfo?.id, loadUserArticles]);
 
   const handleViewArticle = async (article: Articulo) => {
     setSelectedArticle(article)
@@ -164,8 +164,8 @@ const loadUserArticles = useCallback(async () => {
     let byFilter = true
     if (filterValue !== "all") {
       if (filterBy === "category") byFilter = a.Categoria?.Nombre === filterValue
-      if (filterBy === "status")   byFilter = getStatusText(a.Estatus) === filterValue
-      if (filterBy === "createdAt")byFilter = a.FechaCreacion === filterValue
+      if (filterBy === "status") byFilter = getStatusText(a.Estatus) === filterValue
+      if (filterBy === "createdAt") byFilter = a.FechaCreacion === filterValue
     }
     return bySearch && byFilter
   })
@@ -174,8 +174,8 @@ const loadUserArticles = useCallback(async () => {
     const s = new Set<string>()
     articles.forEach(a => {
       if (field === "category" && a.Categoria?.Nombre) s.add(a.Categoria.Nombre)
-      if (field === "status")   s.add(getStatusText(a.Estatus))
-      if (field === "createdAt")s.add(a.FechaCreacion)
+      if (field === "status") s.add(getStatusText(a.Estatus))
+      if (field === "createdAt") s.add(a.FechaCreacion)
     })
     return Array.from(s)
   }
@@ -224,8 +224,8 @@ const loadUserArticles = useCallback(async () => {
           onFilterValueChange={setFilterValue}
           availableFields={[
             { label: "Categoría", value: "category" },
-            { label: "Estado",    value: "status"   },
-            { label: "Fecha",     value: "createdAt"}
+            { label: "Estado", value: "status" },
+            { label: "Fecha", value: "createdAt" }
           ]}
           getFilterValues={getFilterOptions}
         />
@@ -282,41 +282,56 @@ const loadUserArticles = useCallback(async () => {
         setIsDialogOpen(open)
         if (!open) setSelectedArticleResources([])
       }}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="w-full max-w-[40%] sm:max-w-[60rem] max-h-[90vh] overflow-y-auto px-6">
           <DialogHeader>
-            <DialogTitle>{selectedArticle?.Titulo}</DialogTitle>
+            <DialogTitle>Información del Artículo</DialogTitle>
             <DialogDescription>
-              Publicado el{" "}
-              {selectedArticle?.FechaCreacion
-                ? new Date(selectedArticle.FechaCreacion).toLocaleDateString("es-ES")
-                : "—"}
+              Todos los detalles del artículo seleccionado.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-6">
-            <section>
-              <h4 className="font-semibold">Resumen:</h4>
-              <p className="text-sm text-muted-foreground">
+
+          <div className="space-y-6 px-1 py-2">
+            {/* Datos Generales */}
+            <section className="border-b pb-4">
+              <h3 className="font-semibold text-lg mb-2 text-orange-800">Datos Generales</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                <p><strong>Título:</strong> {selectedArticle?.Titulo}</p>
+                <p><strong>Autor:</strong> {userInfo?.name ?? "Desconocido"}</p>
+                <p><strong>Categoría:</strong> {selectedArticle?.Categoria?.Nombre}</p>
+                <p><strong>Estado:</strong> {getStatusText(selectedArticle?.Estatus || 0)}</p>
+                <p><strong>Fecha de Creación:</strong> {selectedArticle?.FechaCreacion && new Date(selectedArticle.FechaCreacion).toLocaleDateString("es-ES")}</p>
+              </div>
+            </section>
+
+            {/* Resumen */}
+            <section className="border-b pb-4">
+              <h3 className="font-semibold text-lg mb-2 text-orange-800">Resumen</h3>
+              <p className="text-sm text-justify whitespace-pre-line">
                 {selectedArticle?.Resumen || "—"}
               </p>
             </section>
+
+            {/* Contenido */}
             <section>
-              <h4 className="font-semibold">Contenido:</h4>
-              <p className="text-sm text-muted-foreground whitespace-pre-line">
-                {selectedArticle?.Contenido || "—"}
-              </p>
+              <h3 className="font-semibold text-lg mb-2 text-orange-800">Contenido Completo</h3>
+              <div className="text-sm whitespace-pre-line text-justify leading-relaxed">
+                {selectedArticle?.Contenido || "Sin contenido disponible"}
+              </div>
             </section>
+
+            {/* Comentario (opcional) */}
             {selectedArticle?.Comentario && (
               <section>
-                <h4 className="font-semibold">Comentario del revisor:</h4>
+                <h3 className="font-semibold text-lg mb-2 text-orange-800">Comentario del Revisor</h3>
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                  <p className="text-sm text-yellow-800">
-                    {selectedArticle.Comentario}
-                  </p>
+                  <p className="text-sm text-yellow-800 whitespace-pre-line">{selectedArticle.Comentario}</p>
                 </div>
               </section>
             )}
+
+            {/* Recursos */}
             <section>
-              <h4 className="font-semibold">Recursos:</h4>
+              <h3 className="font-semibold text-lg mb-2 text-orange-800">Recursos</h3>
               {loadingResources ? (
                 <div className="py-4 text-center text-sm text-gray-500">
                   Cargando recursos...
