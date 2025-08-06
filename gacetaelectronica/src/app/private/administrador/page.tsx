@@ -24,26 +24,29 @@ export default function Page() {
   const loadStats = async () => {
     try {
       setLoading(true);
-      
-      // Cargar usuarios
-      const usuariosResponse = await fetch('/api/usuarios');
+
+      const usuariosResponse = await fetch("/api/usuarios");
       if (usuariosResponse.ok) {
         const usuarios = await usuariosResponse.json();
         setTotalUsuarios(usuarios.length);
-        setRedactoresActivos(usuarios.filter((user: any) => user.Rol === "Autor").length);
+        setRedactoresActivos(
+          usuarios.filter((user: any) => user.Rol === "Autor").length
+        );
       }
 
-      // Cargar artículos
-      const articulosResponse = await fetch('/api/articulos');
+      const articulosResponse = await fetch("/api/articulos");
       if (articulosResponse.ok) {
         const articulos = await articulosResponse.json();
         setTotalArticulos(articulos.length);
-        setArticulosPublicados(articulos.filter((item: any) => item.status === 'published').length);
-        setArticulosPendientes(articulos.filter((item: any) => item.status === 'pending').length);
+        setArticulosPublicados(
+          articulos.filter((item: any) => item.status === "published").length
+        );
+        setArticulosPendientes(
+          articulos.filter((item: any) => item.status === "pending").length
+        );
       }
 
-      // Cargar eventos
-      const eventosResponse = await fetch('/api/eventos');
+      const eventosResponse = await fetch("/api/eventos");
       if (eventosResponse.ok) {
         const eventos = await eventosResponse.json();
         setTotalEventos(eventos.length);
@@ -86,96 +89,96 @@ export default function Page() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Usuarios</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <Users className="h-5 w-5 text-blue-500" />
                 </CardHeader>
-                                 <CardContent>
-                   {loading ? (
-                     <Spinner />
-                   ) : (
-                     <>
-                       <div className="text-2xl font-bold">{totalUsuarios}</div>
-                       <p className="text-xs text-muted-foreground">
-                         +{totalUsuarios} desde el mes pasado
-                       </p>
-                     </>
-                   )}
-                 </CardContent>
+                <CardContent>
+                  {loading ? (
+                    <Spinner />
+                  ) : (
+                    <>
+                      <div className="text-2xl font-bold">{totalUsuarios}</div>
+                      <p className="text-xs text-muted-foreground">
+                        +{totalUsuarios} desde el mes pasado
+                      </p>
+                    </>
+                  )}
+                </CardContent>
               </Card>
 
               {/* Artículos Publicados */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Artículos Publicados</CardTitle>
-                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <FileText className="h-5 w-5 text-purple-500" />
                 </CardHeader>
-                                 <CardContent>
-                   {loading ? (
-                     <Spinner />
-                   ) : (
-                     <>
-                       <div className="text-2xl font-bold">{articulosPublicados}</div>
-                       <p className="text-xs text-muted-foreground">
-                         De {totalArticulos} total
-                       </p>
-                     </>
-                   )}
-                 </CardContent>
+                <CardContent>
+                  {loading ? (
+                    <Spinner />
+                  ) : (
+                    <>
+                      <div className="text-2xl font-bold">{articulosPublicados}</div>
+                      <p className="text-xs text-muted-foreground">
+                        De {totalArticulos} total
+                      </p>
+                    </>
+                  )}
+                </CardContent>
               </Card>
 
               {/* En Revisión */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">En Revisión</CardTitle>
-                  <Settings className="h-4 w-4 text-muted-foreground" />
+                  <Settings className="h-5 w-5 text-yellow-500" />
                 </CardHeader>
-                                 <CardContent>
-                   {loading ? (
-                     <Spinner />
-                   ) : (
-                     <>
-                       <div className="text-2xl font-bold">{articulosPendientes}</div>
-                       <p className="text-xs text-muted-foreground">Pendientes de aprobación</p>
-                     </>
-                   )}
-                 </CardContent>
+                <CardContent>
+                  {loading ? (
+                    <Spinner />
+                  ) : (
+                    <>
+                      <div className="text-2xl font-bold">{articulosPendientes}</div>
+                      <p className="text-xs text-muted-foreground">Pendientes de aprobación</p>
+                    </>
+                  )}
+                </CardContent>
               </Card>
 
               {/* Redactores Activos */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Redactores Activos</CardTitle>
-                  <Plus className="h-4 w-4 text-muted-foreground" />
+                  <Plus className="h-5 w-5 text-green-500" />
                 </CardHeader>
-                                 <CardContent>
-                   {loading ? (
-                     <Spinner />
-                   ) : (
-                     <>
-                       <div className="text-2xl font-bold">{redactoresActivos}</div>
-                       <p className="text-xs text-muted-foreground">De {totalUsuarios} total</p>
-                     </>
-                   )}
-                 </CardContent>
+                <CardContent>
+                  {loading ? (
+                    <Spinner />
+                  ) : (
+                    <>
+                      <div className="text-2xl font-bold">{redactoresActivos}</div>
+                      <p className="text-xs text-muted-foreground">De {totalUsuarios} total</p>
+                    </>
+                  )}
+                </CardContent>
               </Card>
 
               {/* Total de Eventos */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total de Eventos</CardTitle>
-                  <Plus className="h-4 w-4 text-muted-foreground" />
+                  <Plus className="h-5 w-5 text-pink-500" />
                 </CardHeader>
-                                 <CardContent>
-                   {loading ? (
-                     <Spinner />
-                   ) : (
-                     <>
-                       <div className="text-2xl font-bold">{totalEventos}</div>
-                       <p className="text-xs text-muted-foreground">
-                         +{totalEventos} este mes
-                       </p>
-                     </>
-                   )}
-                 </CardContent>
+                <CardContent>
+                  {loading ? (
+                    <Spinner />
+                  ) : (
+                    <>
+                      <div className="text-2xl font-bold">{totalEventos}</div>
+                      <p className="text-xs text-muted-foreground">
+                        +{totalEventos} este mes
+                      </p>
+                    </>
+                  )}
+                </CardContent>
               </Card>
             </div>
           </TabsContent>
@@ -189,7 +192,7 @@ export default function Page() {
           </TabsContent>
 
           <TabsContent value="events">
-            <EventOverview /> {/* Aquí agregas el componente de Eventos */}
+            <EventOverview />
           </TabsContent>
 
           <TabsContent value="addEvent">

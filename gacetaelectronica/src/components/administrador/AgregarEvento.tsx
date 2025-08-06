@@ -79,119 +79,114 @@ export default function AgregarEvento() {
   }
 
   return (
-    <Card className="w-full max-w-4xl mx-auto p-6 shadow-sm">
-      <CardHeader>
-        <div className="flex flex-col gap-1">
-          <CardTitle className="text-xl font-bold">Agregar nuevo evento</CardTitle>
-          <CardDescription className="text-sm text-muted-foreground">
-            Completa el formulario para registrar un nuevo evento en el sistema
-          </CardDescription>
-        </div>
-      </CardHeader>
+    <main className="flex flex-col gap-6">
+      <Card className="w-full">
+        <CardHeader className="flex flex-col gap-1">
+          <CardTitle className="text-lg font-semibold">Agregar nuevo evento</CardTitle>
+          <CardDescription>Completa el formulario para registrar un nuevo evento en el sistema</CardDescription>
+        </CardHeader>
 
-      <CardContent>
-        <form id="form-evento" onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <Label htmlFor="nombre" className="text-lg">Título del evento</Label>
-            <Input
-              name="nombre"
-              id="nombre"
-              placeholder="Ej. Taller de diseño"
-              required
-              className="w-full p-3"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <CardContent>
+          <form id="form-evento" onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <Label htmlFor="fecha" className="text-lg">Fecha</Label>
-              <Input name="fecha" id="fecha" type="date" required className="w-full p-3" />
-            </div>
-            <div>
-              <Label htmlFor="hora" className="text-lg">Hora</Label>
-              <Input name="hora" id="hora" type="time" required className="w-full p-3" />
-            </div>
-            <div>
-              <Label htmlFor="lugar" className="text-lg">Lugar</Label>
+              <Label htmlFor="nombre" className="text-sm font-medium">Título del evento</Label>
               <Input
-                name="lugar"
-                id="lugar"
-                placeholder="Ej. Auditorio"
+                name="nombre"
+                id="nombre"
+                placeholder="Ej. Taller de diseño"
                 required
-                className="w-full p-3"
+                className="w-full"
               />
             </div>
-          </div>
 
-          <div>
-            <Label htmlFor="desCorta" className="text-lg">Descripción corta</Label>
-            <Textarea
-              name="desCorta"
-              id="desCorta"
-              placeholder="Breve resumen del evento..."
-              required
-              className="w-full p-3"
-            />
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <Label htmlFor="fecha" className="text-sm font-medium">Fecha</Label>
+                <Input name="fecha" id="fecha" type="date" required className="w-full" />
+              </div>
+              <div>
+                <Label htmlFor="hora" className="text-sm font-medium">Hora</Label>
+                <Input name="hora" id="hora" type="time" required className="w-full" />
+              </div>
+              <div>
+                <Label htmlFor="lugar" className="text-sm font-medium">Lugar</Label>
+                <Input
+                  name="lugar"
+                  id="lugar"
+                  placeholder="Ej. Auditorio"
+                  required
+                  className="w-full"
+                />
+              </div>
+            </div>
 
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full py-3 mt-4 text-gray-600 border border-gray-600 hover:bg-gray-300 hover:text-black cursor-pointer transition"
-              >
-                <PencilIcon className="mr-2 h-4 w-4" />
-                Agregar descripción larga
-              </Button>
-
-
-
-
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Descripción larga</DialogTitle>
-                <DialogDescription>
-                  Agrega más detalles sobre el evento.
-                </DialogDescription>
-              </DialogHeader>
+            <div>
+              <Label htmlFor="desCorta" className="text-sm font-medium">Descripción corta</Label>
               <Textarea
-                value={longDescription}
-                onChange={(e) => setLongDescription(e.target.value)}
-                rows={6}
-                placeholder="Información extendida del evento..."
-                className="w-full p-3"
+                name="desCorta"
+                id="desCorta"
+                placeholder="Breve resumen del evento..."
+                required
+                className="w-full"
               />
-              <DialogFooter>
+            </div>
+
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
                 <Button
                   type="button"
-                  onClick={() => setOpen(false)}
-                  className="bg-white text-[#4C0000] border border-[#4C0000] hover:bg-[#4C0000] hover:text-white cursor-pointer transition"
+                  variant="outline"
+                  className="w-full py-3 mt-4 text-gray-600 border border-gray-600 hover:bg-gray-300 hover:text-black cursor-pointer transition"
                 >
-                  Guardar
+                  <PencilIcon className="mr-2 h-4 w-4" />
+                  Agregar descripción larga
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </form>
+              </DialogTrigger>
 
-        {error && (
-          <p className="text-sm text-red-500 mt-4">{error}</p>
-        )}
-      </CardContent>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Descripción larga</DialogTitle>
+                  <DialogDescription>
+                    Agrega más detalles sobre el evento.
+                  </DialogDescription>
+                </DialogHeader>
+                <Textarea
+                  value={longDescription}
+                  onChange={(e) => setLongDescription(e.target.value)}
+                  rows={6}
+                  placeholder="Información extendida del evento..."
+                  className="w-full p-3"
+                />
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    className="bg-white text-[#4C0000] border border-[#4C0000] hover:bg-[#4C0000] hover:text-white cursor-pointer transition"
+                  >
+                    Guardar
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </form>
 
-      <CardFooter>
-        <Button
-          type="submit"
-          form="form-evento"
-          disabled={loading}
-          className="w-full py-3 mt-4 bg-white text-[#4C0000] border border-[#4C0000] hover:bg-[#4C0000] hover:text-white transition  cursor-pointer"
-        >
-          <CirclePlus className="mr-2" />
-          {loading ? 'Creando...' : 'Crear Evento'}
-        </Button>
-      </CardFooter>
-    </Card>
+          {error && (
+            <p className="text-sm text-red-500 mt-4">{error}</p>
+          )}
+        </CardContent>
+
+        <CardFooter>
+          <Button
+            type="submit"
+            form="form-evento"
+            disabled={loading}
+            className="w-full py-3 mt-4 bg-white text-[#4C0000] border border-[#4C0000] hover:bg-[#4C0000] hover:text-white transition cursor-pointer"
+          >
+            <CirclePlus className="mr-2 h-4 w-4" />
+            {loading ? 'Creando...' : 'Crear Evento'}
+          </Button>
+        </CardFooter>
+      </Card>
+    </main>
   )
 }

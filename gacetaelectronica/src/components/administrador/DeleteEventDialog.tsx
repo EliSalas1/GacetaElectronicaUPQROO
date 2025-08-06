@@ -3,6 +3,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { EventInterface } from "@/entities/event";
+import { toast } from "sonner";
+
 
 interface Props {
   open: boolean;
@@ -14,20 +16,16 @@ interface Props {
 export function DeleteEventDialog({ open, onOpenChange, event, onConfirm }: Props) {
   if (!event) return null;
 
-  const handleDelete = async () => {
-    try {
-      // Llamar a la función onConfirm que eliminará el evento
-      await onConfirm(event.id); // Pasar el id del evento
-
-      // Mostrar mensaje de éxito
-      alert("Evento eliminado correctamente");
-      onOpenChange(false); // Cerrar el modal de eliminación
-    } catch (err: any) {
-      console.error(err);
-      // Mostrar mensaje de error
-      alert("Error al eliminar el evento");
-    }
-  };
+ const handleDelete = async () => {
+  try {
+    await onConfirm(event.id);
+    toast.success("Evento eliminado correctamente");
+    onOpenChange(false);
+  } catch (err: any) {
+    console.error(err);
+    toast.error("Error al eliminar el evento");
+  }
+};
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

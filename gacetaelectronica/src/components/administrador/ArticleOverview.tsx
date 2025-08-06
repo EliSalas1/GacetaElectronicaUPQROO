@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 // Función para obtener el estado con badge
 const getStatusBadge = (status: string) => {
@@ -52,6 +53,10 @@ const getStatusBadge = (status: string) => {
 
 export default function ArticleOverview() {
   const [selectedArticle, setSelectedArticle] = useState<ArticleInterface | null>(null);
+  
+  const [resources, setResources] = useState<any[]>([]);
+  const [loadingResources, setLoadingResources] = useState(false);
+
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
@@ -77,7 +82,7 @@ export default function ArticleOverview() {
       return authorData[0] ? `${authorData[0].Nombre} ${authorData[0].Apellido}` : "Sin autor";
     } catch (err) {
       console.error(err);
-      return "Sin autor";
+      return "Anonimo";
     }
   };
 
@@ -112,15 +117,14 @@ export default function ArticleOverview() {
       })
     : [];
 
-      const handleSave = async (updatedArticle: ArticleInterface) => {
+  const handleSave = async (updatedArticle: ArticleInterface) => {
     if (!updatedArticle?.id || !updatedArticle?.title || !updatedArticle?.status) {
       alert("Faltan campos requeridos");
       return;
     }
 
     try {
-      const res = await fetch(`/api/articulos?id=${updatedArticle.id}`, 
-        {
+      const res = await fetch(`/api/articulos?id=${updatedArticle.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -159,13 +163,56 @@ export default function ArticleOverview() {
       const updatedArticles = articles.filter((article) => article.id !== selectedArticle?.id);
       setArticles(updatedArticles);
 
-      alert("Artículo eliminado");
+      toast("Artículo eliminado");
       setDeleteOpen(false);
     } catch (err) {
       console.error(err);
-      alert("Error al eliminar artículo");
+      toast("Error al eliminar artículo");
     }
   };
+
+const handleViewArticle = async (article: ArticleInterface) => {
+  setLoadingResources(true);
+  setViewOpen(true);
+
+  try {
+    const res = await fetch(`http://localhost:4000/api/articulos?id=${article.id}`);
+    const data = await res.json();
+
+    // Procesar los recursos (vienen como string separados por coma)
+    const recursoArray = data.Recursos
+      ? data.Recursos.split(",").map((url: string, index: number) => ({
+          idRecurso: index + 1,
+          nombre: `Recurso ${index + 1}`,
+          url: url.trim(),
+          tipo: "link",
+          idArticulo: article.id,
+        }))
+      : [];
+
+    setResources(recursoArray);
+
+    setSelectedArticle({
+      id: article.id,
+      title: data.Titulo,
+      resumen: data.Resumen,
+      contenido: data.Contenido,
+      createdAt: data.createdAt,
+      category: data.Categoria?.trim() || article.category,
+      author: data.Autor || article.author,
+      status: data.status || article.status,
+    });
+  } catch (err) {
+    console.error("Error al obtener datos completos del artículo:", err);
+    setSelectedArticle(article); // fallback
+    setResources([]);
+  } finally {
+    setLoadingResources(false);
+  }
+};
+
+
+
 
   return (
     <main className="flex flex-col gap-6">
@@ -201,7 +248,7 @@ export default function ArticleOverview() {
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
                   {filterBy === "status" &&
-                    ["published", "pending", "rejected"].map((option) => (
+                    ["publicado", "en revisión", "rechazado"].map((option) => (
                       <SelectItem key={option} value={option}>
                         {option}
                       </SelectItem>
@@ -251,7 +298,9 @@ export default function ArticleOverview() {
                     <TableCell>{new Date(article.createdAt).toLocaleDateString("es-MX")}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setViewOpen(true); }} >
+                        {/* <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setViewOpen(true); }} > */}
+                        <Button variant="ghost" size="sm" onClick={() => handleViewArticle(article)}>
+
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => { setSelectedArticle(article); setEditOpen(true); }} >
@@ -303,11 +352,16 @@ export default function ArticleOverview() {
 
       <ViewArticleDialog
         open={viewOpen}
-        onOpenChange={(value) => {
-          setViewOpen(value);
-          if (!value) setSelectedArticle(null);
-        }}
-        article={selectedArticle}
+  onOpenChange={(value) => {
+    setViewOpen(value);
+    if (!value) {
+      setSelectedArticle(null);
+      setResources([]);
+    }
+  }}
+  article={selectedArticle}
+  resources={resources}
+  loadingResources={loadingResources}
       />
     </main>
   );
