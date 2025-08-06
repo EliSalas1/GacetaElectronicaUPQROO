@@ -46,6 +46,8 @@ export default function HomeCarousel() {
     ),
   };
 
+  const allSlides = [staticSlide, ...articles];
+
   useEffect(() => {
     async function fetchArticlesAndAuthorsAndImages() {
       try {
@@ -105,14 +107,14 @@ export default function HomeCarousel() {
         prev === allSlides.length - 1 ? 0 : prev + 1
       );
     }, 7000);
-    return () => clearInterval(interval);
-  }, [articles]);
+  return () => clearInterval(interval);
+}, [allSlides.length, articles.length]);
 
   if (loading) {
     return <SkeletonSchema grid={1} variant="carousel" />;
   }
 
-  const allSlides = [staticSlide, ...articles];
+  
 
   return (
     <div className="max-w-3xl mx-auto">

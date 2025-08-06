@@ -17,7 +17,7 @@ export default function SupervisorPage() {
     if (!loading && userInfo?.role !== "Revisor") {
       router.push("/forbidden");
     }
-  }, [loading, userInfo?.role, status]);
+}, [router, loading, userInfo?.role, status]);
 
   return <SupervisorContainer />;
 }

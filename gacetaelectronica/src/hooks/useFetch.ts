@@ -101,7 +101,7 @@ export function useFetch<TResponse = any, TBody = any>(
     return () => {
       cleanup();
     };
-  }, [endpoint]);
+  }, [endpoint, fetchData]);
 
   return { data, error, loading, fetchData };
 }
