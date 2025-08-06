@@ -80,13 +80,14 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
 
       {/* Subtítulo */}
       <h2
-        className="mb-6"
-        style={{
-          fontFamily: "Inter, sans-serif",
-          fontWeight: 400,
-          fontSize: 20,
-          color: "#918B8B",
-        }}
+          className="mb-6 text-justify"
+  style={{
+    fontFamily: "Inter, sans-serif",
+    fontWeight: 400,
+    fontSize: 20,
+    color: "#918B8B",
+    whiteSpace: "pre-line",
+  }}
       >
         {article.Resumen || ""}
       </h2>
