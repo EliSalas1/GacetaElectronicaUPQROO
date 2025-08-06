@@ -362,7 +362,7 @@ async function updateArticleWithRelations(id: string, body: any) {
   try {
     await connection.beginTransaction();
     
-    const { Titulo, Resumen, Contenido, IdCategoria, recursos, etiquetas } = body;
+    const { Titulo, Resumen, Contenido, IdCategoria, Estatus, recursos, etiquetas } = body;
 
     if (!id || isNaN(Number(id))) {
       return new Response('ID válido requerido', { status: 400 });
@@ -397,7 +397,7 @@ async function updateArticleWithRelations(id: string, body: any) {
     if (Resumen) { updates.push('Resumen = ?'); params.push(Resumen.trim()); }
     if (Contenido) { updates.push('Contenido = ?'); params.push(Contenido.trim()); }
     if (IdCategoria) { updates.push('IdCategoria = ?'); params.push(IdCategoria); }
-
+    if (Estatus !== undefined) { updates.push('Estatus = ?'); params.push(Estatus); }
     if (updates.length > 0) {
       query += updates.join(', ') + ' WHERE IdArticulo = ?';
       params.push(id);
