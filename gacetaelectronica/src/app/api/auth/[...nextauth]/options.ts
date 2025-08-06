@@ -91,7 +91,7 @@ export const authOptions: NextAuthOptions = {
             const lastName = user.name?.split(' ')[1] || "";
             const [result] = await pool.query(
               "INSERT INTO Usuarios (Nombre, Apellido, Correo, Rol, Estado, Contraseña, FechaCreacion) VALUES (?, ?, ?, ?, ?, NULL, NOW())",
-              [firstName, lastName, user.email, "usuario", 1]
+              [firstName, lastName, user.email, "Usuario", 1]
             );
             console.log(`Nuevo usuario insertado con id: ${(result as any).insertId}`);
           } catch (error) {

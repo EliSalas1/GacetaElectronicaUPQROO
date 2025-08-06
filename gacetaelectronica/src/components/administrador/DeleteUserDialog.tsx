@@ -5,6 +5,7 @@ import CustomDialog from "../Dialog"
 import { UserInterface } from "@/entities/user"
 import { useState } from "react"
 import { Spinner } from "../Spinner"
+import { toast } from "sonner";
 
 interface EliminarUsuarioDialogProps {
   isOpen: boolean
@@ -22,16 +23,18 @@ export default function DeleteUserDialog({
   const [loading, setLoading] = useState(false)
 
   const onConfirmHandler = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      await onConfirm(usuario.idUsuarios)
+      await onConfirm(usuario.idUsuarios);
+      toast.success(`Usuario ${usuario.Nombre} eliminado correctamente`);
+      setIsOpen(false);
     } catch (err) {
-      console.error(err)
-      alert('Error al eliminar el usuario')
+      console.error(err);
+      toast.error("Error al eliminar el usuario");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <CustomDialog

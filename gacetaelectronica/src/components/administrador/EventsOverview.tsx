@@ -47,7 +47,7 @@ export default function EventOverview() {
         setEvents(mapped);
         const totalEvents = await fetch("/api/eventos/count");
         const total = await totalEvents.json();
-        totalPages
+       // totalPages
         setTotalPages(Math.ceil(total / 15));
       } catch (err) {
         console.error("Error al cargar eventos:", err);
@@ -57,7 +57,7 @@ export default function EventOverview() {
     };
 
     fetchEvents();
-}, [page, totalPages]);
+  }, [page]);
 
   const filteredEvents = events.filter((event) => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -172,7 +172,7 @@ export default function EventOverview() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                {(filterBy === "status" ? ["published", "pending", "draft"] : filterBy === "location" ? Array.from(new Set(events.map((e) => e.location))) : []).map((option) => (
+                {(filterBy === "status" ? ["publicado", "pending", "draft"] : filterBy === "location" ? Array.from(new Set(events.map((e) => e.location))) : []).map((option) => (
                   <SelectItem key={option} value={option}>{option}</SelectItem>
                 ))}
               </SelectContent>

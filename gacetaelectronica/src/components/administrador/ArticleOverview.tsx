@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 // Función para obtener el estado con badge
 const getStatusBadge = (status: string) => {
@@ -77,7 +78,7 @@ export default function ArticleOverview() {
       return authorData[0] ? `${authorData[0].Nombre} ${authorData[0].Apellido}` : "Sin autor";
     } catch (err) {
       console.error(err);
-      return "Sin autor";
+      return "Anonimo";
     }
   };
 
@@ -112,15 +113,14 @@ export default function ArticleOverview() {
       })
     : [];
 
-      const handleSave = async (updatedArticle: ArticleInterface) => {
+  const handleSave = async (updatedArticle: ArticleInterface) => {
     if (!updatedArticle?.id || !updatedArticle?.title || !updatedArticle?.status) {
       alert("Faltan campos requeridos");
       return;
     }
 
     try {
-      const res = await fetch(`/api/articulos?id=${updatedArticle.id}`, 
-        {
+      const res = await fetch(`/api/articulos?id=${updatedArticle.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -159,11 +159,11 @@ export default function ArticleOverview() {
       const updatedArticles = articles.filter((article) => article.id !== selectedArticle?.id);
       setArticles(updatedArticles);
 
-      alert("Artículo eliminado");
+      toast("Artículo eliminado");
       setDeleteOpen(false);
     } catch (err) {
       console.error(err);
-      alert("Error al eliminar artículo");
+      toast("Error al eliminar artículo");
     }
   };
 
@@ -201,7 +201,7 @@ export default function ArticleOverview() {
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
                   {filterBy === "status" &&
-                    ["published", "pending", "rejected"].map((option) => (
+                    ["publicado", "en revisión", "rechazado"].map((option) => (
                       <SelectItem key={option} value={option}>
                         {option}
                       </SelectItem>

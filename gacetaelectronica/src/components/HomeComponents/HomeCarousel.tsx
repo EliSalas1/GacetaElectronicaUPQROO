@@ -149,7 +149,7 @@ export default function HomeCarousel() {
                   {index !== 0 && (
                     <a
                       href={`/publica/articulo/${item.id}`}
-                      className="inline-block bg-[#4C0000] hover:bg-[#390000] text-white px-3 py-1.5 rounded text-sm transition w-fit"
+                      className="inline-block bg-white text-[#4C0000] border border-[#4C0000] hover:bg-[#4C0000] hover:text-white cursor-pointer px-3 py-1.5 rounded text-sm transition-colors duration-300 w-fit"
                     >
                       Leer más
                     </a>
