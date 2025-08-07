@@ -31,6 +31,13 @@ export default function SearchBar() {
       setMostrarResultados(false);
     }
   }, [debouncedTermino]);
+  
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+    }
+  };
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +66,7 @@ export default function SearchBar() {
               onChange={(e) => setTermino(e.target.value)}
               onFocus={() => termino && setMostrarResultados(true)}
               onBlur={() => setTimeout(() => setMostrarResultados(false), 200)}
+              onKeyDown={handleKeyDown}
             />
             <svg
               className="absolute left-3 top-3.5 h-5 w-5 text-gray-400"

@@ -85,7 +85,7 @@ export default function UserManagement() {
       case "Autor":
         return <Badge className="bg-blue-100 text-blue-800">Autor</Badge>;
       case "Revisor":
-        return <Badge className="bg-green-100 text-green-800">Revisor</Badge>;
+        return <Badge className="bg-cyan-100 text-cyan-800">Revisor</Badge>;
       case "Usuario":
         return <Badge className="bg-green-100 text-green-800">Usuario</Badge>;
       default:

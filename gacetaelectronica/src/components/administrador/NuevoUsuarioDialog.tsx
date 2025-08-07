@@ -25,6 +25,9 @@ export default function NuevoUsuariosDialog() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [usuarios, setUsuarios] = useState<UserInterface[]>([]);
   const [loading, setLoading] = useState(false);
+  const [deleteUserId, setDeleteUserId] = useState<number | null>(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+
 
   // Estado local para los roles editados
   const [roles, setRoles] = useState<{ [key: number]: string }>({});
@@ -32,26 +35,29 @@ export default function NuevoUsuariosDialog() {
   const [showAdminConfirm, setShowAdminConfirm] = useState(false);
   const [adminTargetUserId, setAdminTargetUserId] = useState<number | null>(null);
 
-  const handleDelete = async (id: number) => {
-    const usuario = usuarios.find((u) => u.idUsuarios === id);
+  const handleDelete = async () => {
+    if (deleteUserId === null) return;
+
+    const usuario = usuarios.find((u) => u.idUsuarios === deleteUserId);
     if (!usuario) return;
 
-    if (!confirm(`¿Estás seguro de eliminar al usuario ${usuario.Nombre}?`))
-      return;
-
     try {
-      const res = await fetch(`/api/usuarios?id=${id}`, {
+      const res = await fetch(`/api/usuarios?id=${deleteUserId}`, {
         method: "DELETE",
       });
 
       if (!res.ok) throw new Error(await res.text());
 
       toast.success(`Usuario ${usuario.Nombre} eliminado`);
-      setUsuarios((prev) => prev.filter((u) => u.idUsuarios !== id));
+      setUsuarios((prev) => prev.filter((u) => u.idUsuarios !== deleteUserId));
     } catch (err: any) {
       toast.error("Error al eliminar usuario: " + err.message);
+    } finally {
+      setDeleteUserId(null);
+      setConfirmOpen(false);
     }
   };
+
 
   const fetchUsuarios = async () => {
     try {
@@ -73,7 +79,7 @@ export default function NuevoUsuariosDialog() {
     if (isDialogOpen) fetchUsuarios();
   }, [isDialogOpen]);
 
-    useEffect(() => {
+  useEffect(() => {
     if (isDialogOpen) fetchUsuarios();
   }, [isDialogOpen]);
 
@@ -131,10 +137,10 @@ export default function NuevoUsuariosDialog() {
 
   return (
 
-        <>
+    <>
       {showAdminConfirm && (
-       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm pointer-events-none">
-  <div className="bg-white rounded-xl p-6 shadow-2xl w-[340px] border border-yellow-400 z-[9999] pointer-events-auto">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm pointer-events-none">
+          <div className="bg-white rounded-xl p-6 shadow-2xl w-[340px] border border-yellow-400 z-[9999] pointer-events-auto">
 
             <div className="text-center">
               <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-yellow-100 flex items-center justify-center">
@@ -177,101 +183,132 @@ export default function NuevoUsuariosDialog() {
         </div>
       )}
 
-    {/* <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}> */}
-    <Dialog open={isDialogOpen} onOpenChange={(open) => {
-  // Si se está mostrando el modal de advertencia, NO cierres el principal
-  if (!showAdminConfirm) {
-    setIsDialogOpen(open);
-  }
-}}>
+      {/* <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}> */}
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        // Si se está mostrando el modal de advertencia, NO cierres el principal
+        if (!showAdminConfirm) {
+          setIsDialogOpen(open);
+        }
+      }}>
 
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="bg-white text-[#4C0000] border border-[#4C0000] hover:bg-[#4C0000] hover:text-white transition flex items-center gap-2 cursor-pointer"
-            >
-          <Plus className="h-4 w-4" />
-          Nuevo Usuario
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="!max-w-none !w-2xl">
-        <DialogHeader>
-          <DialogTitle>Usuarios</DialogTitle>
-          <DialogDescription>
-            Lista de usuarios con rol <strong>Usuario</strong> para reasignar
-            rol.
-          </DialogDescription>
-        </DialogHeader>
+        <DialogTrigger asChild>
+          <Button
+            variant="outline"
+            className="bg-white text-[#4C0000] border border-[#4C0000] hover:bg-[#4C0000] hover:text-white transition flex items-center gap-2 cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+            Nuevo Usuario
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="!max-w-none !w-2xl">
+          <DialogHeader>
+            <DialogTitle>Usuarios</DialogTitle>
+            <DialogDescription>
+              Lista de usuarios con rol <strong>Usuario</strong> para reasignar
+              rol.
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="overflow-x-auto w-full flex justify-center">
-          <table className="w-[600px] text-sm text-left border border-gray-200">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-2 border-b">Nombre</th>
-                <th className="p-2 border-b">Email</th>
-                <th className="p-2 border-b">Nuevo Rol</th>
-                <th className="p-2 border-b">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+          <div className="overflow-x-auto w-full flex justify-center">
+            <table className="w-[600px] text-sm text-left border border-gray-200">
+              <thead className="bg-gray-100">
                 <tr>
-                  <td colSpan={4} className="text-center p-4 text-gray-500">
-                    Cargando usuarios...
-                  </td>
+                  <th className="p-2 border-b">Nombre</th>
+                  <th className="p-2 border-b">Email</th>
+                  <th className="p-2 border-b">Nuevo Rol</th>
+                  <th className="p-2 border-b">Acciones</th>
                 </tr>
-              ) : usuarios.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="text-center p-4 text-gray-500">
-                    No hay usuarios con rol Usuario.
-                  </td>
-                </tr>
-              ) : (
-                usuarios.map((usuario) => (
-                  <tr key={usuario.idUsuarios} className="hover:bg-gray-50">
-                    <td className="p-2 border-b">{usuario.Nombre}</td>
-                    <td className="p-2 border-b">{usuario.Correo}</td>
-                    <td className="p-2 border-b">
-                      <Select
-                        value={roles[usuario.idUsuarios] || ""}
-                        onValueChange={(val) =>
-                          handleUpdateRolLocal(usuario.idUsuarios, val)
-                        }
-                      >
-                        <SelectTrigger className="w-40">
-                          <SelectValue placeholder="Selecciona un rol" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Autor">Autor</SelectItem>
-                          <SelectItem value="Revisor">Revisor</SelectItem>
-                          <SelectItem value="Admin">Administrador</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </td>
-                    <td className="p-2 border-b">
-                      <Button
-                        size="sm"
-                        onClick={() => handleAccept(usuario.idUsuarios)}
-                        disabled={!roles[usuario.idUsuarios]}
-                      >
-                        <Check className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(usuario.idUsuarios)}
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={4} className="text-center p-4 text-gray-500">
+                      Cargando usuarios...
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </DialogContent>
-    </Dialog>
-      </>
+                ) : usuarios.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="text-center p-4 text-gray-500">
+                      No hay usuarios con rol Usuario.
+                    </td>
+                  </tr>
+                ) : (
+                  usuarios.map((usuario) => (
+                    <tr key={usuario.idUsuarios} className="hover:bg-gray-50">
+                      <td className="p-2 border-b">{usuario.Nombre}</td>
+                      <td className="p-2 border-b">{usuario.Correo}</td>
+                      <td className="p-2 border-b">
+                        <Select
+                          value={roles[usuario.idUsuarios] || ""}
+                          onValueChange={(val) =>
+                            handleUpdateRolLocal(usuario.idUsuarios, val)
+                          }
+                        >
+                          <SelectTrigger className="w-40">
+                            <SelectValue placeholder="Selecciona un rol" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Autor">Autor</SelectItem>
+                            <SelectItem value="Revisor">Revisor</SelectItem>
+                            <SelectItem value="Admin">Administrador</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="p-2 border-b">
+                        <Button
+                          size="sm"
+                          onClick={() => handleAccept(usuario.idUsuarios)}
+                          disabled={!roles[usuario.idUsuarios]}
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => {
+                            setDeleteUserId(usuario.idUsuarios);
+                            setConfirmOpen(true);
+                          }}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Eliminar usuario?</DialogTitle>
+            <DialogDescription>
+              Esta acción eliminará permanentemente al usuario. ¿Estás seguro?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setConfirmOpen(false);
+                setDeleteUserId(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleDelete}
+              className="bg-[var(--color-vino)] text-white hover:bg-white hover:text-[var(--color-vino)] border border-[var(--color-vino)]"
+            >
+              Confirmar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+    </>
   );
 }

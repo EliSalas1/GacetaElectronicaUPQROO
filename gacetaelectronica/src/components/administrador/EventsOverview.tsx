@@ -161,7 +161,7 @@ export default function EventOverview() {
                 <SelectValue placeholder="Filtrar por" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="status">Estado</SelectItem>
+                {/*<SelectItem value="status">Estado</SelectItem>*/}
                 <SelectItem value="location">Lugar</SelectItem>
               </SelectContent>
             </Select>
@@ -171,8 +171,8 @@ export default function EventOverview() {
                 <SelectValue placeholder="Filtrar valor" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {(filterBy === "status" ? ["publicado", "pending", "draft"] : filterBy === "location" ? Array.from(new Set(events.map((e) => e.location))) : []).map((option) => (
+                <SelectItem value="all">Todos</SelectItem> {/* filterBy === "status" ? ["publicado", "", "draft"] : en un futuro cuando un evento se haya vencido deberan agregar el estado de vencido y hacer que de manera automatica se eliminen del home jajan't */}
+                {(filterBy === "location" ? Array.from(new Set(events.map((e) => e.location))) : []).map((option) => (
                   <SelectItem key={option} value={option}>{option}</SelectItem>
                 ))}
               </SelectContent>
